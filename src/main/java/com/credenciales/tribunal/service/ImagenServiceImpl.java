@@ -255,7 +255,7 @@ public class ImagenServiceImpl implements ImagenService {
         dto.setMimeType(imagen.getMimeType());
         dto.setTamanioBytes(imagen.getTamanioBytes());
         dto.setTamanioFormateado(imagen.getTamanioFormateado());
-        dto.setFechaSubida(imagen.getFechaSubida());
+        dto.setFechaSubida(imagen.getCreatedAt());
         dto.setIdComplaint(imagen.getComplaint().getId());
 
         

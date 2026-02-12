@@ -91,7 +91,7 @@ public class Usuario implements UserDetails {
         return rol == RolUsuario.ADMINISTRADOR;
     }
 
-    public boolean esRevisor() {
+    public boolean esCoordinador() {
         return rol == RolUsuario.COORDINADOR || rol == RolUsuario.ADMINISTRADOR;
     }
 }
