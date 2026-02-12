@@ -81,7 +81,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/administradores/**").hasRole("ADMINISTRADOR")
                 .requestMatchers(HttpMethod.DELETE, "/api/administradores/**").hasRole("ADMINISTRADOR")
                 
-                .requestMatchers(HttpMethod.POST,"/api/imagenes/**").hasRole("ADMINISTRADOR")
+                .requestMatchers(HttpMethod.POST,"/api/imagenes/**").permitAll()
                 .requestMatchers(HttpMethod.PUT,"/api/imagenes/**").hasRole("ADMINISTRADOR")
                 .requestMatchers(HttpMethod.DELETE,"/api/imagenes/**").hasRole("ADMINISTRADOR")
 
