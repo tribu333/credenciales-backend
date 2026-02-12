@@ -50,3 +50,7 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+//esto es para railway
+jar {
+    enabled = false
+}
