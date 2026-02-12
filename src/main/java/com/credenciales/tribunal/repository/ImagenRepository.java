@@ -1,7 +1,7 @@
 package com.credenciales.tribunal.repository;
 
 //import com.registro.denuncias.model.Complaint;
-import com.credenciales.tribunal.model.Imagen;
+import com.credenciales.tribunal.model.entity.Imagen;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,7 +12,7 @@ import java.util.Optional;
 public interface ImagenRepository extends JpaRepository<Imagen, Long> {
     // Buscar imágenes por complaint
     //List<Imagen> findByComplaint(Complaint complaint);
-    List<Imagen> findByComplaintId(Long id);
+    /* List<Imagen> findByComplaintId(Long id); */
     
     void deleteByNombreArchivo(String nombreArchivo);
 

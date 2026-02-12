@@ -1,4 +1,4 @@
-package com.credenciales.tribunal.service;
+/* package com.credenciales.tribunal.service;
 
 //import com.registro.denuncias.model.Complaint;
 import com.credenciales.tribunal.model.Imagen;
@@ -32,3 +32,4 @@ public interface ImagenService {
     // Subir múltiples imágenes para un complaint
     List<ImagenResponseDTO> subirImagenesMasivas(MultipartFile[] files, Long idComplaint);
 }
+ */
