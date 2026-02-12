@@ -27,7 +27,7 @@ public class SecurityConfig {
 
 
     @Autowired
-    private AuthService authTokenFilter;
+    private JwtAuthenticationFilter authTokenFilter;
 
     
 
@@ -101,7 +101,7 @@ public class SecurityConfig {
             );
 
         // Agregar nuestro filtro JWT antes del filtro de autenticación
-        //http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
