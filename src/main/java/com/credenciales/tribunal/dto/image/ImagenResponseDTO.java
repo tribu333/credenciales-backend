@@ -17,5 +17,5 @@ public class ImagenResponseDTO {
     private Long tamanioBytes;
     private String tamanioFormateado;
     private LocalDateTime fechaSubida;
-    private Long idComplaint;
+    //private Long idComplaint;
 }
