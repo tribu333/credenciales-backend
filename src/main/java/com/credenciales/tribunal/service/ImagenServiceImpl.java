@@ -1,4 +1,4 @@
-package com.credenciales.tribunal.service;
+/* package com.credenciales.tribunal.service;
 
 //import com.credenciales.tribunal.model.Complaint;
 import com.credenciales.tribunal.model.Imagen;
@@ -36,8 +36,8 @@ public class ImagenServiceImpl implements ImagenService {
     @Autowired
     private ImagenRepository imagenRepository;
     
-/*     @Autowired
-    private ComplaintRepository complaintRepository; */
+//     @Autowired
+  //  private ComplaintRepository complaintRepository; 
     
     @Autowired
     private FileStorageService fileStorageService;
@@ -67,10 +67,10 @@ public class ImagenServiceImpl implements ImagenService {
                 "Tipo recibido: " + contentType
             );
         }
-        /* if (contentType == null || !contentType.startsWith("image/")) {
-            throw new RuntimeException("Solo se permiten archivos de imagen (PNG, JPG, JPEG)");
-        }
-         */
+        // if (contentType == null || !contentType.startsWith("image/")) {
+        //    throw new RuntimeException("Solo se permiten archivos de imagen (PNG, JPG, JPEG)");
+        //}
+         
         // Validar tamaño (opcional, ya está en application.properties pero validamos por seguridad)
         long maxSize = 5 * 1024 * 1024; // 5MB
         if (file.getSize() > maxSize) {
@@ -268,4 +268,4 @@ public class ImagenServiceImpl implements ImagenService {
         
         return dto;
     }
-}
+} */
