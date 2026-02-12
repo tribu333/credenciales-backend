@@ -29,5 +29,6 @@ public class HistorialCargo {
     private LocalDateTime fechaFin;
 
     @Column(nullable = false, columnDefinition = "TINYINT DEFAULT 1")
+    @Builder.Default
     private Boolean activo = true;
 }

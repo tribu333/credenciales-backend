@@ -26,6 +26,7 @@ public class Qr {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20, columnDefinition = "ENUM('LIBRE','ASIGNADO','INACTIVO') DEFAULT 'LIBRE'")
+    @Builder.Default
     private EstadoQr estado = EstadoQr.LIBRE;
 
     @Column(name = "ruta_imagen_qr", nullable = false, length = 255)

@@ -28,5 +28,6 @@ public class AsignacionQr {
     private LocalDateTime fechaLiberacion;
 
     @Column(nullable = false, columnDefinition = "TINYINT DEFAULT 1")
+    @Builder.Default
     private Boolean activo = true;
 }

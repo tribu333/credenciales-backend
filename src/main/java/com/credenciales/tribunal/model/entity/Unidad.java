@@ -23,6 +23,7 @@ public class Unidad {
     private String abreviatura;
 
     @Column(nullable = false, columnDefinition = "TINYINT DEFAULT 1")
+    @Builder.Default
     private Boolean estado = true;
 
     @CreationTimestamp

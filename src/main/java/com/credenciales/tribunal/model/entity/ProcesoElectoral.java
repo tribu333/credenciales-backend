@@ -30,6 +30,7 @@ public class ProcesoElectoral {
     private LocalDate fechaFin;
 
     @Column(nullable = false, columnDefinition = "TINYINT DEFAULT 1")
+    @Builder.Default
     private Boolean estado = true;
 
     @CreationTimestamp
