@@ -38,9 +38,12 @@ public class Imagen {
     @Column(name = "tamanio_bytes")
     private Long tamanioBytes;
 
-    @Column(name = "fecha_subida")
+    @Column(name = "tipo_imagen", length = 100)
+    private String tipoImagen;
+
     @CreationTimestamp
-    private LocalDateTime fechaSubida;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     /* // Relación muchos a uno: muchas imágenes pertenecen a un complaint
     @ManyToOne(fetch = FetchType.LAZY)
@@ -63,8 +66,13 @@ public class Imagen {
 
     @PrePersist
     protected void onCreate() {
-        if (fechaSubida == null) {
-            fechaSubida = LocalDateTime.now();
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
         }
+    }
+
+    public LocalDateTime getFechaSubida() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getFechaSubida'");
     }
 }

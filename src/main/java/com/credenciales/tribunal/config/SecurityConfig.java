@@ -17,7 +17,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import com.credenciales.tribunal.service.AuthService;
 
 import org.springframework.http.HttpMethod;
 @Configuration
@@ -69,30 +68,30 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET,"/api/ubicaciones/**").permitAll()
                 .requestMatchers(HttpMethod.GET,"/api/descriptores/**").permitAll()
 
-                // Restringir POST, PUT, DELETE a ADMIN
-                .requestMatchers(HttpMethod.POST, "/api/empleados/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/empleados/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/empleados/**").hasRole("ADMIN")
+                // Restringir POST, PUT, DELETE a ADMINISTRADOR
+                .requestMatchers(HttpMethod.POST, "/api/empleados/**").hasRole("ADMINISTRADOR")
+                .requestMatchers(HttpMethod.PUT, "/api/empleados/**").hasRole("ADMINISTRADOR")
+                .requestMatchers(HttpMethod.DELETE, "/api/empleados/**").hasRole("ADMINISTRADOR")
 
-                .requestMatchers(HttpMethod.POST, "/api/supervisor/horarios/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/supervisor/horarios/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/supervisor/horarios/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/supervisor/horarios/**").hasRole("ADMINISTRADOR")
+                .requestMatchers(HttpMethod.PUT, "/api/supervisor/horarios/**").hasRole("ADMINISTRADOR")
+                .requestMatchers(HttpMethod.DELETE, "/api/supervisor/horarios/**").hasRole("ADMINISTRADOR")
 
-                .requestMatchers(HttpMethod.POST, "/api/administradores/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/administradores/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/administradores/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/administradores/**").hasRole("ADMINISTRADOR")
+                .requestMatchers(HttpMethod.PUT, "/api/administradores/**").hasRole("ADMINISTRADOR")
+                .requestMatchers(HttpMethod.DELETE, "/api/administradores/**").hasRole("ADMINISTRADOR")
                 
-                .requestMatchers(HttpMethod.POST,"/api/imagenes/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT,"/api/imagenes/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE,"/api/imagenes/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST,"/api/imagenes/**").hasRole("ADMINISTRADOR")
+                .requestMatchers(HttpMethod.PUT,"/api/imagenes/**").hasRole("ADMINISTRADOR")
+                .requestMatchers(HttpMethod.DELETE,"/api/imagenes/**").hasRole("ADMINISTRADOR")
 
-                .requestMatchers(HttpMethod.POST,"/api/ubicaciones/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT,"/api/ubicaciones/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE,"/api/ubicaciones/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST,"/api/ubicaciones/**").hasRole("ADMINISTRADOR")
+                .requestMatchers(HttpMethod.PUT,"/api/ubicaciones/**").hasRole("ADMINISTRADOR")
+                .requestMatchers(HttpMethod.DELETE,"/api/ubicaciones/**").hasRole("ADMINISTRADOR")
 
-                .requestMatchers(HttpMethod.POST,"/api/descriptores/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT,"/api/descriptores/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE,"/api/descriptores/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST,"/api/descriptores/**").hasRole("ADMINISTRADOR")
+                .requestMatchers(HttpMethod.PUT,"/api/descriptores/**").hasRole("ADMINISTRADOR")
+                .requestMatchers(HttpMethod.DELETE,"/api/descriptores/**").hasRole("ADMINISTRADOR")
                 // Ruta de autenticación pública
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/asistencias/**").permitAll()
