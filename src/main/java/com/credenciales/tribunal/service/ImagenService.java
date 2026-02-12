@@ -1,8 +1,6 @@
 package com.credenciales.tribunal.service;
 
-//import com.registro.denuncias.model.Complaint;
 import com.credenciales.tribunal.model.entity.Imagen;
-//import com.registro.denuncias.repository.ComplaintRepository;
 import com.credenciales.tribunal.repository.ImagenRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +19,6 @@ public interface ImagenService {
     // Operaciones CRUD
     ImagenResponseDTO subirImagen(MultipartFile file);
     Optional<ImagenResponseDTO> findById(Long id);
-    //List<ImagenResponseDTO> getImagenesPorDenuncia(Long idComplaint);
     void deleteById(Long id);
     
     // Operaciones específicas
