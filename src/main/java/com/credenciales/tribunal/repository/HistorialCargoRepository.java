@@ -3,7 +3,7 @@ package com.credenciales.tribunal.repository;
 import com.credenciales.tribunal.model.entity.HistorialCargo;
 import com.credenciales.tribunal.model.entity.Personal;
 
-import org.springdoc.core.converters.models.Pageable;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
