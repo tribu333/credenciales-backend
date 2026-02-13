@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,4 +37,6 @@ public interface EstadoActualRepository extends JpaRepository<EstadoActual, Inte
     void deleteByPersonalId(Long personalId);
     
     boolean existsByPersonalIdAndEstadoId(Long personalId, Integer estadoId);
+    
+    void setFecha(LocalDateTime now);
 }

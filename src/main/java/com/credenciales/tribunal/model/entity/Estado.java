@@ -20,6 +20,9 @@ public class Estado {
     @Column(name = "valor_estado", nullable = false, columnDefinition = "TINYINT DEFAULT 0")
     private Boolean valorEstado = false;
 
+    @Builder.Default
+    private Boolean verificado = false;
+
     // Relación bidireccional con EstadoActual
     @OneToMany(mappedBy = "estado", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EstadoActual> estadosActuales;

@@ -3,7 +3,7 @@ package com.credenciales.tribunal.model.entity;
 
 import com.credenciales.tribunal.model.enums.TipoPersonal;
 import lombok.*;
-import main.java.com.credenciales.tribunal.model.entity.EstadoActual;
+import com.credenciales.tribunal.model.entity.EstadoActual;
 
 import org.hibernate.annotations.CreationTimestamp;
 import jakarta.persistence.*;
@@ -28,10 +28,10 @@ public class Personal {
     @Column(name = "apellido_materno", length = 100)
     private String apellidoMaterno;
 
-    @Column(name = "carnet_identidad", nullable = false, length = 50, unique = true)
+    @Column(name = "carnet_identidad", nullable = false, length = 50)
     private String carnetIdentidad;
 
-    @Column(nullable = false, length = 150, unique = true)
+    @Column(nullable = false, length = 150)
     private String correo;
 
     @Column(length = 30)
@@ -62,6 +62,16 @@ public class Personal {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "qr_id", nullable = false)
     private Qr qr;
+
+    @Column(name = "codigo_verificacion", length = 6)
+    private String codigoVerificacion;
+
+    @Column(name = "codigo_expiracion")
+    private LocalDateTime codigoExpiracion;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean verificado = false;
 
     @OneToMany(mappedBy = "personal", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<HistorialCargo> historialCargos;

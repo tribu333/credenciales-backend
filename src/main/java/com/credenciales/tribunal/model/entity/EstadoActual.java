@@ -2,6 +2,11 @@ package com.credenciales.tribunal.model.entity;
 
 import lombok.*;
 import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
+
+import org.hibernate.annotations.CreationTimestamp;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
@@ -24,4 +29,7 @@ public class EstadoActual {
     @JoinColumn(name = "estado_id", nullable = false)
     @JsonIgnoreProperties("estadosActuales")
     private Estado estado;
+
+    @Column(nullable = false)
+    private LocalDateTime fecha;
 }
