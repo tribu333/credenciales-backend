@@ -3,6 +3,8 @@ package com.credenciales.tribunal.model.entity;
 
 import com.credenciales.tribunal.model.enums.TipoPersonal;
 import lombok.*;
+import main.java.com.credenciales.tribunal.model.entity.EstadoActual;
+
 import org.hibernate.annotations.CreationTimestamp;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -66,4 +68,7 @@ public class Personal {
 
     @OneToMany(mappedBy = "personal", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<HistorialCargoProceso> historialCargosProceso;
+
+    @OneToMany(mappedBy = "personal", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EstadoActual> estadosActuales;
 }
