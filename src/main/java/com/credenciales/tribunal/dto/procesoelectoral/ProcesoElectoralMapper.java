@@ -47,9 +47,9 @@ public class ProcesoElectoralMapper {
         
         int totalCargosActivos = 0;
         if (proceso.getCargosProceso() != null) {
-            totalCargosActivos = (int) proceso.getCargosProceso().stream()
-                    .filter(CargoProceso::getActivo)
-                    .count();
+            // totalCargosActivos = (int) proceso.getCargosProceso().stream()
+            //         .filter(CargoProceso::getActivo)
+            //         .count();
         }
         
         return ProcesoElectoralResponseDTO.builder()
@@ -143,13 +143,13 @@ public class ProcesoElectoralMapper {
         return CargoProcesoResumenDTO.builder()
                 .id(cargoProceso.getId())
                 .nombre(cargoProceso.getNombre())
-                .cargoId(cargoProceso.getCargo() != null ? cargoProceso.getCargo().getId() : null)
-                .unidadNombre(cargoProceso.getCargo() != null && 
+                //.cargoId(cargoProceso.getCargo() != null ? cargoProceso.getCargo().getId() : null)
+                /* .unidadNombre(cargoProceso.getCargo() != null && 
                              cargoProceso.getCargo().getUnidad() != null ? 
                              cargoProceso.getCargo().getUnidad().getNombre() : null)
                 .totalCandidatos(cargoProceso.getCandidatos() != null ? 
-                                 cargoProceso.getCandidatos().size() : 0)
-                .activo(cargoProceso.getActivo())
+                                 cargoProceso.getCandidatos().size() : 0) */
+                //.activo(cargoProceso.getActivo())
                 .build();
     }
     
