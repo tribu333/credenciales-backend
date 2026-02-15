@@ -27,8 +27,8 @@ public interface CargoProcesoRepository extends JpaRepository<CargoProceso, Long
     List<CargoProceso> findByNombreContainingIgnoreCase(String nombre);
     
     // Buscar cargos activos en un proceso (considerando el campo activo si existe)
-    @Query("SELECT cp FROM CargoProceso cp WHERE cp.proceso.id = :procesoId AND cp.activo = true")
-    List<CargoProceso> findActivosByProcesoId(@Param("procesoId") Long procesoId);
+    /* @Query("SELECT cp FROM CargoProceso cp WHERE cp.proceso.id = :procesoId AND cp.activo = true")
+    List<CargoProceso> findActivosByProcesoId(@Param("procesoId") Long procesoId); */
     
     // Buscar cargos por proceso con sus relaciones
     @Query("SELECT cp FROM CargoProceso cp " +

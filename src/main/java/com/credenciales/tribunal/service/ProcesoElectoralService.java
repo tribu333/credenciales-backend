@@ -51,7 +51,7 @@ public interface ProcesoElectoralService {
     // Métodos con relaciones
     Optional<ProcesoElectoralResponseDTO> getProcesoWithImagen(Long id);
     
-    Optional<ProcesoElectoralResponseDTO> getProcesoWithCargos(Long id);
+    //Optional<ProcesoElectoralResponseDTO> getProcesoWithCargos(Long id);
     
     Optional<ProcesoElectoralResponseDTO> getProcesoWithAllRelations(Long id);
     

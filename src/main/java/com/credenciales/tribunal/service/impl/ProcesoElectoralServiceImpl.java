@@ -259,13 +259,13 @@ public class ProcesoElectoralServiceImpl implements ProcesoElectoralService {
                 .map(procesoMapper::toResponseDTO);
     }
     
-    @Override
+    /* @Override
     @Transactional(readOnly = true)
     public Optional<ProcesoElectoralResponseDTO> getProcesoWithCargos(Long id) {
         log.debug("Buscando proceso con cargos por ID: {}", id);
         return procesoRepository.findByIdWithCargos(id)
                 .map(procesoMapper::toResponseDTO);
-    }
+    } */
     
     @Override
     @Transactional(readOnly = true)

@@ -196,8 +196,8 @@ public class CargoProcesoServiceImpl implements CargoProcesoService {
         if (!procesoRepository.existsById(procesoId)) {
             throw new ResourceNotFoundException("Proceso no encontrado con ID: " + procesoId);
         }
-        
-        List<CargoProceso> cargosProceso = cargoProcesoRepository.findActivosByProcesoId(procesoId);
+        //no funcionando aun por activos en luga solo por procesos
+        List<CargoProceso> cargosProceso = cargoProcesoRepository.findByProcesoId(procesoId);
         return cargoProcesoMapper.toResponseDTOList(cargosProceso);
     }
     
