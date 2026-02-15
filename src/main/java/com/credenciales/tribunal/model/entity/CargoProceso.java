@@ -28,7 +28,8 @@ public class CargoProceso {
 
     @Column(columnDefinition = "TEXT")
     private String descripcion;
-
+    @Column(name = "activo") // o sin @Column si el nombre coincide
+    private Boolean activo;   // o boolean
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
