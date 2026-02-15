@@ -20,6 +20,9 @@ public interface PersonalRepository extends JpaRepository<Personal, Long> {
     Optional<Personal> findByQrId(Long qrId);
     
     List<Personal> findByTipo(TipoPersonal tipo);
+
+    Optional<Personal> findTopByCarnetIdentidadOrderByCreatedAtDesc(String carnet);
+
     
     @Query("SELECT p FROM Personal p WHERE p.accesoComputo = true")
     List<Personal> findAllWithAccesoComputo();
