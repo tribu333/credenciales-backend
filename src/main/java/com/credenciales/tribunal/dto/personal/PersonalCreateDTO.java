@@ -49,19 +49,31 @@ public class PersonalCreateDTO {
     @Schema(description = "Número de celular", example = "76543210")
     private String celular;
     
-    @NotNull(message = "El campo acceso a cómputo es requerido")
     @Schema(description = "Tiene acceso a cómputo", example = "false", defaultValue = "false")
-    private Boolean accesoComputo;
+    @Builder.Default
+    private Boolean accesoComputo = false;
     
     @Size(max = 10, message = "El número de circunscripción no puede exceder los 10 caracteres")
     @Pattern(regexp = "^[A-Za-z0-9-]+$", message = "El número de circunscripción solo puede contener letras, números y guiones")
     @Schema(description = "Número de circunscripción", example = "C-2")
     private String nroCircunscripcion;
-    
+
+    @NotNull(message = "El cargo es requerido")
+    @Schema(description = "ID del cargo", example = "1")
+    private Long cargoID;
+
     @NotNull(message = "El tipo de personal es requerido")
-    @Schema(description = "Tipo de personal", example = "JURADO")
-    private TipoPersonal tipo;
+    @Schema(description = "Tipo de personal", example = "EVENTUAL")
+    @Builder.Default
+    private TipoPersonal tipo = TipoPersonal.EVENTUAL;
     
-    @Schema(description = "ID de la imagen asociada", example = "1")
+    @NotNull(message = "La imagen es obligatoria")  // ← Cambiado de @NotBlank a @NotNull
+    @Schema(description = "ID de la imagen", example = "1")
     private Long imagenId;
+
+    @NotBlank(message = "El código de verificación es requerido")
+    @Size(min = 6, max = 6, message = "El código de verificación debe tener 6 dígitos")
+    @Pattern(regexp = "^[0-9]{6}$", message = "El código de verificación debe tener 6 dígitos")
+    @Schema(description = "Código de verificación", example = "123456")
+    private String codigoVerificacion;
 }

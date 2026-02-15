@@ -11,6 +11,6 @@ import org.springframework.stereotype.Component;
 @Setter
 public class QrStorageProperties {
     
-    private String path = "/uploads/qr/";
+    private String path = "C:/qr/";
     private String urlPrefix = "/uploads/qr/";
 }

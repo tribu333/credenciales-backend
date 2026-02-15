@@ -54,7 +54,6 @@ public class QrServiceImpl implements QrService {
 
     @Override
     public QrResponseDTO generarQrPersonal(QrGenerarDTO qrGenerarDTO) {
-        // Validar que el tipo sea PERSONAL
         if (qrGenerarDTO.getTipo() != TipoQr.PERSONAL) {
             throw new BusinessException("El método generarQrPersonal solo acepta tipo PERSONAL");
         }
@@ -115,31 +114,29 @@ public class QrServiceImpl implements QrService {
     private String generarImagenQr(String codigo, String carnetIdentidad) throws Exception {
         // Crear directorio si no existe
         Path storagePath = Paths.get(storageProperties.getPath()).toAbsolutePath().normalize();
+    
         if (!Files.exists(storagePath)) {
-            try {
-                Files.createDirectories(storagePath);
-            } catch (Exception e) {
-                throw new BusinessException("No se pudo crear el directorio para almacenar QR: " + e.getMessage());
-            }
+            Files.createDirectories(storagePath);
+            log.info("Directorio QR creado: {}", storagePath);
         }
         
-        // Generar contenido del QR (puede ser una URL o información relevante)
-        String qrContent = String.format("{\"tipo\":\"PERSONAL\",\"carnet\":\"%s\",\"codigo\":\"%s\"}", 
-                carnetIdentidad, codigo);
+       // Verificar permisos
+        if (!Files.isWritable(storagePath)) {
+            throw new BusinessException("No hay permisos de escritura en: " + storagePath);
+        }
         
-        // Generar imagen QR
-        QRCodeWriter qrCodeWriter = new QRCodeWriter();
-        BitMatrix bitMatrix = qrCodeWriter.encode(qrContent, BarcodeFormat.QR_CODE, QR_SIZE, QR_SIZE);
-        
-        // Nombre del archivo
         String fileName = String.format("qr-%s-%d.png", carnetIdentidad, System.currentTimeMillis());
         Path filePath = storagePath.resolve(fileName);
         
-        // Guardar imagen
+        // Generar QR...
+        QRCodeWriter qrCodeWriter = new QRCodeWriter();
+        BitMatrix bitMatrix = qrCodeWriter.encode(codigo, BarcodeFormat.QR_CODE, 300, 300);
         MatrixToImageWriter.writeToPath(bitMatrix, "PNG", filePath);
         
-        // Retornar ruta relativa
-        return storageProperties.getPath() + fileName;
+        log.info("QR guardado en: {}", filePath);
+        
+        // IMPORTANTE: Guardar la ruta completa en BD
+        return filePath.toString();  // Guarda la ruta completa C:/qr/qr-1234567.png
     }
 
     @Override
