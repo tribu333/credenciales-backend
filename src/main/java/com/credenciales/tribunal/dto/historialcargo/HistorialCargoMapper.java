@@ -1,6 +1,6 @@
 package com.credenciales.tribunal.dto.historialcargo;
 
-import com.credenciales.tribunal.dto.historialcargo.HistorialCargoDTO;
+//import com.credenciales.tribunal.dto.historialcargo.HistorialCargoDTO;
 /* import com.credenciales.tribunal.dto.historialcargo.request.HistorialCargoCreateRequestDTO;
 import com.credenciales.tribunal.dto.historialcargo.request.HistorialCargoUpdateRequestDTO;
 import com.credenciales.tribunal.dto.historialcargo.response.HistorialCargoResponseDTO; */

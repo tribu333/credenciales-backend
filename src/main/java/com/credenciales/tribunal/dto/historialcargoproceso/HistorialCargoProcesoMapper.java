@@ -1,9 +1,9 @@
 package com.credenciales.tribunal.dto.historialcargoproceso;
 
-import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoDTO;
+/* import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoCreateRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoUpdateRequestDTO;
-import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoResponseDTO;
+import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoResponseDTO; */
 import com.credenciales.tribunal.model.entity.CargoProceso;
 import com.credenciales.tribunal.model.entity.HistorialCargoProceso;
 import com.credenciales.tribunal.model.entity.Personal;
