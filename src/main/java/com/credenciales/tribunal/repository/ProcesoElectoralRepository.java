@@ -60,13 +60,13 @@ public interface ProcesoElectoralRepository extends JpaRepository<ProcesoElector
     Optional<ProcesoElectoral> findByIdWithCargos(@Param("id") Long id); */
     
     // Buscar proceso con imagen y cargos
-    @Query("SELECT p FROM ProcesoElectoral p " +
+    /* @Query("SELECT p FROM ProcesoElectoral p " +
            "LEFT JOIN FETCH p.imagen " +
            "LEFT JOIN FETCH p.cargosProceso c " +
            "LEFT JOIN FETCH c.cargo " +
            "LEFT JOIN FETCH c.cargo.unidad " +
            "WHERE p.id = :id")
-    Optional<ProcesoElectoral> findByIdWithAllRelations(@Param("id") Long id);
+    Optional<ProcesoElectoral> findByIdWithAllRelations(@Param("id") Long id); */
     
     // Buscar procesos con cantidad de cargos
     @Query("SELECT p, SIZE(p.cargosProceso) as totalCargos FROM ProcesoElectoral p")

@@ -74,6 +74,12 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST,"/api/cargos/**").permitAll()
                 .requestMatchers(HttpMethod.GET,"/api/historiales-cargo/**").permitAll()
                 .requestMatchers(HttpMethod.POST,"/api/historiales-cargo/**").permitAll()
+                .requestMatchers(HttpMethod.GET,"/api/procesos-electorales/**").permitAll()
+                .requestMatchers(HttpMethod.POST,"/api/procesos-electorales/**").permitAll()
+                .requestMatchers(HttpMethod.GET,"/api/cargos-proceso/**").permitAll()
+                .requestMatchers(HttpMethod.POST,"/api/cargos-proceso/**").permitAll()
+                .requestMatchers(HttpMethod.GET,"/api/historiales-cargo-proceso/**").permitAll()
+                .requestMatchers(HttpMethod.POST,"/api/historiales-cargo-proceso/**").permitAll()
 
                 // Restringir POST, PUT, DELETE a ADMINISTRADOR
                 .requestMatchers(HttpMethod.POST, "/api/empleados/**").hasRole("ADMINISTRADOR")

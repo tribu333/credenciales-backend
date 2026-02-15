@@ -146,12 +146,12 @@ public class ProcesoElectoralController {
                 .orElse(ResponseEntity.notFound().build());
     } */
     
-    @GetMapping("/{id}/with-all")
+/*     @GetMapping("/{id}/with-all")
     public ResponseEntity<ProcesoElectoralResponseDTO> getProcesoWithAllRelations(@PathVariable Long id) {
         return procesoService.getProcesoWithAllRelations(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
-    }
+    } */
     
     @PatchMapping("/{id}/activar")
     public ResponseEntity<ProcesoElectoralResponseDTO> activarProceso(@PathVariable Long id) {

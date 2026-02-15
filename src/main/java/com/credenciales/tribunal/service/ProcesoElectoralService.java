@@ -53,7 +53,7 @@ public interface ProcesoElectoralService {
     
     //Optional<ProcesoElectoralResponseDTO> getProcesoWithCargos(Long id);
     
-    Optional<ProcesoElectoralResponseDTO> getProcesoWithAllRelations(Long id);
+    //Optional<ProcesoElectoralResponseDTO> getProcesoWithAllRelations(Long id);
     
     // Métodos de negocio
     ProcesoElectoralResponseDTO activarProceso(Long id);
