@@ -24,7 +24,11 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
-    
+    // ZXing para generación de códigos QR
+    implementation 'com.google.zxing:core:3.5.2'
+    implementation 'com.google.zxing:javase:3.5.2'
+    // Email
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
     // Base de datos
     runtimeOnly 'com.mysql:mysql-connector-j'
     

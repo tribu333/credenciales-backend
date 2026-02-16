@@ -26,4 +26,12 @@ public interface PersonalRepository extends JpaRepository<Personal, Long> {
     
     @Query("SELECT p FROM Personal p WHERE LOWER(p.nombre) LIKE LOWER(CONCAT('%', :nombre, '%')) OR LOWER(p.apellidoPaterno) LIKE LOWER(CONCAT('%', :nombre, '%'))")
     List<Personal> buscarPorNombre(@Param("nombre") String nombre);
+
+    @Query("SELECT p FROM Personal p JOIN p.estadosActuales ea WHERE ea.estado.nombre = :estadoNombre AND ea.valor_estado_actual = true")
+    List<Personal> findAllByCurrentEstado(@Param("estadoNombre") String estadoNombre);
+    
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM Personal p " +
+        "JOIN p.estadosActuales ea " +
+        "WHERE p.id = :personalId AND ea.estado.nombre = :estadoNombre AND ea.valor_estado_actual = true")
+    boolean isPersonalInEstado(@Param("personalId") Long personalId, @Param("estadoNombre") String estadoNombre);
 }

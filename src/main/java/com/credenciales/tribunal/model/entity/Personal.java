@@ -66,4 +66,7 @@ public class Personal {
 
     @OneToMany(mappedBy = "personal", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<HistorialCargoProceso> historialCargosProceso;
+
+    @OneToMany(mappedBy = "personal", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EstadoActual> estadosActuales;
 }
