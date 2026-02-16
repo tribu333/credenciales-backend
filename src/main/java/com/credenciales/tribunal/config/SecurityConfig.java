@@ -1,4 +1,5 @@
 package com.credenciales.tribunal.config;
+
 import java.util.Arrays;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,18 +18,14 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-
 import org.springframework.http.HttpMethod;
+
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
-
-
     @Autowired
     private JwtAuthenticationFilter authTokenFilter;
-
-    
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
@@ -40,77 +37,123 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Habilitar CORS
-            .csrf(csrf -> csrf.disable()) // Deshabilitar CSRF para APIs
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Sin estado para JWT
-            )
-            .authorizeHttpRequests(auth -> auth
-                // Swagger/OpenAPI docs
-                .requestMatchers(
-                    "/swagger-ui.html",
-                    "/swagger-ui/**",
-                    "/v3/api-docs/**",
-                    "/v3/api-docs",
-                    "/v2/api-docs",
-                    "/webjars/**",
-                    "/swagger-resources/**"
-                ).permitAll()
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Habilitar CORS
+                .csrf(csrf -> csrf.disable()) // Deshabilitar CSRF para APIs
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Sin estado para JWT
+                )
+                .authorizeHttpRequests(auth -> auth
+                        // Swagger/OpenAPI docs
+                        .requestMatchers(
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/v3/api-docs",
+                                "/v2/api-docs",
+                                "/webjars/**",
+                                "/swagger-resources/**")
+                        .permitAll()
 
-                // Permitir acceso público solo a métodos GET
-                .requestMatchers(HttpMethod.GET, "/api/empleados/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/supervisor/horarios/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/administradores/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/imagenes/descargar/**").permitAll() // O .authenticated()
-                .requestMatchers(HttpMethod.GET,"/api/ubicaciones/**").permitAll()
-                .requestMatchers(HttpMethod.GET,"/api/descriptores/**").permitAll()
-                .requestMatchers(HttpMethod.GET,"/api/unidades/**").permitAll()
-                .requestMatchers(HttpMethod.POST,"/api/unidades/**").permitAll()
-                .requestMatchers(HttpMethod.GET,"/api/cargos/**").permitAll()
-                .requestMatchers(HttpMethod.POST,"/api/cargos/**").permitAll()
-                .requestMatchers(HttpMethod.GET,"/api/historiales-cargo/**").permitAll()
-                .requestMatchers(HttpMethod.POST,"/api/historiales-cargo/**").permitAll()
-                .requestMatchers(HttpMethod.GET,"/api/procesos-electorales/**").permitAll()
-                .requestMatchers(HttpMethod.POST,"/api/procesos-electorales/**").permitAll()
-                .requestMatchers(HttpMethod.GET,"/api/cargos-proceso/**").permitAll()
-                .requestMatchers(HttpMethod.POST,"/api/cargos-proceso/**").permitAll()
-                .requestMatchers(HttpMethod.GET,"/api/historiales-cargo-proceso/**").permitAll()
-                .requestMatchers(HttpMethod.POST,"/api/historiales-cargo-proceso/**").permitAll()
+                        // ============ NUEVAS RUTAS DE PERSONAL ============
+                        // Endpoints públicos de personal (verificación y registro)
+                        .requestMatchers(HttpMethod.POST, "/api/personal/solicitar-codigo").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/personal/verificar-codigo").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/personal/registrar").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/personal/verificar-correo/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/personal/puede-registrarse/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/personal/mensaje-estado/**").permitAll()
 
-                // Restringir POST, PUT, DELETE a ADMINISTRADOR
-                .requestMatchers(HttpMethod.POST, "/api/empleados/**").hasRole("ADMINISTRADOR")
-                .requestMatchers(HttpMethod.PUT, "/api/empleados/**").hasRole("ADMINISTRADOR")
-                .requestMatchers(HttpMethod.DELETE, "/api/empleados/**").hasRole("ADMINISTRADOR")
+                        // Endpoints de consulta pública
+                        .requestMatchers(HttpMethod.GET, "/api/personal/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/personal/ci/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/personal/buscar").permitAll()
 
-                .requestMatchers(HttpMethod.POST, "/api/supervisor/horarios/**").hasRole("ADMINISTRADOR")
-                .requestMatchers(HttpMethod.PUT, "/api/supervisor/horarios/**").hasRole("ADMINISTRADOR")
-                .requestMatchers(HttpMethod.DELETE, "/api/supervisor/horarios/**").hasRole("ADMINISTRADOR")
+                        // Endpoints de modificación (requieren autenticación)
+                        .requestMatchers(HttpMethod.PUT, "/api/personal/**").hasRole("ADMINISTRADOR")
+                        // =================================================
 
-                .requestMatchers(HttpMethod.POST, "/api/administradores/**").hasRole("ADMINISTRADOR")
-                .requestMatchers(HttpMethod.PUT, "/api/administradores/**").hasRole("ADMINISTRADOR")
-                .requestMatchers(HttpMethod.DELETE, "/api/administradores/**").hasRole("ADMINISTRADOR")
-                
-                .requestMatchers(HttpMethod.POST,"/api/imagenes/**").permitAll()
-                .requestMatchers(HttpMethod.PUT,"/api/imagenes/**").hasRole("ADMINISTRADOR")
-                .requestMatchers(HttpMethod.DELETE,"/api/imagenes/**").hasRole("ADMINISTRADOR")
+                        // ============ RUTAS DE QR ============
+                        // Endpoints públicos de QR (generación y consulta)
+                        .requestMatchers(HttpMethod.POST, "/api/qr/generar/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/qr/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/qr/codigo/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/qr/libres").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/qr/tipo/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/qr/personal/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/qr/*/imagen").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/qr/*/ver").permitAll()
 
-                .requestMatchers(HttpMethod.POST,"/api/ubicaciones/**").hasRole("ADMINISTRADOR")
-                .requestMatchers(HttpMethod.PUT,"/api/ubicaciones/**").hasRole("ADMINISTRADOR")
-                .requestMatchers(HttpMethod.DELETE,"/api/ubicaciones/**").hasRole("ADMINISTRADOR")
+                        // Endpoints de modificación de QR (requieren autenticación)
+                        .requestMatchers(HttpMethod.PUT, "/api/qr/*/asignar/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/qr/*/liberar").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/qr/*/inactivar").hasRole("ADMINISTRADOR")
+                        // =====================================
 
-                .requestMatchers(HttpMethod.POST,"/api/descriptores/**").hasRole("ADMINISTRADOR")
-                .requestMatchers(HttpMethod.PUT,"/api/descriptores/**").hasRole("ADMINISTRADOR")
-                .requestMatchers(HttpMethod.DELETE,"/api/descriptores/**").hasRole("ADMINISTRADOR")
-                // Ruta de autenticación pública
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/asistencias/**").permitAll()
+                        // ============ RUTAS DE ESTADOS ============
+                        // Endpoints públicos de estados
+                        .requestMatchers(HttpMethod.GET, "/api/estados-personal/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/estados-personal/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/estados-personal/personal/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/estados-personal/estado/**").permitAll()
 
-                .anyRequest().authenticated() // El resto requiere autenticación
-            );
+                        // Endpoints de cambio de estado (requieren autenticación)
+                        .requestMatchers(HttpMethod.POST, "/api/estados-personal/registrar").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/estados-personal/*/**").hasRole("ADMINISTRADOR")
+                        // =========================================
+
+                        // Permitir acceso público solo a métodos GET
+                        .requestMatchers(HttpMethod.GET, "/api/empleados/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/supervisor/horarios/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/administradores/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/imagenes/descargar/**").permitAll() // O .authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/ubicaciones/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/descriptores/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/unidades/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/unidades/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/cargos/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/cargos/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/historiales-cargo/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/historiales-cargo/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/procesos-electorales/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/procesos-electorales/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/cargos-proceso/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/cargos-proceso/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/historiales-cargo-proceso/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/historiales-cargo-proceso/**").permitAll()
+
+                        // Restringir POST, PUT, DELETE a ADMINISTRADOR
+                        .requestMatchers(HttpMethod.POST, "/api/empleados/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/empleados/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/empleados/**").hasRole("ADMINISTRADOR")
+
+                        .requestMatchers(HttpMethod.POST, "/api/supervisor/horarios/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/supervisor/horarios/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/supervisor/horarios/**").hasRole("ADMINISTRADOR")
+
+                        .requestMatchers(HttpMethod.POST, "/api/administradores/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/administradores/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/administradores/**").hasRole("ADMINISTRADOR")
+
+                        .requestMatchers(HttpMethod.POST, "/api/imagenes/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/imagenes/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/imagenes/**").hasRole("ADMINISTRADOR")
+
+                        .requestMatchers(HttpMethod.POST, "/api/ubicaciones/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/ubicaciones/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/ubicaciones/**").hasRole("ADMINISTRADOR")
+
+                        .requestMatchers(HttpMethod.POST, "/api/descriptores/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/descriptores/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/descriptores/**").hasRole("ADMINISTRADOR")
+                        // Ruta de autenticación pública
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/asistencias/**").permitAll()
+
+                        .anyRequest().authenticated() // El resto requiere autenticación
+                );
 
         // Agregar nuestro filtro JWT antes del filtro de autenticación
         http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
@@ -118,52 +161,50 @@ public class SecurityConfig {
         return http.build();
     }
 
-     @Bean
+    @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        
+
         // Orígenes permitidos (frontend)
         configuration.setAllowedOriginPatterns(Arrays.asList(
-            "http://localhost:3000",  // React dev server
-            "http://localhost:4200",  // Angular dev server
-            "http://localhost:5173",  // Vite dev server
-            "http://localhost:8081"   // Otros puertos
+                "https://d154-2800-cd0-7b1c-e300-bc73-8cd0-c070-cc3c.ngrok-free.app/",
+                "http://localhost:3000", // React dev server
+                "http://localhost:4200", // Angular dev server
+                "http://localhost:5173", // Vite dev server
+                "http://localhost:8081" // Otros puertos
         ));
-        
+
         // Métodos HTTP permitidos
         configuration.setAllowedMethods(Arrays.asList(
-            "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
-        ));
-        
+                "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+
         // Headers permitidos
         configuration.setAllowedHeaders(Arrays.asList(
-            "Authorization", 
-            "Content-Type", 
-            "X-Requested-With", 
-            "Accept",
-            "Origin",
-            "Access-Control-Request-Method",
-            "Access-Control-Request-Headers",
-            "X-Admin-Id",
-            "X-Admin-ID", 
-            "x-admin-id"
-        ));
-        
+                "Authorization",
+                "Content-Type",
+                "X-Requested-With",
+                "Accept",
+                "Origin",
+                "Access-Control-Request-Method",
+                "Access-Control-Request-Headers",
+                "X-Admin-Id",
+                "X-Admin-ID",
+                "x-admin-id"));
+
         // Headers expuestos al frontend
         configuration.setExposedHeaders(Arrays.asList(
-            "Authorization",
-            "Content-Type"
-        ));
-        
+                "Authorization",
+                "Content-Type"));
+
         // Permitir credenciales (cookies, auth headers)
         configuration.setAllowCredentials(true);
-        
+
         // Tiempo de cache para preflight requests
         configuration.setMaxAge(3600L);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration); // Aplicar a todos los endpoints
-        
+
         return source;
     }
 }
