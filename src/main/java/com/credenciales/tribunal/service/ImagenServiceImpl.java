@@ -41,6 +41,8 @@ public class ImagenServiceImpl implements ImagenService {
     
     @Autowired
     private FileStorageService fileStorageService;
+    @Autowired
+    private ImageOptimizationService imageOptimizationService;
 
     @Override
     public ImagenResponseDTO subirImagen(MultipartFile file) {
@@ -72,14 +74,42 @@ public class ImagenServiceImpl implements ImagenService {
         //}
          
         // Validar tamaño (opcional, ya está en application.properties pero validamos por seguridad)
-        long maxSize = 5 * 1024 * 1024; // 5MB
+        /* long maxSize = 5 * 1024 * 1024; // 5MB
         if (file.getSize() > maxSize) {
             throw new RuntimeException("El archivo excede el tamaño máximo permitido de 5MB");
-        }
-        
+        } */
         try {
-            // Guardar archivo físicamente
-            String nombreArchivo = fileStorageService.storeFile(file);
+            byte[] optimizedImage;
+            
+            // Optimizar imagen según su tamaño
+            if (file.getSize() > 1024 * 1024) { // Si es mayor a 1MB
+                // Calcular dimensiones y calidad basado en el tamaño
+                int targetWidth = 1920;
+                int targetHeight = 1080;
+                double quality = file.getSize() > 5 * 1024 * 1024 ? 0.3 : 0.6;
+                
+                optimizedImage = imageOptimizationService.optimizeImage(
+                    file, targetWidth, targetHeight, quality
+                );
+                
+                System.out.println("Imagen optimizada de " + 
+                    file.getSize() / 1024 + "KB a " + 
+                    optimizedImage.length / 1024 + "KB");
+            } else {
+                // Si es pequeña, usar optimización suave
+                optimizedImage = imageOptimizationService.optimizeImage(file);
+            }
+            
+            // Crear un nuevo MultipartFile con la imagen optimizada
+            // Nota: Necesitarás crear una implementación de MultipartFile o adaptar tu FileStorageService
+            OptimizedMultipartFile optimizedFile = new OptimizedMultipartFile(
+                file.getOriginalFilename(),
+                file.getContentType(),
+                optimizedImage
+            );
+            
+            // Guardar archivo optimizado
+            String nombreArchivo = fileStorageService.storeFile(optimizedFile);
             String rutaCompleta = fileStorageService.getFilePath(nombreArchivo);
             
             // Crear entidad Imagen
@@ -88,14 +118,12 @@ public class ImagenServiceImpl implements ImagenService {
                     .nombreOriginal(file.getOriginalFilename())
                     .rutaCompleta(rutaCompleta)
                     .mimeType(file.getContentType())
-                    .tamanioBytes(file.getSize())
-                    //.complaint(complaint)
+                    .tamanioBytes((long) optimizedImage.length) // Tamaño optimizado
                     .build();
             
             // Guardar en base de datos
             Imagen imagenGuardada = imagenRepository.save(imagen);
             
-            // Retornar DTO
             return convertToResponseDTO(imagenGuardada);
             
         } catch (Exception e) {

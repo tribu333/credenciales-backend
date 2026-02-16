@@ -171,7 +171,9 @@ public class SecurityConfig {
                 "http://localhost:3000", // React dev server
                 "http://localhost:4200", // Angular dev server
                 "http://localhost:5173", // Vite dev server
-                "http://localhost:8081" // Otros puertos
+                "http://localhost:8081", // Otros puertos
+                "http://localhost:8085" // Otros puertos
+
         ));
 
         // Métodos HTTP permitidos
