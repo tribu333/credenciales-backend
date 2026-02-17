@@ -106,15 +106,11 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.GET, "/api/unidades/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/cargos/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/cargos/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/historiales-cargo/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/historiales-cargo/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/procesos-electorales/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/procesos-electorales/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/cargos-proceso/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/cargos-proceso/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/historiales-cargo-proceso/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/historiales-cargo-proceso/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/imagenes/**").permitAll()
                         
                         .requestMatchers(HttpMethod.DELETE, "/api/imagenes/**").hasRole("ADMINISTRADOR")
                         // Restringir POST, PUT, DELETE a ADMINISTRADOR
@@ -123,28 +119,32 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/unidades/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/unidades/**").permitAll() //hasRole("ADMINISTRADOR")
 
+                        .requestMatchers(HttpMethod.POST, "/api/cargos/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/supervisor/horarios/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/api/cargos/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/cargos/**").hasRole("ADMINISTRADOR")
 
+                        .requestMatchers(HttpMethod.POST, "/api/historiales-cargo/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/administradores/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/api/historiales-cargo/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/historiales-cargo/**").hasRole("ADMINISTRADOR")
 
                         .requestMatchers(HttpMethod.POST, "/api/imagenes/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/procesos-electorales/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/procesos-electorales/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/procesos-electorales/**").hasRole("ADMINISTRADOR")
 
+                        .requestMatchers(HttpMethod.POST, "/api/cargos-proceso/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/ubicaciones/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/api/cargos-proceso/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/cargos-proceso/**").hasRole("ADMINISTRADOR")
 
+                        .requestMatchers(HttpMethod.POST, "/api/historiales-cargo-proceso/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/descriptores/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/api/historiales-cargo-proceso/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/historiales-cargo-proceso/**").hasRole("ADMINISTRADOR")
                         // Ruta de autenticación pública
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/asistencias/**").permitAll()
 
                         .anyRequest().authenticated() // El resto requiere autenticación
                 );
