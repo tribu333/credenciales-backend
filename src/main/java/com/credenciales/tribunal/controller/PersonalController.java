@@ -3,10 +3,7 @@ package com.credenciales.tribunal.controller;
 import com.credenciales.tribunal.dto.email.VerificacionCodigoRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionEmailRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionResponseDTO;
-import com.credenciales.tribunal.dto.personal.PersonalActualizacionDTO;
-import com.credenciales.tribunal.dto.personal.PersonalCompletoDTO;
-import com.credenciales.tribunal.dto.personal.PersonalCreateDTO;
-import com.credenciales.tribunal.dto.personal.PersonalRegistroCompletoDTO;
+import com.credenciales.tribunal.dto.personal.*;
 import com.credenciales.tribunal.model.enums.EstadoPersonal;
 import com.credenciales.tribunal.service.PersonalService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -138,4 +135,12 @@ public class PersonalController {
             @Parameter(description = "Correo electrónico", example = "juan@ejemplo.com") @PathVariable String correo) {
         return ResponseEntity.ok(personalService.existeCorreoActivo(correo));
     }
+
+    @Operation(summary = "Eliminar personal", description = "Elimina un personal por su ID")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponseDTO> eliminarPersonal(
+            @Parameter(description = "ID del personal", example = "1") @PathVariable Long id) {
+        return ResponseEntity.ok(personalService.deletePersonal(id));
+    }
+
 }
