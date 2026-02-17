@@ -74,6 +74,7 @@ public ResponseEntity<List<CargoProcesoResponseDTO>> createCargosSimple(
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+    @Tag(name = "Nuevos Endpoints")
     @Operation(
         summary = "Obtener asociación Cargo-Proceso por unidadID",
         description = "Retorna los procesos de la unidad"
