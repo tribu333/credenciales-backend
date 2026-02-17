@@ -5,10 +5,7 @@ import com.credenciales.tribunal.dto.email.VerificacionEmailRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionResponseDTO;
 import com.credenciales.tribunal.dto.historialcargo.HistorialCargoDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoDTO;
-import com.credenciales.tribunal.dto.personal.ApiResponseDTO;
-import com.credenciales.tribunal.dto.personal.PersonalActualizacionDTO;
-import com.credenciales.tribunal.dto.personal.PersonalCompletoDTO;
-import com.credenciales.tribunal.dto.personal.PersonalCreateDTO;
+import com.credenciales.tribunal.dto.personal.*;
 import com.credenciales.tribunal.dto.qr.QrGenerarDTO;
 import com.credenciales.tribunal.dto.qr.QrResponseDTO;
 import com.credenciales.tribunal.dto.image.ImagenResponseDTO;
@@ -30,6 +27,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -42,6 +40,8 @@ import java.util.stream.Collectors;
 @Slf4j
 @Transactional
 public class PersonalServiceImpl implements PersonalService {
+    @Value("${qr.base-url}")
+    private String baseUrl;
 
     private final PersonalRepository personalRepository;
     private final EstadoActualRepository estadoActualRepository;
@@ -55,28 +55,28 @@ public class PersonalServiceImpl implements PersonalService {
     private final HistorialCargoProcesoRepository historialCargoProcesoRepository;
     private final CargoRepository cargoRepository;
     private final CargoProcesoRepository cargoProcesoRepository;
-    
+
     private static final int EXPIRACION_MINUTOS = 5;
 
     @Override
     public VerificacionResponseDTO solicitarCodigoVerificacion(VerificacionEmailRequestDTO request) {
-        
+
         log.info("Solicitando código para email: {}, CI: {}", request.getCorreo(), request.getCarnetIdentidad());
-        
+
         // Validar si el correo ya existe en personal activo
         if (existeCorreoActivo(request.getCorreo())) {
             throw new BusinessException("El correo electrónico ya está registrado por otro personal activo");
         }
-        
+
         // Verificar si puede registrarse nuevamente (si el CI ya existe)
         String mensajeEstado = obtenerMensajeEstadoActual(request.getCarnetIdentidad());
         if (mensajeEstado != null) {
             throw new BusinessException(mensajeEstado);
         }
-        
+
         // Generar código aleatorio de 6 dígitos
         String codigo = generarCodigoVerificacion();
-        
+
         // Guardar en base de datos
         VerificacionEmail verificacion = VerificacionEmail.builder()
                 .email(request.getCorreo())
@@ -85,17 +85,17 @@ public class PersonalServiceImpl implements PersonalService {
                 .fechaExpiracion(LocalDateTime.now().plusMinutes(EXPIRACION_MINUTOS))
                 .utilizado(false)
                 .build();
-        
+
         verificacionEmailRepository.save(verificacion);
-        
+
         // Enviar código por email
         emailService.enviarCodigoVerificacion(request.getCorreo(), codigo, request.getCarnetIdentidad());
-        
+
         // Limpiar códigos expirados
         verificacionEmailRepository.eliminarExpirados(LocalDateTime.now());
-        
+
         log.info("Código de verificación enviado a: {} para CI: {}", request.getCorreo(), request.getCarnetIdentidad());
-        
+
         return VerificacionResponseDTO.builder()
                 .mensaje("Código de verificación enviado a " + request.getCorreo())
                 .email(request.getCorreo())
@@ -110,61 +110,61 @@ public class PersonalServiceImpl implements PersonalService {
                 .findTopByEmailAndCarnetIdentidadAndUtilizadoFalseOrderByCreatedAtDesc(
                         request.getCorreo(), request.getCarnetIdentidad())
                 .orElseThrow(() -> new BusinessException("No hay código de verificación pendiente para este email"));
-        
+
         if (verificacion.getFechaExpiracion().isBefore(LocalDateTime.now())) {
             throw new BusinessException("El código ha expirado. Solicite uno nuevo.");
         }
-        
+
         if (!verificacion.getCodigo().equals(request.getCodigo())) {
             throw new BusinessException("Código de verificación incorrecto");
         }
-        
+
         verificacion.setUtilizado(true);
         verificacionEmailRepository.save(verificacion);
-        
+
         log.info("Código verificado correctamente para: {}", request.getCorreo());
-        
+
         return true;
     }
 
     @Override
     public PersonalCompletoDTO registrarPersonalCompleto(
             PersonalCreateDTO registroDTO) {
-        
+
         // Verificar código
         VerificacionCodigoRequestDTO verifRequest = VerificacionCodigoRequestDTO.builder()
                 .correo(registroDTO.getCorreo())
                 .carnetIdentidad(registroDTO.getCarnetIdentidad())
                 .codigo(registroDTO.getCodigoVerificacion())
                 .build();
-        
+
         if (!verificarCodigo(verifRequest)) {
             throw new BusinessException("Código de verificación inválido");
         }
-        
+
         // Verificar si el CI ya existe y manejar según estado
         Personal personalExistente = personalRepository.findByCarnetIdentidad(registroDTO.getCarnetIdentidad())
                 .orElse(null);
-        
+
         if (personalExistente != null) {
             return actualizarPersonalExistente(personalExistente, registroDTO);
         }
-        
+
         // Crear nuevo personal
         return crearNuevoPersonal(registroDTO);
     }
 
     private PersonalCompletoDTO crearNuevoPersonal(PersonalCreateDTO registroDTO) {
-        
+
         // 1. Obtener la imagen por ID
         Imagen imagen = imagenService.findEntityById(registroDTO.getImagenId());
         if (imagen == null) {
             throw new BusinessException("Imagen no encontrada con ID: " + registroDTO.getImagenId());
         }
-        
+
         // 2. Generar QR
         Qr qr = generarQrParaPersonal(registroDTO.getCarnetIdentidad());
-        
+
         // 3. Crear personal
         Personal personal = Personal.builder()
                 .nombre(registroDTO.getNombre())
@@ -173,25 +173,24 @@ public class PersonalServiceImpl implements PersonalService {
                 .carnetIdentidad(registroDTO.getCarnetIdentidad())
                 .correo(registroDTO.getCorreo())
                 .celular(registroDTO.getCelular())
-                .accesoComputo(registroDTO.getAccesoComputo() != null ? 
-                        registroDTO.getAccesoComputo() : false)
+                .accesoComputo(registroDTO.getAccesoComputo() != null ? registroDTO.getAccesoComputo() : false)
                 .nroCircunscripcion(registroDTO.getNroCircunscripcion())
                 .tipo(registroDTO.getTipo())
                 .imagen(imagen)
                 .qr(qr)
                 .tokenPersonal(generarTokenPersonal())
                 .build();
-        
+
         personal = personalRepository.save(personal);
-        
+
         // 4. Asignar QR al personal
         qr.setPersonal(personal);
         qr.setEstado(EstadoQr.ASIGNADO);
         qrRepository.save(qr);
-        
+
         // 5. Registrar estado inicial
         registrarEstadoInicial(personal);
-        
+
         // 6. Registrar cargo según tipo
         if (registroDTO.getTipo() == TipoPersonal.PLANTA) {
             // Para PLANTA, usamos cargoID
@@ -206,9 +205,9 @@ public class PersonalServiceImpl implements PersonalService {
             }
             registrarCargoEventual(personal, registroDTO.getCargoID());
         }
-        
+
         log.info("Personal creado exitosamente: {} - {}", personal.getId(), personal.getCarnetIdentidad());
-        
+
         return mapToCompletoDTO(personal);
     }
 
@@ -221,12 +220,11 @@ public class PersonalServiceImpl implements PersonalService {
 
         // Validar según el estado
         if (EstadoPersonal.CREDENCIAL_ENTREGADO.getNombre().equals(estadoActual) ||
-            EstadoPersonal.PERSONAL_ACTIVO.getNombre().equals(estadoActual) ||
-            EstadoPersonal.PERSONAL_CON_ACCESO_A_COMPUTO.getNombre().equals(estadoActual)) {
+                EstadoPersonal.PERSONAL_ACTIVO.getNombre().equals(estadoActual) ||
+                EstadoPersonal.PERSONAL_CON_ACCESO_A_COMPUTO.getNombre().equals(estadoActual)) {
             throw new BusinessException(
-                "El personal tiene la credencial entregada y activa. " +
-                "Debe devolver la credencial antes de poder registrarse nuevamente."
-            );
+                    "El personal tiene la credencial entregada y activa. " +
+                            "Debe devolver la credencial antes de poder registrarse nuevamente.");
         }
 
         // Actualizar datos básicos
@@ -235,8 +233,8 @@ public class PersonalServiceImpl implements PersonalService {
         personalExistente.setApellidoMaterno(registroDTO.getApellidoMaterno());
         personalExistente.setCorreo(registroDTO.getCorreo());
         personalExistente.setCelular(registroDTO.getCelular());
-        personalExistente.setAccesoComputo(registroDTO.getAccesoComputo() != null ?
-                registroDTO.getAccesoComputo() : false);
+        personalExistente
+                .setAccesoComputo(registroDTO.getAccesoComputo() != null ? registroDTO.getAccesoComputo() : false);
         personalExistente.setNroCircunscripcion(registroDTO.getNroCircunscripcion());
 
         // Actualizar imagen si se proporciona un nuevo ID
@@ -247,7 +245,7 @@ public class PersonalServiceImpl implements PersonalService {
 
         // Generar nuevo QR si es necesario
         if (personalExistente.getQr() == null ||
-            personalExistente.getQr().getEstado() == EstadoQr.INACTIVO) {
+                personalExistente.getQr().getEstado() == EstadoQr.INACTIVO) {
             Qr nuevoQr = generarQrParaPersonal(registroDTO.getCarnetIdentidad());
             nuevoQr.setPersonal(personalExistente);
             nuevoQr.setEstado(EstadoQr.ASIGNADO);
@@ -259,7 +257,7 @@ public class PersonalServiceImpl implements PersonalService {
 
         // Si está inactivo, reactivar con estado REGISTRADO
         if (EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO.getNombre().equals(estadoActual) ||
-            EstadoPersonal.INACTIVO_POR_RENUNCIA.getNombre().equals(estadoActual)) {
+                EstadoPersonal.INACTIVO_POR_RENUNCIA.getNombre().equals(estadoActual)) {
             reactivarPersonal(personalExistente);
         }
 
@@ -284,7 +282,7 @@ public class PersonalServiceImpl implements PersonalService {
                 .carnetIdentidad(carnetIdentidad)
                 .tipo(TipoQr.PERSONAL)
                 .build();
-        
+
         QrResponseDTO qrResponse = qrService.generarQrPersonal(qrGenerarDTO);
         return qrRepository.findByCodigo(qrResponse.getCodigo())
                 .orElseThrow(() -> new BusinessException("Error al generar QR"));
@@ -293,42 +291,43 @@ public class PersonalServiceImpl implements PersonalService {
     private void registrarEstadoInicial(Personal personal) {
         Estado estadoRegistrado = estadoRepository.findByEnum(EstadoPersonal.PERSONAL_REGISTRADO)
                 .orElseThrow(() -> new BusinessException("Estado PERSONAL REGISTRADO no configurado"));
-        
+
         EstadoActual estadoActual = EstadoActual.builder()
                 .personal(personal)
                 .estado(estadoRegistrado)
                 .valor_estado_actual(true)
                 .build();
-        
+
         estadoActualRepository.save(estadoActual);
     }
 
     private void registrarCargoPlanta(Personal personal, Long cargoId) {
         Cargo cargo = cargoRepository.findById(cargoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cargo no encontrado con ID: " + cargoId));
-        
+
         HistorialCargo historial = HistorialCargo.builder()
                 .personal(personal)
                 .cargo(cargo)
                 .fechaInicio(LocalDateTime.now())
                 .activo(true)
                 .build();
-        
+
         historialCargoRepository.save(historial);
         log.info("Cargo PLANTA registrado: {} para personal {}", cargo.getNombre(), personal.getId());
     }
 
     private void registrarCargoEventual(Personal personal, Long cargoProcesoId) {
         CargoProceso cargoProceso = cargoProcesoRepository.findById(cargoProcesoId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cargo de proceso no encontrado con ID: " + cargoProcesoId));
-        
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Cargo de proceso no encontrado con ID: " + cargoProcesoId));
+
         HistorialCargoProceso historial = HistorialCargoProceso.builder()
                 .personal(personal)
                 .cargoProceso(cargoProceso)
                 .fechaInicio(LocalDateTime.now())
                 .activo(true)
                 .build();
-        
+
         historialCargoProcesoRepository.save(historial);
         log.info("Cargo EVENTUAL registrado: {} para personal {}", cargoProceso.getNombre(), personal.getId());
     }
@@ -339,7 +338,7 @@ public class PersonalServiceImpl implements PersonalService {
                     ea.setValor_estado_actual(false);
                     estadoActualRepository.save(ea);
                 });
-        
+
         registrarEstadoInicial(personal);
     }
 
@@ -355,8 +354,8 @@ public class PersonalServiceImpl implements PersonalService {
                 .map(personal -> {
                     String estado = obtenerEstadoActual(personal.getId());
                     return !estado.equals(EstadoPersonal.CREDENCIAL_DEVUELTO.getNombre()) &&
-                           !estado.equals(EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO.getNombre()) &&
-                           !estado.equals(EstadoPersonal.INACTIVO_POR_RENUNCIA.getNombre());
+                            !estado.equals(EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO.getNombre()) &&
+                            !estado.equals(EstadoPersonal.INACTIVO_POR_RENUNCIA.getNombre());
                 })
                 .orElse(false);
     }
@@ -367,9 +366,9 @@ public class PersonalServiceImpl implements PersonalService {
                 .map(personal -> {
                     String estado = obtenerEstadoActual(personal.getId());
                     return estado.equals(EstadoPersonal.PERSONAL_REGISTRADO.getNombre()) ||
-                           estado.equals(EstadoPersonal.CREDENCIAL_IMPRESO.getNombre()) ||
-                           estado.equals(EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO.getNombre()) ||
-                           estado.equals(EstadoPersonal.INACTIVO_POR_RENUNCIA.getNombre());
+                            estado.equals(EstadoPersonal.CREDENCIAL_IMPRESO.getNombre()) ||
+                            estado.equals(EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO.getNombre()) ||
+                            estado.equals(EstadoPersonal.INACTIVO_POR_RENUNCIA.getNombre());
                 })
                 .orElse(true);
     }
@@ -379,24 +378,24 @@ public class PersonalServiceImpl implements PersonalService {
         return personalRepository.findByCarnetIdentidad(carnetIdentidad)
                 .map(personal -> {
                     String estado = obtenerEstadoActual(personal.getId());
-                    
+
                     if (estado.equals(EstadoPersonal.CREDENCIAL_ENTREGADO.getNombre()) ||
-                        estado.equals(EstadoPersonal.PERSONAL_ACTIVO.getNombre()) ||
-                        estado.equals(EstadoPersonal.PERSONAL_CON_ACCESO_A_COMPUTO.getNombre())) {
+                            estado.equals(EstadoPersonal.PERSONAL_ACTIVO.getNombre()) ||
+                            estado.equals(EstadoPersonal.PERSONAL_CON_ACCESO_A_COMPUTO.getNombre())) {
                         return "El personal tiene la credencial entregada y activa. " +
-                            "Debe devolver la credencial antes de poder registrarse nuevamente.";
+                                "Debe devolver la credencial antes de poder registrarse nuevamente.";
                     }
-                    
+
                     if (estado.equals(EstadoPersonal.PERSONAL_REGISTRADO.getNombre()) ||
-                        estado.equals(EstadoPersonal.CREDENCIAL_IMPRESO.getNombre())) {
+                            estado.equals(EstadoPersonal.CREDENCIAL_IMPRESO.getNombre())) {
                         return "El personal ya existe y puede actualizar sus datos.";
                     }
-                    
+
                     if (estado.equals(EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO.getNombre()) ||
-                        estado.equals(EstadoPersonal.INACTIVO_POR_RENUNCIA.getNombre())) {
+                            estado.equals(EstadoPersonal.INACTIVO_POR_RENUNCIA.getNombre())) {
                         return "El personal estaba inactivo y puede volver a registrarse.";
                     }
-                    
+
                     return null;
                 })
                 .orElse(null);
@@ -449,23 +448,23 @@ public class PersonalServiceImpl implements PersonalService {
     public PersonalCompletoDTO actualizarPersonal(Long id, PersonalCreateDTO actualizacionDTO) {
         Personal personal = personalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado con ID: " + id));
-        
+
         personal.setNombre(actualizacionDTO.getNombre());
         personal.setApellidoPaterno(actualizacionDTO.getApellidoPaterno());
         personal.setApellidoMaterno(actualizacionDTO.getApellidoMaterno());
         personal.setCorreo(actualizacionDTO.getCorreo());
         personal.setCelular(actualizacionDTO.getCelular());
-        personal.setAccesoComputo(actualizacionDTO.getAccesoComputo() != null ? 
-                actualizacionDTO.getAccesoComputo() : false);
+        personal.setAccesoComputo(
+                actualizacionDTO.getAccesoComputo() != null ? actualizacionDTO.getAccesoComputo() : false);
         personal.setNroCircunscripcion(actualizacionDTO.getNroCircunscripcion());
-        
+
         if (actualizacionDTO.getImagenId() != null) {
             Imagen nuevaImagen = imagenService.findEntityById(actualizacionDTO.getImagenId());
             personal.setImagen(nuevaImagen);
         }
-        
+
         personal = personalRepository.save(personal);
-        
+
         return mapToCompletoDTO(personal);
     }
 
@@ -488,8 +487,7 @@ public class PersonalServiceImpl implements PersonalService {
                 EstadoPersonal.PERSONAL_CON_ACCESO_A_COMPUTO.getNombre().equals(estadoActual)) {
             throw new BusinessException(
                     "El personal tiene la credencial entregada y activa. " +
-                            "Debe devolver la credencial antes de editar datos del personal."
-            );
+                            "Debe devolver la credencial antes de editar datos del personal.");
         }
 
         if (!personal.getCarnetIdentidad().equals(actualizacionDTO.getCarnetIdentidad()) ||
@@ -516,8 +514,8 @@ public class PersonalServiceImpl implements PersonalService {
         personal.setCarnetIdentidad(actualizacionDTO.getCarnetIdentidad());
         personal.setCorreo(actualizacionDTO.getCorreo());
         personal.setCelular(actualizacionDTO.getCelular());
-        personal.setAccesoComputo(actualizacionDTO.getAccesoComputo() != null ?
-                actualizacionDTO.getAccesoComputo() : false);
+        personal.setAccesoComputo(
+                actualizacionDTO.getAccesoComputo() != null ? actualizacionDTO.getAccesoComputo() : false);
         personal.setNroCircunscripcion(actualizacionDTO.getNroCircunscripcion());
 
         if (actualizacionDTO.getImagenId() != null) {
@@ -543,8 +541,7 @@ public class PersonalServiceImpl implements PersonalService {
                 EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO.getNombre().equals(estadoActual) ||
                 EstadoPersonal.INACTIVO_POR_RENUNCIA.getNombre().equals(estadoActual)) {
             throw new BusinessException(
-                    "El personal no puede ser eliminado debido a su estado actual. Debe estar en estado PERSONAL REGISTRADO o CREDENCIAL IMPRESO para ser eliminado."
-            );
+                    "El personal no puede ser eliminado debido a su estado actual. Debe estar en estado PERSONAL REGISTRADO o CREDENCIAL IMPRESO para ser eliminado.");
         }
 
         personalRepository.delete(personal);
@@ -559,9 +556,97 @@ public class PersonalServiceImpl implements PersonalService {
         return response;
     }
 
+    @Override
+    public PersonalDetallesDTO obtenerDetallesPersonal(Long id) {
+        Personal personal = personalRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado con ID: " + id));
+        // solo tipo eventual
+        List<HistorialCargoProceso> listaCargo = historialCargoProcesoRepository
+                .findByPersonalIdAndActivoTrue(personal.getId());
+        CargoProceso cargoProceso = listaCargo.isEmpty() ? null : listaCargo.get(0).getCargoProceso();
+        Unidad unidad = cargoProceso != null ? cargoProceso.getUnidad() : null;
+
+        String nombreUnidad = unidad != null ? unidad.getNombre() : null;
+        String nombreCargo = cargoProceso != null ? cargoProceso.getNombre() : null;
+        String urlImagen = baseUrl + "/api/imagenes/" + personal.getImagen().getIdImagen() + "/descargar";
+        String urlQr = baseUrl + "/api/qr/" + personal.getQr().getId() + "/ver";
+
+        return PersonalDetallesDTO.builder()
+                .id(personal.getId())
+                .nombre(personal.getNombre())
+                .apellidoPaterno(personal.getApellidoPaterno())
+                .apellidoMaterno(personal.getApellidoMaterno())
+                .carnetIdentidad(personal.getCarnetIdentidad())
+                .correo(personal.getCorreo())
+                .celular(personal.getCelular())
+                .accesoComputo(personal.getAccesoComputo())
+                .nroCircunscripcion(personal.getNroCircunscripcion())
+                .tipo(personal.getTipo())
+                .estadoActual(obtenerEstadoActual(personal.getId()))
+                .createdAt(personal.getCreatedAt())
+                .cargo(nombreCargo)
+                .unidad(nombreUnidad)
+                .imagenId(personal.getImagen() != null ? personal.getImagen().getIdImagen() : null)
+                .qrId(personal.getQr() != null ? personal.getQr().getId() : null)
+                .imagen(urlImagen)
+                .qr(urlQr)
+                .build();
+    }
+
+    @Override
+    public List<PersonalDetallesDTO> obtenerDetallesPersonal() {
+        List<Personal> listaPersonal = personalRepository.findAll();
+
+        return listaPersonal.stream()
+                .map(this::mapearAPersonalDetallesDTO)
+                .collect(Collectors.toList());
+    }
+
+    private PersonalDetallesDTO mapearAPersonalDetallesDTO(Personal personal) {
+        // Solo tipo eventual (como en tu código original)
+        List<HistorialCargoProceso> listaCargo = historialCargoProcesoRepository
+                .findByPersonalIdAndActivoTrue(personal.getId());
+
+        CargoProceso cargoProceso = listaCargo.isEmpty() ? null : listaCargo.get(0).getCargoProceso();
+        Unidad unidad = cargoProceso != null ? cargoProceso.getUnidad() : null;
+
+        String nombreUnidad = unidad != null ? unidad.getNombre() : null;
+        String nombreCargo = cargoProceso != null ? cargoProceso.getNombre() : null;
+
+        // Construir URLs (manejando nulls)
+        String urlImagen = personal.getImagen() != null
+                ? baseUrl + "/api/imagenes/" + personal.getImagen().getIdImagen() + "/descargar"
+                : null;
+
+        String urlQr = personal.getQr() != null
+                ? baseUrl + "/api/qr/" + personal.getQr().getId() + "/ver"
+                : null;
+
+        return PersonalDetallesDTO.builder()
+                .id(personal.getId())
+                .nombre(personal.getNombre())
+                .apellidoPaterno(personal.getApellidoPaterno())
+                .apellidoMaterno(personal.getApellidoMaterno())
+                .carnetIdentidad(personal.getCarnetIdentidad())
+                .correo(personal.getCorreo())
+                .celular(personal.getCelular())
+                .accesoComputo(personal.getAccesoComputo())
+                .nroCircunscripcion(personal.getNroCircunscripcion())
+                .tipo(personal.getTipo())
+                .estadoActual(obtenerEstadoActual(personal.getId()))
+                .createdAt(personal.getCreatedAt())
+                .cargo(nombreCargo)
+                .unidad(nombreUnidad)
+                .imagenId(personal.getImagen() != null ? personal.getImagen().getIdImagen() : null)
+                .qrId(personal.getQr() != null ? personal.getQr().getId() : null)
+                .imagen(urlImagen)
+                .qr(urlQr)
+                .build();
+    }
+
     private PersonalCompletoDTO mapToCompletoDTO(Personal personal) {
         String estadoActual = obtenerEstadoActual(personal.getId());
-        
+
         return PersonalCompletoDTO.builder()
                 .id(personal.getId())
                 .nombre(personal.getNombre())

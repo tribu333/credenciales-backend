@@ -143,4 +143,17 @@ public class PersonalController {
         return ResponseEntity.ok(personalService.deletePersonal(id));
     }
 
+    @Operation(summary = "Obtener detalles de personal", description = "Retorna información detallada de un personal, incluyendo su cargo y unidad actual")
+    @GetMapping("/{id}/detalles")
+    public ResponseEntity<PersonalDetallesDTO> obtenerDetallesPersonal(
+            @Parameter(description = "ID del personal", example = "1") @PathVariable Long id) {
+        return ResponseEntity.ok(personalService.obtenerDetallesPersonal(id));
+    }
+
+    @Operation(summary = "Obtener todos los detalles de personal", description = "Retorna información detallada de todos los personales, incluyendo su cargo y unidad actual")
+    @GetMapping("/detalles")
+    public ResponseEntity<List<PersonalDetallesDTO>> obtenerDetallesPersonal() {
+        return ResponseEntity.ok(personalService.obtenerDetallesPersonal());
+    }
+
 }
