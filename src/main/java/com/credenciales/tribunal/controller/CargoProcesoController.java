@@ -1,5 +1,6 @@
 package com.credenciales.tribunal.controller;
 
+import com.credenciales.tribunal.dto.cargo.CargoResponseDTO;
 import com.credenciales.tribunal.dto.cargoproceso.CargoProcesoCreateRequestDTO;
 //import com.credenciales.tribunal.dto.cargoproceso.CargoProcesoSearchRequestDTO;
 import com.credenciales.tribunal.dto.cargoproceso.CargoProcesoUpdateRequestDTO;
@@ -50,7 +51,13 @@ public class CargoProcesoController {
         CargoProcesoResponseDTO response = cargoProcesoService.createCargoProceso(requestDTO);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
+    @PostMapping("/batch-simple")
+public ResponseEntity<List<CargoProcesoResponseDTO>> createCargosSimple(
+        @Valid @RequestBody List<CargoProcesoCreateRequestDTO> cargos) {
     
+    List<CargoProcesoResponseDTO> responses = cargoProcesoService.createCargosSimple(cargos);
+    return new ResponseEntity<>(responses, HttpStatus.CREATED);
+}
     @GetMapping("/{id}")
     @Operation(
         summary = "Obtener asociación Cargo-Proceso por ID",
@@ -67,7 +74,16 @@ public class CargoProcesoController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-    
+    @Operation(
+        summary = "Obtener asociación Cargo-Proceso por unidadID",
+        description = "Retorna los procesos de la unidad"
+    )
+    @GetMapping("/unidad/{unidadId}")
+    public ResponseEntity<List<CargoProcesoResponseDTO>> getCargosProcesoByUnidad(
+            @PathVariable Long unidadId) {
+        List<CargoProcesoResponseDTO> cargosProceso = cargoProcesoService.getCargosProcesoByUnidad(unidadId);
+        return ResponseEntity.ok(cargosProceso);
+    }
     @GetMapping
     @Operation(
         summary = "Listar todas las asociaciones Cargo-Proceso",
