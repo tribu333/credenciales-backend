@@ -72,7 +72,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/personal/buscar").permitAll()
 
                         // Endpoints de modificación (requieren autenticación)
-                        .requestMatchers(HttpMethod.PUT, "/api/personal/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/personal/**").permitAll()
                         // =================================================
 
                         // ============ RUTAS DE QR ============

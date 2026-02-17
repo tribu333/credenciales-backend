@@ -3,9 +3,12 @@ package com.credenciales.tribunal.service;
 import com.credenciales.tribunal.dto.email.VerificacionCodigoRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionEmailRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionResponseDTO;
+import com.credenciales.tribunal.dto.personal.PersonalActualizacionDTO;
 import com.credenciales.tribunal.dto.personal.PersonalCompletoDTO;
 import com.credenciales.tribunal.dto.personal.PersonalCreateDTO;
 import com.credenciales.tribunal.model.enums.EstadoPersonal;
+import jakarta.validation.Valid;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
@@ -36,4 +39,6 @@ public interface PersonalService {
     
     // Búsqueda
     List<PersonalCompletoDTO> buscarPorNombre(String nombre);
+
+    PersonalCompletoDTO actualizarPersonalExistenteAdmin(Long id, PersonalActualizacionDTO actualizacionDTO);
 }

@@ -3,6 +3,7 @@ package com.credenciales.tribunal.controller;
 import com.credenciales.tribunal.dto.email.VerificacionCodigoRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionEmailRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionResponseDTO;
+import com.credenciales.tribunal.dto.personal.PersonalActualizacionDTO;
 import com.credenciales.tribunal.dto.personal.PersonalCompletoDTO;
 import com.credenciales.tribunal.dto.personal.PersonalCreateDTO;
 import com.credenciales.tribunal.dto.personal.PersonalRegistroCompletoDTO;
@@ -120,6 +121,15 @@ public class PersonalController {
             @Valid @RequestBody PersonalCreateDTO actualizacionDTO) { // ← Sin MultipartFile
         return ResponseEntity.ok(
                 personalService.actualizarPersonal(id, actualizacionDTO));
+    }
+
+    @Operation(summary = "Actualizar personal desde admin", description = "Actualiza los datos de un personal existente")
+    @PutMapping("/{id}/admin")
+    public ResponseEntity<PersonalCompletoDTO> actualizarPersonalExistenteAdmin(
+            @PathVariable Long id,
+            @Valid @RequestBody PersonalActualizacionDTO actualizacionDTO) { // ← Sin MultipartFile
+        return ResponseEntity.ok(
+                personalService.actualizarPersonalExistenteAdmin(id, actualizacionDTO));
     }
 
     @Operation(summary = "Verificar correo activo", description = "Verifica si un correo ya está siendo usado por un personal activo")
