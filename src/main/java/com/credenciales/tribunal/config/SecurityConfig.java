@@ -70,10 +70,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/personal/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/personal/ci/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/personal/buscar").permitAll()
-
-                        // Endpoints de modificación (requieren autenticación)
                         .requestMatchers(HttpMethod.PUT, "/api/personal/**").permitAll()
-                        // =================================================
+                        .requestMatchers(HttpMethod.DELETE, "/api/personal/**").permitAll()
 
                         // ============ RUTAS DE QR ============
                         // Endpoints públicos de QR (generación y consulta)

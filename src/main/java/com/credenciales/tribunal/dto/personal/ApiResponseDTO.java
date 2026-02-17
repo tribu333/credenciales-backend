@@ -1,4 +1,4 @@
-package com.credenciales.tribunal.dto.email;
+package com.credenciales.tribunal.dto.personal;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;

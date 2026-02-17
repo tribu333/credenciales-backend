@@ -5,6 +5,7 @@ import com.credenciales.tribunal.dto.email.VerificacionEmailRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionResponseDTO;
 import com.credenciales.tribunal.dto.historialcargo.HistorialCargoDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoDTO;
+import com.credenciales.tribunal.dto.personal.ApiResponseDTO;
 import com.credenciales.tribunal.dto.personal.PersonalActualizacionDTO;
 import com.credenciales.tribunal.dto.personal.PersonalCompletoDTO;
 import com.credenciales.tribunal.dto.personal.PersonalCreateDTO;
@@ -26,6 +27,7 @@ import com.credenciales.tribunal.service.ImagenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -476,7 +478,6 @@ public class PersonalServiceImpl implements PersonalService {
 
     @Override
     public PersonalCompletoDTO actualizarPersonalExistenteAdmin(Long id, PersonalActualizacionDTO actualizacionDTO) {
-        log.info("EDITAR PERSONAL DESDE ADMIN.................................................................."); // ✅ Log correcto
         Personal personal = personalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado con ID: " + id));
 
@@ -491,8 +492,6 @@ public class PersonalServiceImpl implements PersonalService {
             );
         }
 
-        log.info("EDITAR PERSONAL DESDE ADMIN..................................................................{},......{}",personal.getCarnetIdentidad(),actualizacionDTO.getCarnetIdentidad()); // ✅ Log correcto
-        // Generar nuevo QR si es necesario
         if (!personal.getCarnetIdentidad().equals(actualizacionDTO.getCarnetIdentidad()) ||
                 personal.getQr() == null ||
                 personal.getQr().getEstado() == EstadoQr.INACTIVO) {
@@ -502,7 +501,6 @@ public class PersonalServiceImpl implements PersonalService {
                     personal.getQr() != null) {
                 personal.getQr().setEstado(EstadoQr.INACTIVO);
                 qrRepository.save(personal.getQr());
-                log.info("CAMBIO CARNET.................................................................."); // ✅ Log correcto
             }
 
             Qr nuevoQr = generarQrParaPersonal(actualizacionDTO.getCarnetIdentidad());
@@ -510,7 +508,6 @@ public class PersonalServiceImpl implements PersonalService {
             nuevoQr.setEstado(EstadoQr.ASIGNADO);
             qrRepository.save(nuevoQr);
             personal.setQr(nuevoQr);
-            log.info("Nuevo QR generado con ID: {}", nuevoQr.getId()); // ✅ Log correcto
         }
 
         personal.setNombre(actualizacionDTO.getNombre());
@@ -531,6 +528,35 @@ public class PersonalServiceImpl implements PersonalService {
         personal = personalRepository.save(personal);
 
         return mapToCompletoDTO(personal);
+    }
+
+    @Override
+    public ApiResponseDTO deletePersonal(Long id) {
+        Personal personal = personalRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado con ID: " + id));
+
+        String estadoActual = obtenerEstadoActual(personal.getId());
+        if (EstadoPersonal.CREDENCIAL_ENTREGADO.getNombre().equals(estadoActual) ||
+                EstadoPersonal.PERSONAL_ACTIVO.getNombre().equals(estadoActual) ||
+                EstadoPersonal.PERSONAL_CON_ACCESO_A_COMPUTO.getNombre().equals(estadoActual) ||
+                EstadoPersonal.CREDENCIAL_DEVUELTO.getNombre().equals(estadoActual) ||
+                EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO.getNombre().equals(estadoActual) ||
+                EstadoPersonal.INACTIVO_POR_RENUNCIA.getNombre().equals(estadoActual)) {
+            throw new BusinessException(
+                    "El personal no puede ser eliminado debido a su estado actual. Debe estar en estado PERSONAL REGISTRADO o CREDENCIAL IMPRESO para ser eliminado."
+            );
+        }
+
+        personalRepository.delete(personal);
+
+        ApiResponseDTO response = ApiResponseDTO.builder()
+                .success(true)
+                .message("Personal eliminado exitosamente con CI: " + personal.getCarnetIdentidad())
+                .status(HttpStatus.OK.value())
+                .timestamp(LocalDateTime.now().toString())
+                .build();
+
+        return response;
     }
 
     private PersonalCompletoDTO mapToCompletoDTO(Personal personal) {
