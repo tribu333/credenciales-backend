@@ -176,4 +176,24 @@ public class ImagenController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    // ========== ELIMINACIÓN ==========
+    
+    /**
+     * Elimina una imagen por ID
+     * DELETE /api/imagenes/{id}
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> eliminarImagen(@PathVariable Long id) {
+        try {
+            imagenService.deleteById(id);
+            Map<String, String> resultado = new HashMap<>();
+            resultado.put("mensaje", "Imagen eliminada exitosamente");
+            return ResponseEntity.ok(resultado);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
 }
