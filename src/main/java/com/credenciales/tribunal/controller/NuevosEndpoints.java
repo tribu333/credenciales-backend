@@ -1,5 +1,5 @@
 package com.credenciales.tribunal.controller;
 
-public class aauxi {
+public class NuevosEndpoints {
     
 }
