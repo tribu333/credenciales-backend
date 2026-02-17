@@ -21,6 +21,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -391,4 +393,16 @@ public class CargoProcesoServiceImpl implements CargoProcesoService {
         log.debug("Verificando existencia de cargo '{}' en proceso ID: {}", nombre, procesoId);
         return cargoProcesoRepository.existsByProcesoIdAndNombre(procesoId, nombre);
     }
+    @Override
+    public List<CargoProcesoResponseDTO> createCargosSimple(List<CargoProcesoCreateRequestDTO> cargos) {
+    List<CargoProcesoResponseDTO> responses = new ArrayList<>();
+    
+    for (CargoProcesoCreateRequestDTO dto : cargos) {
+        CargoProcesoResponseDTO response = createCargoProceso(dto);
+        
+        responses.add(response);
+    }
+    
+    return responses;
+}
 }

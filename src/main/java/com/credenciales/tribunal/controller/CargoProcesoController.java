@@ -1,8 +1,10 @@
 package com.credenciales.tribunal.controller;
 
+import com.credenciales.tribunal.dto.cargoproceso.CargoProcesoCreateReqSinidDTO;
 import com.credenciales.tribunal.dto.cargoproceso.CargoProcesoCreateRequestDTO;
 //import com.credenciales.tribunal.dto.cargoproceso.CargoProcesoSearchRequestDTO;
 import com.credenciales.tribunal.dto.cargoproceso.CargoProcesoUpdateRequestDTO;
+import com.credenciales.tribunal.dto.procesoelectoral.ProcesoElectoralResponseDTO;
 import com.credenciales.tribunal.dto.cargoproceso.CargoProcesoResponseDTO;
 import com.credenciales.tribunal.service.CargoProcesoService;
 import jakarta.validation.Valid;
@@ -32,7 +34,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class CargoProcesoController {
     
     private final CargoProcesoService cargoProcesoService;
-    
+    private final ProcesoElectoralController procesoElectoralController;
     @PostMapping
     @Operation(
         summary = "Asociar un cargo a un proceso electoral",
@@ -50,7 +52,42 @@ public class CargoProcesoController {
         CargoProcesoResponseDTO response = cargoProcesoService.createCargoProceso(requestDTO);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
-    
+
+    @Tag(name = "Nuevos Endpoints")
+    @PostMapping("/api/cargos-proceso/sin-id")  
+    @Operation(
+        summary = "Asociar un cargo a un proceso electoral",
+        description = "Registra un nuevo cargo disponible en un proceso electoral actual"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Cargo-Proceso creado exitosamente",
+                    content = @Content(schema = @Schema(implementation = CargoProcesoResponseDTO.class))),
+        @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos"),
+        @ApiResponse(responseCode = "404", description = "Cargo o Proceso electoral no encontrado"),
+        @ApiResponse(responseCode = "409", description = "El cargo ya está asociado a este proceso")
+    })
+    public ResponseEntity<CargoProcesoResponseDTO> createCargoProcesoSinidProceso(
+            @Valid @RequestBody CargoProcesoCreateReqSinidDTO requestDTO) {
+                ResponseEntity<List<ProcesoElectoralResponseDTO>> procesos = procesoElectoralController.getProcesosVigentesActuales();
+                Long idProceso= procesos.getBody().get(0).getId();
+                CargoProcesoCreateRequestDTO request= CargoProcesoCreateRequestDTO.builder()
+                .procesoId(idProceso)
+                .nombre(requestDTO.getNombre())
+                .unidadId(requestDTO.getUnidadId())
+                .descripcion(requestDTO.getDescripcion())
+                .activo(requestDTO.getActivo())
+                .build();
+        CargoProcesoResponseDTO response = cargoProcesoService.createCargoProceso(request);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/batch-simple")
+    public ResponseEntity<List<CargoProcesoResponseDTO>> createCargosSimple(
+            @Valid @RequestBody List<CargoProcesoCreateRequestDTO> cargos) {
+        
+        List<CargoProcesoResponseDTO> responses = cargoProcesoService.createCargosSimple(cargos);
+        return new ResponseEntity<>(responses, HttpStatus.CREATED);
+    }
     @GetMapping("/{id}")
     @Operation(
         summary = "Obtener asociación Cargo-Proceso por ID",
@@ -67,7 +104,17 @@ public class CargoProcesoController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-    
+    @Tag(name = "Nuevos Endpoints")
+    @Operation(
+        summary = "Obtener asociación Cargo-Proceso por unidadID",
+        description = "Retorna los procesos de la unidad"
+    )
+    @GetMapping("/unidad/{unidadId}")
+    public ResponseEntity<List<CargoProcesoResponseDTO>> getCargosProcesoByUnidad(
+            @PathVariable Long unidadId) {
+        List<CargoProcesoResponseDTO> cargosProceso = cargoProcesoService.getCargosProcesoByUnidad(unidadId);
+        return ResponseEntity.ok(cargosProceso);
+    }
     @GetMapping
     @Operation(
         summary = "Listar todas las asociaciones Cargo-Proceso",
