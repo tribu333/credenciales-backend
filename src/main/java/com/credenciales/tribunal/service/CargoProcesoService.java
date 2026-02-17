@@ -61,4 +61,6 @@ public interface CargoProcesoService {
     Long countCargosProcesoByUnidad(Long unidadId);
     
     boolean existsCargoProcesoInProceso(Long procesoId, String nombre);
+
+    List<CargoProcesoResponseDTO> createCargosSimple(List<CargoProcesoCreateRequestDTO> cargos);
 }
