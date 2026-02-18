@@ -377,10 +377,10 @@ public class PersonalServiceImpl implements PersonalService {
         // solo tipo eventual
         if(oPpersonal.isPresent()){
                 Personal personal=oPpersonal.get();
-                if(!personal.getAccesoComputo()){
+                /* if(!personal.getAccesoComputo()){
                         throw new BusinessException(
                     "No tiene Acceso a Computo");
-                }
+                } */
                 List<HistorialCargoProceso> listaCargo = historialCargoProcesoRepository
                 .findByPersonalIdAndActivoTrue(personal.getId());
         CargoProceso cargoProceso = listaCargo.isEmpty() ? null : listaCargo.get(0).getCargoProceso();
