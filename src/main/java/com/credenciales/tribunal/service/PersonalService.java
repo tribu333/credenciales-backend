@@ -53,4 +53,5 @@ public interface PersonalService {
     PersonalDetallesDTO verificarAcceso(String codQr);
 
     ApiResponseDTO cambiarEstadoAcceso(Long id);
+    PersonalDetallesDTO obtenernPersonalQr(String codigQr);
 }
