@@ -367,7 +367,15 @@ public class PersonalServiceImpl implements PersonalService {
                 })
                 .orElse(true);
     }
-
+    @Override
+    public PersonalDetallesDTO obtenernPersonal(String codigQr){
+        /* String carnet= codigQr.substring(3,);
+        personalRepository.findByCarnetIdentidad(carnet) 
+        .map(personal ->{
+        
+        }) */
+        return null;
+    }
     @Override
     public String obtenerMensajeEstadoActual(String carnetIdentidad) {
         return personalRepository.findByCarnetIdentidad(carnetIdentidad)
