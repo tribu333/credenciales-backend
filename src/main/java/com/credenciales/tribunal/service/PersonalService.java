@@ -4,9 +4,11 @@ import com.credenciales.tribunal.dto.email.VerificacionCodigoRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionEmailRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionResponseDTO;
 import com.credenciales.tribunal.dto.personal.*;
+import com.credenciales.tribunal.model.entity.Estado;
 import com.credenciales.tribunal.model.enums.EstadoPersonal;
 import jakarta.validation.Valid;
 import org.jspecify.annotations.Nullable;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -45,4 +47,6 @@ public interface PersonalService {
     PersonalDetallesDTO obtenerDetallesPersonal(Long id);
 
     List<PersonalDetallesDTO> obtenerDetallesPersonal();
+    // Cambia el tipo de retorno a List<PersonalDetallesDTO>
+    List<PersonalDetallesDTO> listarPersonalPorEstado(EstadoPersonal estado);
 }

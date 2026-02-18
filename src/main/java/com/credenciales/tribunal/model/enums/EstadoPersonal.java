@@ -1,5 +1,9 @@
 package com.credenciales.tribunal.model.enums;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public enum EstadoPersonal {
     PERSONAL_REGISTRADO("PERSONAL REGISTRADO"),
     CREDENCIAL_IMPRESO("CREDENCIAL IMPRESO"),
@@ -18,5 +22,21 @@ public enum EstadoPersonal {
 
     public String getNombre() {
         return nombre;
+    }
+
+    public static EstadoPersonal fromNombre(String nombre) {
+        for (EstadoPersonal estado : values()) {
+            if (estado.nombre.equalsIgnoreCase(nombre) ||
+                    estado.name().equalsIgnoreCase(nombre)) {
+                return estado;
+            }
+        }
+        throw new IllegalArgumentException("Estado no válido: " + nombre);
+    }
+
+    public static List<String> obtenerNombres() {
+        return Arrays.stream(values())
+                .map(EstadoPersonal::getNombre)
+                .collect(Collectors.toList());
     }
 }
