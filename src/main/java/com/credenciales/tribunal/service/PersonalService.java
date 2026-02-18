@@ -49,5 +49,5 @@ public interface PersonalService {
     List<PersonalDetallesDTO> obtenerDetallesPersonal();
     // Cambia el tipo de retorno a List<PersonalDetallesDTO>
     List<PersonalDetallesDTO> listarPersonalPorEstado(EstadoPersonal estado);
-    PersonalDetallesDTO obtenernPersonal(String codigQr);
+    PersonalDetallesDTO obtenernPersonalQr(String codigQr);
 }
