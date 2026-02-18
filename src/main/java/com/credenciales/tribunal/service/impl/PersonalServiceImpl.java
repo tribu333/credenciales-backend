@@ -370,7 +370,7 @@ public class PersonalServiceImpl implements PersonalService {
     @Override
     public PersonalDetallesDTO obtenernPersonalQr(String codigQr){
         String carnet= codigQr.split("-")[1];
-
+        //log.info("Cargo PLANTA registrado: {} para personal {}", cargo.getNombre(), personal.getId());
         Optional<Personal> oPpersonal = personalRepository.findByCarnetIdentidad(carnet);
         /* Personal personal = personalRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado con ID: " + id)); */
