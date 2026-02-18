@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Transactional
 public class PersonalServiceImpl implements PersonalService {
-    @Value("${qr.base-url}")
+    @Value("${qr.base-url-images}")
     private String baseUrl;
 
     private final PersonalRepository personalRepository;
@@ -671,6 +671,29 @@ public class PersonalServiceImpl implements PersonalService {
         return listaPersonal.stream()
                 .map(personal -> mapearAPersonalDetallesDTOConMapa(personal, historialMap))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public PersonalDetallesDTO verificarAcceso (String qrCodigo) {
+        return null;
+    }
+
+    @Override
+    public ApiResponseDTO cambiarEstadoAcceso(Long id) {
+        Personal personal = personalRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado con ID: " + id));
+
+        boolean nuevoEstado = !Boolean.TRUE.equals(personal.getAccesoComputo());
+        personal.setAccesoComputo(nuevoEstado);
+
+        // Guardar cambios
+        personalRepository.save(personal);
+
+        return ApiResponseDTO.builder()
+                .success(true)
+                .message("Estado de acceso a cómputo actualizado correctamente")
+                .status(HttpStatus.OK.value())
+                .build();
     }
 
     private PersonalDetallesDTO mapearAPersonalDetallesDTOConMapa(
