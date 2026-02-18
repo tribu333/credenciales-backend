@@ -113,4 +113,10 @@ public interface HistorialCargoProcesoRepository extends JpaRepository<Historial
     
     // Buscar historiales que no tienen fecha de fin (aún activos)
     List<HistorialCargoProceso> findByFechaFinIsNullAndActivoTrue();
+
+    @Query("SELECT h FROM HistorialCargoProceso h " +
+       "LEFT JOIN FETCH h.cargoProceso cp " +
+       "LEFT JOIN FETCH cp.unidad u " +
+       "WHERE h.personal.id IN :personalIds AND h.activo = true")
+    List<HistorialCargoProceso> findByPersonalIdInAndActivoTrue(@Param("personalIds") List<Long> personalIds);
 }

@@ -3,12 +3,9 @@ package com.credenciales.tribunal.service.impl;
 import com.credenciales.tribunal.dto.email.VerificacionCodigoRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionEmailRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionResponseDTO;
-import com.credenciales.tribunal.dto.historialcargo.HistorialCargoDTO;
-import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoDTO;
 import com.credenciales.tribunal.dto.personal.*;
 import com.credenciales.tribunal.dto.qr.QrGenerarDTO;
 import com.credenciales.tribunal.dto.qr.QrResponseDTO;
-import com.credenciales.tribunal.dto.image.ImagenResponseDTO;
 import com.credenciales.tribunal.exception.BusinessException;
 import com.credenciales.tribunal.exception.ResourceNotFoundException;
 import com.credenciales.tribunal.model.entity.*;
@@ -23,16 +20,14 @@ import com.credenciales.tribunal.service.QrService;
 import com.credenciales.tribunal.service.ImagenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.Nullable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
+import java.util.function.Function;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -614,6 +609,81 @@ public class PersonalServiceImpl implements PersonalService {
         String nombreCargo = cargoProceso != null ? cargoProceso.getNombre() : null;
 
         // Construir URLs (manejando nulls)
+        String urlImagen = personal.getImagen() != null
+                ? baseUrl + "/api/imagenes/" + personal.getImagen().getIdImagen() + "/descargar"
+                : null;
+
+        String urlQr = personal.getQr() != null
+                ? baseUrl + "/api/qr/" + personal.getQr().getId() + "/ver"
+                : null;
+
+        return PersonalDetallesDTO.builder()
+                .id(personal.getId())
+                .nombre(personal.getNombre())
+                .apellidoPaterno(personal.getApellidoPaterno())
+                .apellidoMaterno(personal.getApellidoMaterno())
+                .carnetIdentidad(personal.getCarnetIdentidad())
+                .correo(personal.getCorreo())
+                .celular(personal.getCelular())
+                .accesoComputo(personal.getAccesoComputo())
+                .nroCircunscripcion(personal.getNroCircunscripcion())
+                .tipo(personal.getTipo())
+                .estadoActual(obtenerEstadoActual(personal.getId()))
+                .createdAt(personal.getCreatedAt())
+                .cargo(nombreCargo)
+                .unidad(nombreUnidad)
+                .imagenId(personal.getImagen() != null ? personal.getImagen().getIdImagen() : null)
+                .qrId(personal.getQr() != null ? personal.getQr().getId() : null)
+                .imagen(urlImagen)
+                .qr(urlQr)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<PersonalDetallesDTO> listarPersonalPorEstado(EstadoPersonal estado) {
+        log.info("Listando personales por estado: {}", estado.getNombre());
+
+        // 1. Obtener personales con ese estado (usando tu método existente en el repo)
+        List<Personal> listaPersonal = personalRepository.findAllByCurrentEstado(estado.getNombre());
+
+        if (listaPersonal.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 2. Extraer todos los IDs
+        List<Long> personalIds = listaPersonal.stream()
+                .map(Personal::getId)
+                .collect(Collectors.toList());
+
+        // 3. Obtener TODOS los historiales activos de UNA SOLA VEZ
+        List<HistorialCargoProceso> historialesActivos = historialCargoProcesoRepository
+                .findByPersonalIdInAndActivoTrue(personalIds);
+
+        // 4. Crear mapa para acceso rápido
+        Map<Long, HistorialCargoProceso> historialMap = historialesActivos.stream()
+                .collect(Collectors.toMap(
+                        h -> h.getPersonal().getId(),
+                        Function.identity(),
+                        (h1, h2) -> h1));
+
+        // 5. Mapear usando el mapa
+        return listaPersonal.stream()
+                .map(personal -> mapearAPersonalDetallesDTOConMapa(personal, historialMap))
+                .collect(Collectors.toList());
+    }
+
+    private PersonalDetallesDTO mapearAPersonalDetallesDTOConMapa(
+            Personal personal,
+            Map<Long, HistorialCargoProceso> historialMap) {
+
+        HistorialCargoProceso historial = historialMap.get(personal.getId());
+        CargoProceso cargoProceso = historial != null ? historial.getCargoProceso() : null;
+        Unidad unidad = cargoProceso != null ? cargoProceso.getUnidad() : null;
+
+        String nombreUnidad = unidad != null ? unidad.getNombre() : null;
+        String nombreCargo = cargoProceso != null ? cargoProceso.getNombre() : null;
+
         String urlImagen = personal.getImagen() != null
                 ? baseUrl + "/api/imagenes/" + personal.getImagen().getIdImagen() + "/descargar"
                 : null;

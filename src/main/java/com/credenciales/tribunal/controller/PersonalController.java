@@ -21,7 +21,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/personal")
@@ -143,17 +146,53 @@ public class PersonalController {
         return ResponseEntity.ok(personalService.deletePersonal(id));
     }
 
-    @Operation(summary = "Obtener detalles de personal", description = "Retorna información detallada de un personal, incluyendo su cargo y unidad actual")
+    @Tag(name = "Nuevos Endpoints")
+    @Operation(summary = "Obtener detalles de personal por id", description = "Retorna información detallada de un personal, incluyendo su cargo y unidad actual")
     @GetMapping("/{id}/detalles")
     public ResponseEntity<PersonalDetallesDTO> obtenerDetallesPersonal(
             @Parameter(description = "ID del personal", example = "1") @PathVariable Long id) {
         return ResponseEntity.ok(personalService.obtenerDetallesPersonal(id));
     }
 
-    @Operation(summary = "Obtener todos los detalles de personal", description = "Retorna información detallada de todos los personales, incluyendo su cargo y unidad actual")
+    @Tag(name = "Nuevos Endpoints")
+    @Operation(summary = "Obtener todo el personal mas detalles", description = "Retorna información detallada de todos los personales, incluyendo su cargo y unidad actual")
     @GetMapping("/detalles")
     public ResponseEntity<List<PersonalDetallesDTO>> obtenerDetallesPersonal() {
         return ResponseEntity.ok(personalService.obtenerDetallesPersonal());
     }
 
+    // En PersonalController.java
+    // En PersonalController.java - Versión simplificada SIN metadata
+
+    @GetMapping("/detalles/estado/{estado}")
+    @Operation(summary = "Obtener detalles de personales por estado")
+    public ResponseEntity<ApiResponseDTO> obtenerPersonalesPorEstado(
+            @PathVariable String estado) {
+
+        try {
+            EstadoPersonal estadoEnum = EstadoPersonal.fromNombre(estado);
+            List<PersonalDetallesDTO> detalles = personalService.listarPersonalPorEstado(estadoEnum);
+
+            // Versión SIMPLE sin metadata
+            ApiResponseDTO response = ApiResponseDTO.builder()
+                    .success(true)
+                    .message("Personales con estado '" + estado + "' obtenidos exitosamente. Total: " + detalles.size())
+                    .status(HttpStatus.OK.value())
+                    .timestamp(LocalDateTime.now().toString())
+                    .data(detalles)
+                    .build();
+
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException e) {
+            ApiResponseDTO response = ApiResponseDTO.builder()
+                    .success(false)
+                    .message("Estado no válido: '" + estado + "'")
+                    .status(HttpStatus.BAD_REQUEST.value())
+                    .timestamp(LocalDateTime.now().toString())
+                    .build();
+
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
 }
