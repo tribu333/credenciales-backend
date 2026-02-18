@@ -201,4 +201,11 @@ public class PersonalController {
         ApiResponseDTO response = personalService.cambiarEstadoAcceso(id);
         return ResponseEntity.ok(response);
     }
+    @GetMapping("/detalles/qrComputo/{qr}")
+    @Operation(summary = "Obtener detalles de personales por estado")
+    public PersonalDetallesDTO obtenerPersonalesPorcodQr(
+            @PathVariable String qr) {
+              PersonalDetallesDTO res = personalService.obtenernPersonalQr(qr);
+              return res;
+    }
 }
