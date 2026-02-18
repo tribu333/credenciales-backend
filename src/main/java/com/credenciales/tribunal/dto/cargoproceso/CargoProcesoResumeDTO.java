@@ -17,4 +17,6 @@ public class CargoProcesoResumeDTO {
     private String nombre;
     private Long unidadId;
     private Boolean activo;
+    private Long totalHistorialesActivos;
+
 }
