@@ -54,7 +54,7 @@ public class CargoProcesoController {
     }
 
     @Tag(name = "Nuevos Endpoints")
-    @PostMapping("/api/cargos-proceso/sin-id")  
+    @PostMapping("/sin-id")  
     @Operation(
         summary = "Asociar un cargo a un proceso electoral",
         description = "Registra un nuevo cargo disponible en un proceso electoral actual"
