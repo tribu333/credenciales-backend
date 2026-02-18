@@ -1,6 +1,8 @@
 package com.credenciales.tribunal.service.impl;
 
+import com.credenciales.tribunal.dto.estadoActual.CambioEstadoMasivoRequestDTO;
 import com.credenciales.tribunal.dto.estadoActual.EstadoActualDTO;
+import com.credenciales.tribunal.dto.estadoActual.ResultadoCambioMasivoDTO;
 import com.credenciales.tribunal.dto.personal.PersonalDTO;
 import com.credenciales.tribunal.dto.estadoActual.CambioEstadoResquestDTO;
 import com.credenciales.tribunal.model.entity.Estado;
@@ -17,8 +19,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.Arrays;
-import java.util.List;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -332,6 +334,34 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
         return personal.getAccesoComputo() &&
                 estadoActualRepository.existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
                         personalId, EstadoPersonal.PERSONAL_ACTIVO.getNombre());
+    }
+
+    @Override
+    public ResultadoCambioMasivoDTO imprimirCredencialMasivo(CambioEstadoMasivoRequestDTO request) {
+        ResultadoCambioMasivoDTO resultado = new ResultadoCambioMasivoDTO();
+        List<PersonalDTO> actualizados = new ArrayList<>();
+        Map<Long, String> errores = new HashMap<>();
+        List<Long> exitosos = new ArrayList<>();
+
+        resultado.setTotalProcesados(request.getPersonalIds().size());
+
+        for (Long personalId : request.getPersonalIds()) {
+            try {
+                PersonalDTO personalActualizado = imprimirCredencial(personalId);
+                actualizados.add(personalActualizado);
+                exitosos.add(personalId);
+            } catch (Exception e) {
+                errores.put(personalId, e.getMessage());
+            }
+        }
+
+        resultado.setExitosos(exitosos.size());
+        resultado.setFallidos(errores.size());
+        resultado.setIdsExitosos(exitosos);
+        resultado.setErrores(errores);
+        resultado.setPersonalesActualizados(actualizados);
+
+        return resultado;
     }
 
     // Métodos privados de ayuda
