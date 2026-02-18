@@ -368,13 +368,54 @@ public class PersonalServiceImpl implements PersonalService {
                 .orElse(true);
     }
     @Override
-    public PersonalDetallesDTO obtenernPersonal(String codigQr){
-        /* String carnet= codigQr.substring(3,);
-        personalRepository.findByCarnetIdentidad(carnet) 
-        .map(personal ->{
+    public PersonalDetallesDTO obtenernPersonalQr(String codigQr){
+        String carnet= codigQr.split("-")[1];
+
+        Optional<Personal> oPpersonal = personalRepository.findByCarnetIdentidad(carnet);
+        /* Personal personal = personalRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado con ID: " + id)); */
+        // solo tipo eventual
+        if(oPpersonal.isPresent()){
+                Personal personal=oPpersonal.get();
+                if(!personal.getAccesoComputo()){
+                        throw new BusinessException(
+                    "No tiene Acceso a Computo");
+                }
+                List<HistorialCargoProceso> listaCargo = historialCargoProcesoRepository
+                .findByPersonalIdAndActivoTrue(personal.getId());
+        CargoProceso cargoProceso = listaCargo.isEmpty() ? null : listaCargo.get(0).getCargoProceso();
+        Unidad unidad = cargoProceso != null ? cargoProceso.getUnidad() : null;
+
+        String nombreUnidad = unidad != null ? unidad.getNombre() : null;
+        String nombreCargo = cargoProceso != null ? cargoProceso.getNombre() : null;
+        String urlImagen = baseUrl + "/api/imagenes/" + personal.getImagen().getIdImagen() + "/descargar";
+        String urlQr = baseUrl + "/api/qr/" + personal.getQr().getId() + "/ver";
+        return PersonalDetallesDTO.builder()
+                .id(personal.getId())
+                .nombre(personal.getNombre())
+                .apellidoPaterno(personal.getApellidoPaterno())
+                .apellidoMaterno(personal.getApellidoMaterno())
+                .carnetIdentidad(personal.getCarnetIdentidad())
+                .correo(personal.getCorreo())
+                .celular(personal.getCelular())
+                .accesoComputo(personal.getAccesoComputo())
+                .nroCircunscripcion(personal.getNroCircunscripcion())
+                .tipo(personal.getTipo())
+                .estadoActual(obtenerEstadoActual(personal.getId()))
+                .createdAt(personal.getCreatedAt())
+                .cargo(nombreCargo)
+                .unidad(nombreUnidad)
+                .imagenId(personal.getImagen() != null ? personal.getImagen().getIdImagen() : null)
+                .qrId(personal.getQr() != null ? personal.getQr().getId() : null)
+                .imagen(urlImagen)
+                .qr(urlQr)
+                .build();
+        }else{
+                throw new BusinessException(
+                    "No existe esa persona " +
+                            "");
+        }
         
-        }) */
-        return null;
     }
     @Override
     public String obtenerMensajeEstadoActual(String carnetIdentidad) {
