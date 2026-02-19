@@ -160,4 +160,11 @@ public class EstadoPersonalController {
             @Parameter(description = "ID del personal", required = true, example = "1") @PathVariable Long personalId) {
         return ResponseEntity.ok(estadoPersonalService.puedeHabilitarseAccesoComputo(personalId));
     }
+
+    @PutMapping("/{personalId}/estado-registrado")
+    public ResponseEntity<PersonalDTO> estadoRegistrado(@PathVariable Long personalId) {
+        PersonalDTO personalDTO = estadoPersonalService.estadoRegistrado(personalId);
+        return ResponseEntity.ok(personalDTO);
+    }
+
 }

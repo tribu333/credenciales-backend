@@ -17,6 +17,8 @@ public interface EstadoPersonalService {
     PersonalDTO devolverCredencial(Long personalId);
     PersonalDTO finalizarProcesoElectoral(Long personalId);
     PersonalDTO renunciar(Long personalId);
+    //metodo para volver a imprimir cambiar de estado
+    PersonalDTO estadoRegistrado (Long personalId);
     
     // Validaciones
     boolean validarTransicionEstado(Long personalId, EstadoPersonal nuevoEstado);
