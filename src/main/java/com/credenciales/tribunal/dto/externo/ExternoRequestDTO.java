@@ -15,9 +15,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ExternoRequestDTO {
 
+    @NotBlank(message = "El nombre es obligatorio")
     @Size(max = 150, message = "El nombre completo no puede exceder los 150 caracteres")
     private String nombreCompleto;
-
+    
+    @NotBlank(message = "El carnet es obligatorio")
     @Size(max = 50, message = "El carnet de identidad no puede exceder los 50 caracteres")
     private String carnetIdentidad;
 
