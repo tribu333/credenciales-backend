@@ -18,5 +18,5 @@ public class CargoProcesoResumeDTO {
     private Long unidadId;
     private Boolean activo;
     private Long totalHistorialesActivos;
-
+    
 }
