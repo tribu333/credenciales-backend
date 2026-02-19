@@ -23,6 +23,6 @@ public class ExternoDto {
     private TipoExterno tipoExterno;
     private LocalDateTime createdAt;
     private Long idImagen;
-    //private List<AsignacionQrBasicaDTO> asignaciones; // DTO básico de asignaciones
+    private List<AsignacionQrBasicaDTO> asignaciones; // DTO básico de asignaciones
 }
 

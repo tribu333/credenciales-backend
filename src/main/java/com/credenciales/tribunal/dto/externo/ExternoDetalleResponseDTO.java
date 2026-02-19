@@ -24,5 +24,5 @@ public class ExternoDetalleResponseDTO {
     private TipoExterno tipoExterno;
     private LocalDateTime createdAt;
     private ImagenBasicaDTO imagen;
-    //private List<AsignacionQrBasicaDTO> asignaciones; // DTO básico de asignaciones
+    private List<AsignacionQrBasicaDTO> asignaciones; // DTO básico de asignaciones
 }
