@@ -1,4 +1,4 @@
-package com.credenciales.tribunal.service.impl;
+/* package com.credenciales.tribunal.service.impl;
 
 import java.time.LocalDateTime;
 
@@ -122,3 +122,4 @@ public class AsignacionQrSeviceImpl {
             LocalDateTime.now().plusDays(30);
     }
 }
+ */
