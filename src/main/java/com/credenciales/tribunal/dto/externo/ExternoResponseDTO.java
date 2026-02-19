@@ -1,7 +1,6 @@
 package com.credenciales.tribunal.dto.externo;
 
 import com.credenciales.tribunal.model.enums.TipoExterno;
-import com.credenciales.tribunal.dto.image.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +13,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExternoResponseDTO {
-
     private Long id;
     private String nombreCompleto;
     private String carnetIdentidad;
@@ -22,5 +20,8 @@ public class ExternoResponseDTO {
     private String orgPolitica;
     private TipoExterno tipoExterno;
     private LocalDateTime createdAt;
-    private ImagenBasicaDTO imagen; // DTO básico de imagen
+    private Long imagenId;
+    private String imagenNombre;
+    private String imagenUrl;
+    private Integer totalAsignaciones; // opcional, si quieres mostrar el total
 }
