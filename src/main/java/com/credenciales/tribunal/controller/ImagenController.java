@@ -3,7 +3,7 @@ package com.credenciales.tribunal.controller;
 import com.credenciales.tribunal.dto.image.ImagenResponseDTO;
 import com.credenciales.tribunal.model.entity.Imagen;
 import com.credenciales.tribunal.service.FileStorageService;
-import com.credenciales.tribunal.service.ImagenServiceImpl;
+import com.credenciales.tribunal.service.impl.ImagenServiceImpl;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
