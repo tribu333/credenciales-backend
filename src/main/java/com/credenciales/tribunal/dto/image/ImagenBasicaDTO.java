@@ -8,7 +8,6 @@ import lombok.*;
 @Builder
 public class ImagenBasicaDTO {
     private Long idImagen;
-    private String nombreArchivo;
     private String nombreOriginal;
     private String urlDescarga;
 }
