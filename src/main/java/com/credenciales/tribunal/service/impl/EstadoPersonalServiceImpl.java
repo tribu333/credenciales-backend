@@ -253,6 +253,35 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
     }
 
     @Override
+    public PersonalDTO estadoRegistrado(Long personalId) {
+        Personal personal = personalRepository.findById(personalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado"));
+
+         boolean pudeVolverARegistrarse = estadoActualRepository.existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
+                personalId, EstadoPersonal.CREDENCIAL_IMPRESO.getNombre());
+
+         if (!pudeVolverARegistrarse) {
+            throw new BusinessException("No puede volver a imprimir tiene que devolver el credencial.");
+        }
+
+        Estado estado = estadoRepository.findByEnum(EstadoPersonal.INACTIVO_POR_RENUNCIA)
+                .orElseThrow(() -> new BusinessException("Estado INACTIVO POR RENUNCIA no configurado"));
+
+        desactivarEstadoActual(personalId);
+
+        EstadoActual nuevoEstado = EstadoActual.builder()
+                .personal(personal)
+                .estado(estado)
+                .valor_estado_actual(true)
+                .build();
+
+        estadoActualRepository.save(nuevoEstado);
+        log.info("Se habilito para volver a imprimir el credencial. a personal con id: {}", personalId);
+
+        return mapToDTO(personal);
+    }
+
+    @Override
     public boolean validarTransicionEstado(Long personalId, EstadoPersonal nuevoEstado) {
         Personal personal = personalRepository.findById(personalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado"));
@@ -381,4 +410,5 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
                 .createdAt(estadoActual.getCreatedAt())
                 .build();
     }
+
 }
