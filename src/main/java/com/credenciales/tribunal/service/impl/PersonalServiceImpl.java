@@ -71,7 +71,8 @@ public class PersonalServiceImpl implements PersonalService {
 				throw new BusinessException(mensajeEstado);
 			}
 		}
-		//Si el correo ya existe registrado o impreso asociado a un personal que tiene diferente ci al que se esta queriendo solicitar codigo de verificacion
+		// Si el correo ya existe registrado o impreso asociado a un personal que tiene
+		// diferente ci al que se esta queriendo solicitar codigo de verificacion
 		if (existeCorreoRegistradoImpreso(request.getCorreo(), request.getCarnetIdentidad())) {
 			throw new BusinessException(
 					"El correo electronico ya esta asociado a otro personal registrado con diferente CI");
@@ -131,8 +132,7 @@ public class PersonalServiceImpl implements PersonalService {
 	}
 
 	@Override
-	public PersonalCompletoDTO registrarPersonalCompleto(
-			PersonalCreateDTO registroDTO) {
+	public PersonalCompletoDTO registrarPersonalCompleto(PersonalCreateDTO registroDTO) {
 
 		// Verificar código
 		VerificacionCodigoRequestDTO verifRequest = VerificacionCodigoRequestDTO.builder()
@@ -145,19 +145,28 @@ public class PersonalServiceImpl implements PersonalService {
 			throw new BusinessException("Código de verificación inválido");
 		}
 
-		// Verificar si el CI ya existe y manejar según estado
-		Personal personalExistente = personalRepository.findByCarnetIdentidad(registroDTO.getCarnetIdentidad())
-				.orElse(null);
-		String estadoActual = obtenerEstadoActual(personalExistente.getId());
+		// Buscar TODOS los personales con ese carnet
+		List<Personal> personalList = personalRepository.findAllByCarnetIdentidad(registroDTO.getCarnetIdentidad());
 
-		if (personalExistente != null){
-			estadoActual = obtenerEstadoActual(personalExistente.getId());
-			if (estadoActual.equals(EstadoPersonal.PERSONAL_REGISTRADO.getNombre()) || estadoActual.equals(EstadoPersonal.CREDENCIAL_IMPRESO.getNombre())) {
-				return actualizarPersonalExistente(personalExistente, registroDTO);
+		if (!personalList.isEmpty()) {
+			// Si hay múltiples registros, loguear warning
+//			if (personalList.size() > 1) {
+//				logger.warn("Múltiples registros ({}) encontrados para el carnet: {}. Procesando el primero con estado válido.",
+//						personalList.size(), registroDTO.getCarnetIdentidad());
+//			}
+
+			// Buscar el primer personal con estado PERSONAL_REGISTRADO o CREDENCIAL_IMPRESO
+			for (Personal personal : personalList) {
+				String estadoActual = obtenerEstadoActual(personal.getId());
+
+				if (estadoActual.equals(EstadoPersonal.PERSONAL_REGISTRADO.getNombre()) ||
+						estadoActual.equals(EstadoPersonal.CREDENCIAL_IMPRESO.getNombre())) {
+					return actualizarPersonalExistente(personal, registroDTO);
+				}
 			}
 		}
 
-		// Crear nuevo personal
+		// Si no hay personal con estados que permitan actualización, crear nuevo
 		return crearNuevoPersonal(registroDTO);
 	}
 
@@ -474,30 +483,34 @@ public class PersonalServiceImpl implements PersonalService {
 
 	@Override
 	public String obtenerMensajeEstadoActual(String carnetIdentidad) {
-		return personalRepository.findByCarnetIdentidad(carnetIdentidad)
-				.map(personal -> {
-					String estado = obtenerEstadoActual(personal.getId());
+		List<Personal> personalList = personalRepository.findAllByCarnetIdentidad(carnetIdentidad);
 
-					if (estado.equals(EstadoPersonal.CREDENCIAL_ENTREGADO.getNombre()) ||
-							estado.equals(EstadoPersonal.PERSONAL_ACTIVO.getNombre()) ||
-							estado.equals(EstadoPersonal.PERSONAL_CON_ACCESO_A_COMPUTO.getNombre())) {
-						return "El personal tiene la credencial entregada y activa. " +
-								"Debe devolver la credencial antes de poder registrarse nuevamente.";
-					}
+		if (personalList.isEmpty()) {
+			return null;
+		}
 
-					if (estado.equals(EstadoPersonal.PERSONAL_REGISTRADO.getNombre()) ||
-							estado.equals(EstadoPersonal.CREDENCIAL_IMPRESO.getNombre())) {
-						return "El personal ya existe pero aun no se entrego el credencial y puede actualizar sus datos.";
-					}
+		for (Personal personal : personalList) {
+			String estado = obtenerEstadoActual(personal.getId());
 
-					if (estado.equals(EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO.getNombre()) ||
-							estado.equals(EstadoPersonal.INACTIVO_POR_RENUNCIA.getNombre())) {
-						return "El personal estaba inactivo y puede volver a registrarse.";
-					}
+			if (estado.equals(EstadoPersonal.CREDENCIAL_ENTREGADO.getNombre()) ||
+					estado.equals(EstadoPersonal.PERSONAL_ACTIVO.getNombre()) ||
+					estado.equals(EstadoPersonal.PERSONAL_CON_ACCESO_A_COMPUTO.getNombre())) {
+				return "El personal tiene la credencial entregada y activa. " +
+						"Debe devolver la credencial antes de poder registrarse nuevamente.";
+			}
 
-					return null;
-				})
-				.orElse(null);
+			if (estado.equals(EstadoPersonal.PERSONAL_REGISTRADO.getNombre()) ||
+					estado.equals(EstadoPersonal.CREDENCIAL_IMPRESO.getNombre())) {
+				return "El personal ya existe pero aun no se entrego el credencial y puede actualizar sus datos.";
+			}
+
+			if (estado.equals(EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO.getNombre()) ||
+					estado.equals(EstadoPersonal.INACTIVO_POR_RENUNCIA.getNombre())) {
+				return "El personal estaba inactivo y puede volver a registrarse.";
+			}
+		}
+
+		return null;
 	}
 
 	@Override
