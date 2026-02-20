@@ -38,4 +38,6 @@ public interface PersonalRepository extends JpaRepository<Personal, Long> {
         "JOIN p.estadosActuales ea " +
         "WHERE p.id = :personalId AND ea.estado.nombre = :estadoNombre AND ea.valor_estado_actual = true")
     boolean isPersonalInEstado(@Param("personalId") Long personalId, @Param("estadoNombre") String estadoNombre);
+
+    List<Personal> findByNroCircunscripcion(String nroCircunscripcion);
 }

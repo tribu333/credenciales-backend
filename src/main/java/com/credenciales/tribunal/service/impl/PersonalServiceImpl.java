@@ -874,4 +874,12 @@ public class PersonalServiceImpl implements PersonalService {
 				.qrId(personal.getQr() != null ? personal.getQr().getId() : null)
 				.build();
 	}
+
+	@Override
+	public PersonalDetallesDTO filtrarNotarios(String nroCircunscripcion){
+		List<Personal> personasCircuns=personalRepository.findByNroCircunscripcion(nroCircunscripcion);
+		//transformar a la lista de dtos
+
+		return null;
+	}
 }
