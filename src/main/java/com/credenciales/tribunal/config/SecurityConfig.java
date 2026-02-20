@@ -93,9 +93,11 @@ public class SecurityConfig {
                         // ============ RUTAS DE ESTADOS ============
                         // Endpoints públicos de estados
                         .requestMatchers(HttpMethod.GET, "/api/estados-personal/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/personal/estado/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/estados-personal/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/estados-personal/personal/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/estados-personal/estado/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/personal/*/acceso").permitAll()
 
                         // Endpoints de cambio de estado (requieren autenticación)
                         .requestMatchers(HttpMethod.POST, "/api/estados-personal/registrar").hasRole("ADMINISTRADOR")

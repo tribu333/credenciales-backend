@@ -1,9 +1,14 @@
-package com.credenciales.tribunal.service;
+package com.credenciales.tribunal.service.impl;
 
 //import com.credenciales.tribunal.model.Complaint;
 import com.credenciales.tribunal.model.entity.Imagen;
 //import com.credenciales.tribunal.repository.ComplaintRepository;
 import com.credenciales.tribunal.repository.ImagenRepository;
+import com.credenciales.tribunal.service.FileStorageService;
+import com.credenciales.tribunal.service.ImageOptimizationService;
+import com.credenciales.tribunal.service.ImagenService;
+import com.credenciales.tribunal.service.OptimizedMultipartFile;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

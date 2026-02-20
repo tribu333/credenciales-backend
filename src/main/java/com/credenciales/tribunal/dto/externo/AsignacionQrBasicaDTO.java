@@ -1,22 +1,19 @@
-package com.credenciales.tribunal.dto.cargoproceso;
+package com.credenciales.tribunal.dto.externo;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class CargoProcesoResumeDTO {
+public class AsignacionQrBasicaDTO {
     private Long id;
-    private Long procesoId;
-    private String nombre;
-    private Long unidadId;
+    private String codigoQr;
+    private LocalDateTime fechaAsignacion;
     private Boolean activo;
-    private Long totalHistorialesActivos;
-    
 }

@@ -195,4 +195,17 @@ public class PersonalController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+    @PutMapping("/{id}/acceso")
+    @Operation(summary = "Cambiar Acceso de Computo")
+    public ResponseEntity<ApiResponseDTO> cambiarEstadoAcceso(@PathVariable Long id) {
+        ApiResponseDTO response = personalService.cambiarEstadoAcceso(id);
+        return ResponseEntity.ok(response);
+    }
+    @GetMapping("/detalles/qrComputo/{qr}")
+    @Operation(summary = "Obtener detalles de personales por estado")
+    public PersonalDetallesDTO obtenerPersonalesPorcodQr(
+            @PathVariable String qr) {
+              PersonalDetallesDTO res = personalService.obtenernPersonalQr(qr);
+              return res;
+    }
 }
