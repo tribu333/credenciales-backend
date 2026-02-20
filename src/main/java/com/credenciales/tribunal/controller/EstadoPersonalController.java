@@ -177,4 +177,10 @@ public class EstadoPersonalController {
                 ResultadoCambioMasivoDTO resultado = estadoPersonalService.imprimirCredencialMasivo(request);
                 return ResponseEntity.ok(resultado);
         }
+
+        @PutMapping("/{personalId}/estado-registrado")
+        public ResponseEntity<PersonalDTO> estadoRegistrado(@PathVariable Long personalId) {
+                PersonalDTO personalDTO = estadoPersonalService.estadoRegistrado(personalId);
+                return ResponseEntity.ok(personalDTO);
+        }
 }

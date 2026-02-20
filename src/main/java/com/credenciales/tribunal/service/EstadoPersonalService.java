@@ -18,7 +18,8 @@ public interface EstadoPersonalService {
     PersonalDTO devolverCredencial(Long personalId);
     PersonalDTO finalizarProcesoElectoral(Long personalId);
     PersonalDTO renunciar(Long personalId);
-    
+    PersonalDTO estadoRegistrado (Long personalId);
+
     // Validaciones
     boolean validarTransicionEstado(Long personalId, EstadoPersonal nuevoEstado);
     List<EstadoPersonal> obtenerEstadosPermitidos(Long personalId);
