@@ -15,8 +15,12 @@ public interface PersonalRepository extends JpaRepository<Personal, Long> {
     
     Optional<Personal> findByCarnetIdentidad(String carnetIdentidad);
     
-    Optional<Personal> findByCorreo(String correo);
+    List<Personal> findAllByCarnetIdentidad(String carnetIdentidad);
     
+    Optional<Personal> findByCorreo(String correo);
+
+    List<Personal> findAllByCorreo(String correo);
+
     Optional<Personal> findByQrId(Long qrId);
     
     List<Personal> findByTipo(TipoPersonal tipo);
