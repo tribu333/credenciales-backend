@@ -23,8 +23,7 @@ public class Contrato {
     @Builder.Default
     private Boolean activo = true;
     
-    @Column(nullable = false, length = 20) 
-    @Builder.Default
+    @Column(nullable = false, length = 20)
     private String tipo;
 
     @Column(name = "fecha_inicio", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")

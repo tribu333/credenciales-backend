@@ -220,6 +220,19 @@ public class CargoController {
         return ResponseEntity.ok(count);
     }
     
+    @GetMapping("/proceso/unidad/{unidadId}")
+    public ResponseEntity<List<CargoProcesoResponseDTO>> getCargosProcesoByUnidad(
+            @PathVariable Long unidadId) {
+        List<CargoProcesoResponseDTO> cargosProceso = cargoService.getAllCargosProcesoByUnidad(unidadId);
+        return ResponseEntity.ok(cargosProceso);
+    }
+
+    @GetMapping("/proceso")
+    public ResponseEntity<List<CargoResponseDTO>> getAllCargosProceso () {
+        List <CargoResponseDTO> cargosProceso = cargoService.getAllCargosProceso();
+        return ResponseEntity.ok(cargosProceso);
+    }
+
     @GetMapping("/exists")
     @Operation(
         summary = "Verificar si existe un cargo en una unidad",
