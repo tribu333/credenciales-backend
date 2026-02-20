@@ -26,13 +26,11 @@ public class EmailServiceImpl implements EmailService {
             message.setTo(destinatario);
             message.setSubject("Código de verificación - Registro Personal");
             message.setText(String.format(
-                "Hola,\n\n" +
-                "Tu código de verificación para el registro con carnet %s es: %s\n\n" +
-                "Este código expirará en 5 minutos.\n\n" +
-                "Si no solicitaste este código, por favor ignora este mensaje.\n\n" +
-                "Saludos,\n" +
-                "Sistema de Gestión de Personal",
-                carnetIdentidad, codigo
+                    "TRIBUNAL ELECTORAL DEPARTAMENTAL DE COCHABAMBA \n\n" +
+                            "Tu código de verificación es: %s\n\n" +
+                            "Este código expirará en 10 minutos.\n\n" +
+                            "Si no solicitaste este código, por favor ignora este mensaje.\n\n" +
+                            "Saludos,\n", codigo
             ));
             
             mailSender.send(message);
