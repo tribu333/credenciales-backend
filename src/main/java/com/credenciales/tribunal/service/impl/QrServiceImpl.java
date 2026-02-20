@@ -47,7 +47,7 @@ public class QrServiceImpl implements QrService {
     private final PersonalRepository personalRepository;
     private final QrStorageProperties storageProperties;
     
-    @Value("${qr.base-url}")
+    @Value("${qr.base-url-images}")
     private String baseUrl;
     
     private static final int QR_SIZE = 300;

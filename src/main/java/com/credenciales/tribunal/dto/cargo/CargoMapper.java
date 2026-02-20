@@ -1,8 +1,5 @@
 package com.credenciales.tribunal.dto.cargo;
 
-/* import com.credenciales.tribunal.dto.CargoDTO;
-import com.credenciales.tribunal.dto.request.CargoRequestDTO;
-import com.credenciales.tribunal.dto.response.CargoResponseDTO; */
 import com.credenciales.tribunal.model.entity.Cargo;
 import com.credenciales.tribunal.model.entity.Unidad;
 import org.springframework.stereotype.Component;

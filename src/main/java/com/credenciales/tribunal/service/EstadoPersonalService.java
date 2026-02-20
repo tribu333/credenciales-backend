@@ -1,9 +1,9 @@
 package com.credenciales.tribunal.service;
 
+import com.credenciales.tribunal.dto.estadoActual.CambioEstadoMasivoRequestDTO;
 import com.credenciales.tribunal.dto.estadoActual.EstadoActualDTO;
 import com.credenciales.tribunal.dto.estadoActual.ResultadoCambioMasivoDTO;
 import com.credenciales.tribunal.dto.personal.PersonalDTO;
-import com.credenciales.tribunal.dto.estadoActual.CambioEstadoMasivoRequestDTO;
 import com.credenciales.tribunal.dto.estadoActual.CambioEstadoResquestDTO;
 import com.credenciales.tribunal.model.enums.EstadoPersonal;
 import java.util.List;
