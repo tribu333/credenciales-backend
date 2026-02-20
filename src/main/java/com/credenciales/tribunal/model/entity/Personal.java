@@ -26,10 +26,10 @@ public class Personal {
     @Column(name = "apellido_materno", length = 100)
     private String apellidoMaterno;
 
-    @Column(name = "carnet_identidad", nullable = false, length = 50, unique = true)
+    @Column(name = "carnet_identidad", nullable = false, length = 50)
     private String carnetIdentidad;
 
-    @Column(nullable = false, length = 150, unique = true)
+    @Column(nullable = false, length = 150)
     private String correo;
 
     @Column(length = 30)

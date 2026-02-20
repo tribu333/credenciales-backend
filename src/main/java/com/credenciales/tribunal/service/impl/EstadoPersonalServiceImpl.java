@@ -364,7 +364,6 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
         return resultado;
     }
 
-    // Métodos privados de ayuda
     private Personal validarPersonal(Long personalId) {
         return personalRepository.findById(personalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado con ID: " + personalId));
