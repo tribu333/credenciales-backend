@@ -32,11 +32,8 @@ public class PersonalRegistroCompletoDTO {
     
     @NotBlank(message = "El carnet de identidad es requerido")
     @Size(min = 5, max = 20)
-    @Pattern(regexp = "^[0-9]+[A-Za-z]?$")
     private String carnetIdentidad;
     
-    @NotBlank(message = "El correo electrónico es requerido")
-    @Email
     private String correo;
     
     @Pattern(regexp = "^[0-9]{7,10}$")

@@ -17,7 +17,6 @@ import lombok.NoArgsConstructor;
 @Schema(description = "DTO para solicitar código de verificación")
 public class VerificacionEmailRequestDTO {
     
-    @NotBlank(message = "El correo electrónico es requerido")
     @Email(message = "Formato de correo inválido")
     @Size(max = 150, message = "El correo no puede exceder los 150 caracteres")
     @Schema(description = "Correo electrónico", example = "juan.perez@ejemplo.com", required = true)
