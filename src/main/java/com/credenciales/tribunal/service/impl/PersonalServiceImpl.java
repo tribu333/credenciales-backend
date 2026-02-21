@@ -818,7 +818,7 @@ public class PersonalServiceImpl implements PersonalService {
         try {
             // Obtener personal filtrado y ordenado
             List<Personal> personal = personalRepository
-                .findByNroCircunscripcionContainingIgnoreCase(
+                .findByNroCircunscripcion(
                     nroCircunscrip.trim()
                 );
             
