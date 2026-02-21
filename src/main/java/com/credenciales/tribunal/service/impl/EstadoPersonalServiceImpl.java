@@ -1,6 +1,8 @@
 package com.credenciales.tribunal.service.impl;
 
+import com.credenciales.tribunal.dto.estadoActual.CambioEstadoMasivoRequestDTO;
 import com.credenciales.tribunal.dto.estadoActual.EstadoActualDTO;
+import com.credenciales.tribunal.dto.estadoActual.ResultadoCambioMasivoDTO;
 import com.credenciales.tribunal.dto.personal.PersonalDTO;
 import com.credenciales.tribunal.dto.estadoActual.CambioEstadoResquestDTO;
 import com.credenciales.tribunal.model.entity.Estado;
@@ -17,8 +19,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.Arrays;
-import java.util.List;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -334,6 +336,34 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
                         personalId, EstadoPersonal.PERSONAL_ACTIVO.getNombre());
     }
 
+    @Override
+    public ResultadoCambioMasivoDTO imprimirCredencialMasivo(CambioEstadoMasivoRequestDTO request) {
+        ResultadoCambioMasivoDTO resultado = new ResultadoCambioMasivoDTO();
+        List<PersonalDTO> actualizados = new ArrayList<>();
+        Map<Long, String> errores = new HashMap<>();
+        List<Long> exitosos = new ArrayList<>();
+
+        resultado.setTotalProcesados(request.getPersonalIds().size());
+
+        for (Long personalId : request.getPersonalIds()) {
+            try {
+                PersonalDTO personalActualizado = imprimirCredencial(personalId);
+                actualizados.add(personalActualizado);
+                exitosos.add(personalId);
+            } catch (Exception e) {
+                errores.put(personalId, e.getMessage());
+            }
+        }
+
+        resultado.setExitosos(exitosos.size());
+        resultado.setFallidos(errores.size());
+        resultado.setIdsExitosos(exitosos);
+        resultado.setErrores(errores);
+        resultado.setPersonalesActualizados(actualizados);
+
+        return resultado;
+    }
+
     // Métodos privados de ayuda
     private Personal validarPersonal(Long personalId) {
         return personalRepository.findById(personalId)
@@ -368,6 +398,35 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
                 .qrId(personal.getQr() != null ? personal.getQr().getId() : null)
                 .estadoActual(estadoActual)
                 .build();
+    }
+
+    @Override
+    public PersonalDTO estadoRegistrado(Long personalId) {
+        Personal personal = personalRepository.findById(personalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado"));
+
+        boolean pudeVolverARegistrarse = estadoActualRepository.existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
+                personalId, EstadoPersonal.CREDENCIAL_IMPRESO.getNombre());
+
+        if (!pudeVolverARegistrarse) {
+            throw new BusinessException("No puede volver a imprimir tiene que devolver el credencial.");
+        }
+
+        Estado estado = estadoRepository.findByEnum(EstadoPersonal.INACTIVO_POR_RENUNCIA)
+                .orElseThrow(() -> new BusinessException("Estado INACTIVO POR RENUNCIA no configurado"));
+
+        desactivarEstadoActual(personalId);
+
+        EstadoActual nuevoEstado = EstadoActual.builder()
+                .personal(personal)
+                .estado(estado)
+                .valor_estado_actual(true)
+                .build();
+
+        estadoActualRepository.save(nuevoEstado);
+        log.info("Se habilito para volver a imprimir el credencial. a personal con id: {}", personalId);
+
+        return mapToDTO(personal);
     }
 
     private EstadoActualDTO mapToEstadoActualDTO(EstadoActual estadoActual) {
