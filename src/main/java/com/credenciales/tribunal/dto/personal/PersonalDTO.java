@@ -40,14 +40,12 @@ public class PersonalDTO {
     
     @NotBlank(message = "El carnet de identidad es requerido")
     @Size(min = 5, max = 20, message = "El carnet de identidad debe tener entre 5 y 20 caracteres")
-    @Pattern(regexp = "^[0-9]+[A-Za-z]?$", message = "El carnet de identidad debe contener solo números y opcionalmente una letra al final")
     @Schema(description = "Carnet de identidad", example = "1234567", required = true)
     private String carnetIdentidad;
     
-    @NotBlank(message = "El correo electrónico es requerido")
     @Email(message = "El correo electrónico debe tener un formato válido")
     @Size(max = 150, message = "El correo electrónico no puede exceder los 150 caracteres")
-    @Schema(description = "Correo electrónico", example = "juan.perez@ejemplo.com", required = true)
+    @Schema(description = "Correo electrónico", example = "juan.perez@ejemplo.com")
     private String correo;
     
     @Pattern(regexp = "^[0-9]{7,10}$", message = "El celular debe contener entre 7 y 10 dígitos")
