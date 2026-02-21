@@ -208,4 +208,12 @@ public class PersonalController {
               PersonalDetallesDTO res = personalService.obtenernPersonalQr(qr);
               return res;
     }
+
+    @GetMapping("/por/circunscripcion/{cir}")
+    @Operation(summary = "Filtra personal por circunscripcion")
+    public List<PersonalNotarioDTO> obtenerPorCircunscirpcion(
+            @PathVariable String cir) {
+              List<PersonalNotarioDTO> res = personalService.filtroNotarios(cir);
+              return res;
+    }
 }

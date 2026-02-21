@@ -29,6 +29,7 @@ import java.util.function.Function;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -881,4 +882,51 @@ public class PersonalServiceImpl implements PersonalService {
 				.qrId(personal.getQr() != null ? personal.getQr().getId() : null)
 				.build();
 	}
+    @Override
+    public List<PersonalNotarioDTO> filtroNotarios(String nroCircunscrip){
+         // Validación de entrada
+        if (nroCircunscrip == null || nroCircunscrip.trim().isEmpty()) {
+            log.warn("Se recibió número de circunscripción nulo o vacío");
+            return Collections.emptyList();
+        }
+        
+        try {
+            // Obtener personal filtrado y ordenado
+            List<Personal> personal = personalRepository
+                .findByNroCircunscripcion(
+                    nroCircunscrip.trim()
+                );
+            
+            // Convertir a DTOs
+            return personal.stream()
+                .map(this::buildPersonalNotarioDTO)
+                .collect(Collectors.toList());
+                
+        } catch (Exception e) {
+            log.error("Error al filtrar notarios por circunscripción: {}", nroCircunscrip, e);
+            throw new RuntimeException("Error al obtener el listado de notarios", e);
+        }
+    }
+    private PersonalNotarioDTO buildPersonalNotarioDTO(Personal personal) {
+        return PersonalNotarioDTO.builder()
+            .id(personal.getId())
+            .nombreCompleto(formatNombreCompleto(personal))
+            .carnetIdentidad(personal.getCarnetIdentidad())
+            .correo(personal.getCorreo())
+            .celular(personal.getCelular())
+            .nroCircunscripcion(personal.getNroCircunscripcion())
+            .tipo(personal.getTipo())
+            .build();
+    }
+    
+    private String formatNombreCompleto(Personal personal) {
+        return Stream.of(
+                personal.getNombre(),
+                personal.getApellidoPaterno(),
+                personal.getApellidoMaterno()
+            )
+            .filter(Objects::nonNull)
+            .filter(s -> !s.trim().isEmpty())
+            .collect(Collectors.joining(" "));
+    }
 }
