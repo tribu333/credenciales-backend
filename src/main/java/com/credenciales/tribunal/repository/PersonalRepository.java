@@ -42,4 +42,16 @@ public interface PersonalRepository extends JpaRepository<Personal, Long> {
     List<Personal> findByNroCircunscripcionContainingIgnoreCase(String nroCircunscripcion);
 
     List<Personal> findByNroCircunscripcion(String nroCircunscripcion);
+
+    @Query("SELECT DISTINCT p FROM Personal p " +
+            "LEFT JOIN FETCH p.imagen " +
+            "LEFT JOIN FETCH p.qr " +
+            "LEFT JOIN FETCH p.historialCargosProceso hcp " +
+            "LEFT JOIN FETCH hcp.cargoProceso cp " +
+            "LEFT JOIN FETCH cp.unidad u " +
+            "LEFT JOIN FETCH p.estadosActuales ea " +
+            "LEFT JOIN FETCH ea.estado e " +
+            "WHERE (hcp.activo = true OR hcp IS NULL) " +
+            "AND (ea.valor_estado_actual = true OR ea IS NULL)")
+    List<Personal> findAllConTodoCargado();
 }
