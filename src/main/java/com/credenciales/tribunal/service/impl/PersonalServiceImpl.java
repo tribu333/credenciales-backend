@@ -714,8 +714,10 @@ public class PersonalServiceImpl implements PersonalService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public List<PersonalDetallesDTO> obtenerDetallesPersonal() {
-		List<Personal> listaPersonal = personalRepository.findAll();
+		// UNA SOLA consulta a la base de datos
+		List<Personal> listaPersonal = personalRepository.findAllConTodoCargado();
 
 		return listaPersonal.stream()
 				.map(this::mapearAPersonalDetallesDTO)
@@ -723,17 +725,39 @@ public class PersonalServiceImpl implements PersonalService {
 	}
 
 	private PersonalDetallesDTO mapearAPersonalDetallesDTO(Personal personal) {
-		// Solo tipo eventual (como en tu código original)
-		List<HistorialCargoProceso> listaCargo = historialCargoProcesoRepository
-				.findByPersonalIdAndActivoTrue(personal.getId());
+		// Obtener historial activo desde la colección ya cargada
+		String nombreCargo = null;
+		String nombreUnidad = null;
 
-		CargoProceso cargoProceso = listaCargo.isEmpty() ? null : listaCargo.get(0).getCargoProceso();
-		Unidad unidad = cargoProceso != null ? cargoProceso.getUnidad() : null;
+		if (personal.getHistorialCargosProceso() != null) {
+			HistorialCargoProceso historialActivo = personal.getHistorialCargosProceso().stream()
+					.filter(h -> h.getActivo() != null && h.getActivo()) // Solo activos
+					.findFirst()
+					.orElse(null);
 
-		String nombreUnidad = unidad != null ? unidad.getNombre() : null;
-		String nombreCargo = cargoProceso != null ? cargoProceso.getNombre() : null;
+			if (historialActivo != null && historialActivo.getCargoProceso() != null) {
+				nombreCargo = historialActivo.getCargoProceso().getNombre();
 
-		// Construir URLs (manejando nulls)
+				if (historialActivo.getCargoProceso().getUnidad() != null) {
+					nombreUnidad = historialActivo.getCargoProceso().getUnidad().getNombre();
+				}
+			}
+		}
+
+		// Obtener estado actual activo desde la colección ya cargada
+		String estadoActualNombre = null;
+		if (personal.getEstadosActuales() != null) {
+			EstadoActual estadoActivo = personal.getEstadosActuales().stream()
+					.filter(e -> e.getValor_estado_actual() != null && e.getValor_estado_actual()) // Solo activos
+					.findFirst()
+					.orElse(null);
+
+			if (estadoActivo != null && estadoActivo.getEstado() != null) {
+				estadoActualNombre = estadoActivo.getEstado().getNombre();
+			}
+		}
+
+		// URLs (igual que antes)
 		String urlImagen = personal.getImagen() != null
 				? baseUrl + "/api/imagenes/" + personal.getImagen().getIdImagen() + "/descargar"
 				: null;
@@ -752,8 +776,8 @@ public class PersonalServiceImpl implements PersonalService {
 				.celular(personal.getCelular())
 				.accesoComputo(personal.getAccesoComputo())
 				.nroCircunscripcion(personal.getNroCircunscripcion())
-				.tipo(personal.getTipo())
-				.estadoActual(obtenerEstadoActual(personal.getId()))
+				.tipo(personal.getTipo() != null ? personal.getTipo() : null)
+				.estadoActual(estadoActualNombre)
 				.createdAt(personal.getCreatedAt())
 				.cargo(nombreCargo)
 				.unidad(nombreUnidad)
@@ -763,6 +787,7 @@ public class PersonalServiceImpl implements PersonalService {
 				.qr(urlQr)
 				.build();
 	}
+
 
 	@Transactional(readOnly = true)
 	@Override
@@ -907,6 +932,7 @@ public class PersonalServiceImpl implements PersonalService {
             throw new RuntimeException("Error al obtener el listado de notarios", e);
         }
     }
+
     private PersonalNotarioDTO buildPersonalNotarioDTO(Personal personal) {
         return PersonalNotarioDTO.builder()
             .id(personal.getId())
