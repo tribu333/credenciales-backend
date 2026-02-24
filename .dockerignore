@@ -1,0 +1,26 @@
+# Directorios de construcción
+build/
+.gradle/
+bin/
+
+# IDE
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+
+# Logs
+*.log
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Uploads locales (no queremos copiar uploads existentes)
+uploads/
+
+# Archivos de configuración locales
+gradle-wrapper.jar
+.DS_Store
