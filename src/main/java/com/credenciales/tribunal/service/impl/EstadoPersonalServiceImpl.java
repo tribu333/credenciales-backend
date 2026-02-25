@@ -4,7 +4,6 @@ import com.credenciales.tribunal.dto.estadoActual.CambioEstadoMasivoRequestDTO;
 import com.credenciales.tribunal.dto.estadoActual.EstadoActualDTO;
 import com.credenciales.tribunal.dto.estadoActual.ResultadoCambioMasivoDTO;
 import com.credenciales.tribunal.dto.personal.PersonalDTO;
-import com.credenciales.tribunal.dto.estadoActual.CambioEstadoResquestDTO;
 import com.credenciales.tribunal.model.entity.Estado;
 import com.credenciales.tribunal.model.entity.EstadoActual;
 import com.credenciales.tribunal.model.entity.Personal;
@@ -33,229 +32,201 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
     private final EstadoRepository estadoRepository;
     private final EstadoActualRepository estadoActualRepository;
 
-    @Override
-    public PersonalDTO registrarPersonal(CambioEstadoResquestDTO request) {
-        Personal personal = personalRepository.findById(request.getPersonalId())
-                .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado"));
+    // --- Métodos Privados de Ayuda ---
 
-        validarTransicionEstado(personal.getId(), EstadoPersonal.PERSONAL_REGISTRADO);
+    private Personal validarPersonal(Long personalId) {
+        return personalRepository.findById(personalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado con ID: " + personalId));
+    }
 
-        Estado estadoRegistrado = estadoRepository.findByEnum(EstadoPersonal.PERSONAL_REGISTRADO)
-                .orElseThrow(() -> new BusinessException("Estado PERSONAL REGISTRADO no configurado"));
+    /**
+     * Método genérico para cambiar de estado de forma ATÓMICA.
+     * Primero desactiva el estado actual y luego crea el nuevo en una sola operación de base de datos.
+     * La anotación @Transactional garantiza que todo se haga en una sola transacción.
+     */
+    @Transactional
+    protected PersonalDTO cambiarEstadoPersonal(Long personalId, EstadoPersonal nuevoEstadoEnum, String reglaValidacionMensaje) {
+        // 1. Validar que el nuevo estado existe en la BD
+        Estado nuevoEstado = estadoRepository.findByEnum(nuevoEstadoEnum)
+                .orElseThrow(() -> new BusinessException("Estado " + nuevoEstadoEnum.getNombre() + " no configurado en el sistema"));
 
-        // Desactivar estado actual si existe
-        desactivarEstadoActual(personal.getId());
+        // 2. Bloquear la fila del personal para evitar lecturas concurrentes (PESIMISTIC_WRITE)
+        //    Esto es clave para evitar la condición de carrera.
+        Personal personal = personalRepository.findPersonalByIdWithPessimisticLock(personalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado con ID: " + personalId));
 
-        // Crear nuevo estado
-        EstadoActual nuevoEstado = EstadoActual.builder()
+        // 3. Validar la transición (usando el método ya existente, que ahora también se beneficia del lock)
+        if (!validarTransicionEstado(personalId, nuevoEstadoEnum)) {
+            throw new BusinessException(reglaValidacionMensaje);
+        }
+
+        // 4. Desactivar el estado actual (si existe)
+        estadoActualRepository.findCurrentEstadoByPersonalId(personalId)
+                .ifPresent(estadoActual -> {
+                    estadoActual.setValor_estado_actual(false);
+                    estadoActualRepository.save(estadoActual); // Este save está dentro de la misma tx
+                });
+
+        // 5. Crear el nuevo estado
+        EstadoActual nuevoEstadoActual = EstadoActual.builder()
                 .personal(personal)
-                .estado(estadoRegistrado)
+                .estado(nuevoEstado)
                 .valor_estado_actual(true)
                 .build();
 
-        estadoActualRepository.save(nuevoEstado);
-        log.info("Personal {} registrado exitosamente", personal.getId());
+        estadoActualRepository.save(nuevoEstadoActual);
+        log.info("Personal ID {} cambió a estado {}", personalId, nuevoEstadoEnum.getNombre());
 
         return mapToDTO(personal);
     }
 
+    // --- Métodos de Cambio de Estado (ahora usan el método genérico) ---
+
     @Override
     public PersonalDTO imprimirCredencial(Long personalId) {
-        Personal personal = validarPersonal(personalId);
-
-        // Verificar que el estado actual sea PERSONAL_REGISTRADO
-        if (!estadoActualRepository.existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
-                personalId, EstadoPersonal.PERSONAL_REGISTRADO.getNombre())) {
-            throw new BusinessException("El personal debe estar en estado REGISTRADO para imprimir credencial");
-        }
-
-        Estado estadoImpreso = estadoRepository.findByEnum(EstadoPersonal.CREDENCIAL_IMPRESO)
-                .orElseThrow(() -> new BusinessException("Estado CREDENCIAL IMPRESO no configurado"));
-
-        desactivarEstadoActual(personalId);
-
-        EstadoActual nuevoEstado = EstadoActual.builder()
-                .personal(personal)
-                .estado(estadoImpreso)
-                .valor_estado_actual(true)
-                .build();
-
-        estadoActualRepository.save(nuevoEstado);
-        log.info("Credencial impresa para personal {}", personalId);
-
-        return mapToDTO(personal);
+        return cambiarEstadoPersonal(
+                personalId,
+                EstadoPersonal.CREDENCIAL_IMPRESO,
+                "El personal debe estar en estado REGISTRADO para imprimir credencial"
+        );
     }
 
     @Override
     public PersonalDTO entregarCredencial(Long personalId) {
-        Personal personal = validarPersonal(personalId);
+        // Lógica especial: primero a CREDENCIAL ENTREGADO, luego a PERSONAL ACTIVO
+        Personal personal = personalRepository.findPersonalByIdWithPessimisticLock(personalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado con ID: " + personalId));
 
-        // Verificar que el estado actual sea CREDENCIAL_IMPRESO
-        if (!estadoActualRepository.existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
-                personalId, EstadoPersonal.CREDENCIAL_IMPRESO.getNombre())) {
+        if (!validarTransicionEstado(personalId, EstadoPersonal.CREDENCIAL_ENTREGADO)) {
             throw new BusinessException("La credencial debe estar impresa antes de entregarla");
         }
 
         Estado estadoEntregado = estadoRepository.findByEnum(EstadoPersonal.CREDENCIAL_ENTREGADO)
                 .orElseThrow(() -> new BusinessException("Estado CREDENCIAL ENTREGADO no configurado"));
+        Estado estadoActivo = estadoRepository.findByEnum(EstadoPersonal.PERSONAL_ACTIVO)
+                .orElseThrow(() -> new BusinessException("Estado PERSONAL ACTIVO no configurado"));
 
+        // Desactivar actual (CREDENCIAL IMPRESO)
         desactivarEstadoActual(personalId);
 
-        // Crear estado CREDENCIAL ENTREGADO
-        EstadoActual nuevoEstado = EstadoActual.builder()
+        // Crear CREDENCIAL ENTREGADO
+        EstadoActual entregado = EstadoActual.builder()
                 .personal(personal)
                 .estado(estadoEntregado)
                 .valor_estado_actual(true)
                 .build();
+        estadoActualRepository.save(entregado);
 
-        estadoActualRepository.save(nuevoEstado);
+        // Desactivar CREDENCIAL ENTREGADO y crear PERSONAL ACTIVO (inmediato)
+        // Nota: En un flujo real, tal vez quieras dejar un tiempo entre estos dos.
+        // Por simplicidad, lo hacemos automático como en tu código original.
+        desactivarEstadoActual(personalId); // Desactiva el que acabamos de crear (está bien porque está en la misma tx)
 
-        // Automáticamente pasar a PERSONAL ACTIVO
-        Estado estadoActivo = estadoRepository.findByEnum(EstadoPersonal.PERSONAL_ACTIVO)
-                .orElseThrow(() -> new BusinessException("Estado PERSONAL ACTIVO no configurado"));
-
-        desactivarEstadoActual(personalId); // Desactivar CREDENCIAL ENTREGADO
-
-        EstadoActual estadoActivoNuevo = EstadoActual.builder()
+        EstadoActual activo = EstadoActual.builder()
                 .personal(personal)
                 .estado(estadoActivo)
                 .valor_estado_actual(true)
                 .build();
+        estadoActualRepository.save(activo);
 
-        estadoActualRepository.save(estadoActivoNuevo);
         log.info("Credencial entregada y personal {} activado", personalId);
-
         return mapToDTO(personal);
     }
 
     @Override
     public PersonalDTO habilitarAccesoComputo(Long personalId) {
         Personal personal = validarPersonal(personalId);
-
-        // Verificar que el personal tenga acceso a cómputo habilitado
-        if (!personal.getAccesoComputo()) {
+        if (Boolean.FALSE.equals(personal.getAccesoComputo())) {
             throw new BusinessException("Este personal no tiene habilitado el acceso a cómputo");
         }
-
-        // Verificar que esté en estado PERSONAL ACTIVO
-        if (!estadoActualRepository.existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
-                personalId, EstadoPersonal.PERSONAL_ACTIVO.getNombre())) {
-            throw new BusinessException("El personal debe estar ACTIVO para habilitar acceso a cómputo");
-        }
-
-        Estado estadoComputo = estadoRepository.findByEnum(EstadoPersonal.PERSONAL_CON_ACCESO_A_COMPUTO)
-                .orElseThrow(() -> new BusinessException("Estado PERSONAL CON ACCESO A COMPUTO no configurado"));
-
-        desactivarEstadoActual(personalId);
-
-        EstadoActual nuevoEstado = EstadoActual.builder()
-                .personal(personal)
-                .estado(estadoComputo)
-                .valor_estado_actual(true)
-                .build();
-
-        estadoActualRepository.save(nuevoEstado);
-        log.info("Acceso a cómputo habilitado para personal {}", personalId);
-
-        return mapToDTO(personal);
+        return cambiarEstadoPersonal(
+                personalId,
+                EstadoPersonal.PERSONAL_CON_ACCESO_A_COMPUTO,
+                "El personal debe estar ACTIVO para habilitar acceso a cómputo"
+        );
     }
 
     @Override
     public PersonalDTO devolverCredencial(Long personalId) {
-        Personal personal = validarPersonal(personalId);
+        // Lógica especial: Primero CREDENCIAL DEVUELTO, luego INACTIVO
+        Personal personal = personalRepository.findPersonalByIdWithPessimisticLock(personalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado con ID: " + personalId));
 
-        // Puede devolver credencial desde PERSONAL ACTIVO o PERSONAL CON ACCESO A
-        // COMPUTO
-        boolean esActivo = estadoActualRepository.existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
-                personalId, EstadoPersonal.PERSONAL_ACTIVO.getNombre());
-        boolean esAccesoComputo = estadoActualRepository.existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
-                personalId, EstadoPersonal.PERSONAL_CON_ACCESO_A_COMPUTO.getNombre());
-
-        if (!esActivo && !esAccesoComputo) {
-            throw new BusinessException(
-                    "El personal debe estar ACTIVO o con ACCESO A COMPUTO para devolver credencial");
+        boolean esActivoOVálido = validarTransicionEstado(personalId, EstadoPersonal.CREDENCIAL_DEVUELTO);
+        if (!esActivoOVálido) {
+            throw new BusinessException("El personal debe estar ACTIVO o con ACCESO A COMPUTO para devolver credencial");
         }
 
         Estado estadoDevuelto = estadoRepository.findByEnum(EstadoPersonal.CREDENCIAL_DEVUELTO)
                 .orElseThrow(() -> new BusinessException("Estado CREDENCIAL DEVUELTO no configurado"));
 
         desactivarEstadoActual(personalId);
-
-        EstadoActual nuevoEstado = EstadoActual.builder()
+        EstadoActual devuelto = EstadoActual.builder()
                 .personal(personal)
                 .estado(estadoDevuelto)
                 .valor_estado_actual(true)
                 .build();
+        estadoActualRepository.save(devuelto);
 
-        estadoActualRepository.save(nuevoEstado);
-
-        // Al devolver credencial, pasar a INACTIVO
+        // Llamar a finalizar proceso (que ya maneja su propio lock, pero como estamos dentro de la misma tx, el lock ya está adquirido)
         return finalizarProcesoElectoral(personalId);
     }
 
     @Override
     public PersonalDTO finalizarProcesoElectoral(Long personalId) {
-        Personal personal = validarPersonal(personalId);
-
-        Estado estadoInactivoTerminado = estadoRepository.findByEnum(EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO)
-                .orElseThrow(() -> new BusinessException("Estado INACTIVO PROCESO TERMINADO no configurado"));
-
-        desactivarEstadoActual(personalId);
-
-        EstadoActual nuevoEstado = EstadoActual.builder()
-                .personal(personal)
-                .estado(estadoInactivoTerminado)
-                .valor_estado_actual(true)
-                .build();
-
-        estadoActualRepository.save(nuevoEstado);
-        log.info("Proceso electoral finalizado para personal {}", personalId);
-
-        return mapToDTO(personal);
+        return cambiarEstadoPersonal(
+                personalId,
+                EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO,
+                "No se puede finalizar el proceso desde el estado actual"
+        );
     }
 
     @Override
     public PersonalDTO renunciar(Long personalId) {
-        Personal personal = validarPersonal(personalId);
+        return cambiarEstadoPersonal(
+                personalId,
+                EstadoPersonal.INACTIVO_POR_RENUNCIA,
+                "No se puede renunciar desde el estado actual"
+        );
+    }
 
-        // Validar que pueda renunciar desde ciertos estados
-        boolean puedeRenunciar = estadoActualRepository.existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
-                personalId, EstadoPersonal.PERSONAL_REGISTRADO.getNombre()) ||
-                estadoActualRepository.existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
-                        personalId, EstadoPersonal.CREDENCIAL_IMPRESO.getNombre())
-                ||
-                estadoActualRepository.existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
-                        personalId, EstadoPersonal.CREDENCIAL_ENTREGADO.getNombre())
-                ||
-                estadoActualRepository.existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
-                        personalId, EstadoPersonal.PERSONAL_ACTIVO.getNombre())
-                ||
-                estadoActualRepository.existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
-                        personalId, EstadoPersonal.PERSONAL_CON_ACCESO_A_COMPUTO.getNombre());
+    @Override
+    public PersonalDTO estadoRegistrado(Long personalId) {
+        // TODO: Revisar la lógica de este método. El nombre y la implementación actual no coinciden.
+        // Por ahora, lo dejo como estaba pero usando el lock.
+        Personal personal = personalRepository.findPersonalByIdWithPessimisticLock(personalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado"));
 
-        if (!puedeRenunciar) {
-            throw new BusinessException("No se puede renunciar desde el estado actual");
+        boolean puedeVolverARegistrarse = estadoActualRepository.existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
+                personalId, EstadoPersonal.CREDENCIAL_IMPRESO.getNombre());
+
+        if (!puedeVolverARegistrarse) {
+            throw new BusinessException("No puede volver a imprimir, tiene que devolver la credencial.");
         }
 
-        Estado estadoRenuncia = estadoRepository.findByEnum(EstadoPersonal.INACTIVO_POR_RENUNCIA)
+        Estado estado = estadoRepository.findByEnum(EstadoPersonal.INACTIVO_POR_RENUNCIA)
                 .orElseThrow(() -> new BusinessException("Estado INACTIVO POR RENUNCIA no configurado"));
 
         desactivarEstadoActual(personalId);
 
         EstadoActual nuevoEstado = EstadoActual.builder()
                 .personal(personal)
-                .estado(estadoRenuncia)
+                .estado(estado)
                 .valor_estado_actual(true)
                 .build();
 
         estadoActualRepository.save(nuevoEstado);
-        log.info("Renuncia registrada para personal {}", personalId);
+        log.info("Se habilitó para volver a imprimir la credencial a personal con id: {}", personalId);
 
         return mapToDTO(personal);
     }
 
+
+    // --- Métodos de Validación (sin cambios significativos) ---
+
     @Override
     public boolean validarTransicionEstado(Long personalId, EstadoPersonal nuevoEstado) {
+        // Este método ahora se llama dentro del bloqueo pesimista, por lo que la lectura del estado actual es segura.
         Personal personal = personalRepository.findById(personalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado"));
 
@@ -263,37 +234,29 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
                 .orElse(null);
 
         if (estadoActual == null) {
-            // Si no tiene estado, solo puede ser REGISTRADO
             return nuevoEstado == EstadoPersonal.PERSONAL_REGISTRADO;
         }
 
         String estadoActualNombre = estadoActual.getEstado().getNombre();
 
-        // Lógica de transiciones permitidas
         switch (estadoActualNombre) {
             case "PERSONAL REGISTRADO":
                 return nuevoEstado == EstadoPersonal.CREDENCIAL_IMPRESO ||
                         nuevoEstado == EstadoPersonal.INACTIVO_POR_RENUNCIA;
-
             case "CREDENCIAL IMPRESO":
                 return nuevoEstado == EstadoPersonal.CREDENCIAL_ENTREGADO ||
                         nuevoEstado == EstadoPersonal.INACTIVO_POR_RENUNCIA;
-
             case "CREDENCIAL ENTREGADO":
-                return nuevoEstado == EstadoPersonal.PERSONAL_ACTIVO; // Automático
-
+                return nuevoEstado == EstadoPersonal.PERSONAL_ACTIVO;
             case "PERSONAL ACTIVO":
                 return nuevoEstado == EstadoPersonal.PERSONAL_CON_ACCESO_A_COMPUTO ||
                         nuevoEstado == EstadoPersonal.CREDENCIAL_DEVUELTO ||
                         nuevoEstado == EstadoPersonal.INACTIVO_POR_RENUNCIA;
-
             case "PERSONAL CON ACCESO A COMPUTO":
                 return nuevoEstado == EstadoPersonal.CREDENCIAL_DEVUELTO ||
                         nuevoEstado == EstadoPersonal.INACTIVO_POR_RENUNCIA;
-
             case "CREDENCIAL DEVUELTO":
                 return nuevoEstado == EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO;
-
             default:
                 return false;
         }
@@ -306,6 +269,7 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
                 .collect(Collectors.toList());
     }
 
+    // --- Métodos de Consulta ---
     @Override
     public PersonalDTO obtenerPersonalConEstadoActual(Long personalId) {
         Personal personal = validarPersonal(personalId);
@@ -331,44 +295,101 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
     @Override
     public boolean puedeHabilitarseAccesoComputo(Long personalId) {
         Personal personal = validarPersonal(personalId);
-        return personal.getAccesoComputo() &&
+        return Boolean.TRUE.equals(personal.getAccesoComputo()) &&
                 estadoActualRepository.existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
                         personalId, EstadoPersonal.PERSONAL_ACTIVO.getNombre());
     }
 
+    // --- MÉTODO MASIVO OPTIMIZADO ---
     @Override
+    @Transactional
     public ResultadoCambioMasivoDTO imprimirCredencialMasivo(CambioEstadoMasivoRequestDTO request) {
         ResultadoCambioMasivoDTO resultado = new ResultadoCambioMasivoDTO();
-        List<PersonalDTO> actualizados = new ArrayList<>();
+        List<Long> idsSolicitados = request.getPersonalIds();
+        resultado.setTotalProcesados(idsSolicitados.size());
+
+        List<Long> idsExitosos = new ArrayList<>();
         Map<Long, String> errores = new HashMap<>();
-        List<Long> exitosos = new ArrayList<>();
 
-        resultado.setTotalProcesados(request.getPersonalIds().size());
+        // 1. Obtener el estado "CREDENCIAL IMPRESO" una sola vez
+        Estado estadoImpreso = estadoRepository.findByEnum(EstadoPersonal.CREDENCIAL_IMPRESO)
+                .orElseThrow(() -> new BusinessException("Estado CREDENCIAL IMPRESO no configurado"));
 
-        for (Long personalId : request.getPersonalIds()) {
-            try {
-                PersonalDTO personalActualizado = imprimirCredencial(personalId);
-                actualizados.add(personalActualizado);
-                exitosos.add(personalId);
-            } catch (Exception e) {
-                errores.put(personalId, e.getMessage());
+        // 2. Validar que todos los personales existen y están en estado correcto (PERSONAL_REGISTRADO)
+        //    Usamos una sola query para traer todos los personales y sus estados actuales.
+        List<Personal> personales = personalRepository.findAllById(idsSolicitados);
+        Set<Long> idsEncontrados = personales.stream().map(Personal::getId).collect(Collectors.toSet());
+
+        // IDs no encontrados
+        for (Long id : idsSolicitados) {
+            if (!idsEncontrados.contains(id)) {
+                errores.put(id, "Personal no encontrado");
             }
         }
 
-        resultado.setExitosos(exitosos.size());
-        resultado.setFallidos(errores.size());
-        resultado.setIdsExitosos(exitosos);
-        resultado.setErrores(errores);
-        resultado.setPersonalesActualizados(actualizados);
+        if (personales.isEmpty()) {
+            resultado.setExitosos(0);
+            resultado.setFallidos(errores.size());
+            resultado.setErrores(errores);
+            return resultado;
+        }
 
+        // 3. Obtener los estados actuales de todos estos personales en UNA SOLA QUERY
+        List<EstadoActual> estadosActuales = estadoActualRepository.findAllCurrentEstadosByPersonalIds(new ArrayList<>(idsEncontrados));
+        Map<Long, EstadoActual> estadoActualMap = estadosActuales.stream()
+                .collect(Collectors.toMap(ea -> ea.getPersonal().getId(), ea -> ea));
+
+        // 4. Validar regla de negocio para cada uno (que su estado actual sea PERSONAL REGISTRADO)
+        List<Personal> personalesValidos = new ArrayList<>();
+        for (Personal personal : personales) {
+            EstadoActual estadoActual = estadoActualMap.get(personal.getId());
+            if (estadoActual == null) {
+                errores.put(personal.getId(), "El personal no tiene un estado actual asignado");
+            } else if (!estadoActual.getEstado().getNombre().equals(EstadoPersonal.PERSONAL_REGISTRADO.getNombre())) {
+                errores.put(personal.getId(), "El personal debe estar en estado REGISTRADO para imprimir credencial");
+            } else {
+                personalesValidos.add(personal);
+            }
+        }
+
+        if (personalesValidos.isEmpty()) {
+            resultado.setExitosos(0);
+            resultado.setFallidos(errores.size());
+            resultado.setErrores(errores);
+            return resultado;
+        }
+
+        List<Long> idsValidos = personalesValidos.stream().map(Personal::getId).collect(Collectors.toList());
+
+        // 5. Operación Masiva Atómica: Desactivar todos los estados actuales de los válidos en un solo UPDATE
+        int registrosActualizados = estadoActualRepository.bulkDesactivarEstadosActuales(idsValidos);
+        log.info("Desactivados {} estados actuales para el batch de impresión", registrosActualizados);
+
+        // 6. Crear y guardar todos los nuevos estados en un solo BATCH INSERT
+        List<EstadoActual> nuevosEstados = personalesValidos.stream()
+                .map(personal -> EstadoActual.builder()
+                        .personal(personal)
+                        .estado(estadoImpreso)
+                        .valor_estado_actual(true)
+                        .build())
+                .collect(Collectors.toList());
+
+        // Guardar todos en batch (JPA hará un batch insert gracias a la propiedad hibernate.jdbc.batch_size)
+        estadoActualRepository.saveAll(nuevosEstados);
+
+        // 7. Preparar resultado
+        idsExitosos.addAll(idsValidos);
+        resultado.setExitosos(idsExitosos.size());
+        resultado.setFallidos(errores.size());
+        resultado.setIdsExitosos(idsExitosos);
+        resultado.setErrores(errores);
+        resultado.setPersonalesActualizados(personalesValidos.stream().map(this::mapToDTO).collect(Collectors.toList()));
+
+        log.info("Batch de impresión completado. Éxitos: {}, Fallos: {}", idsExitosos.size(), errores.size());
         return resultado;
     }
 
-    private Personal validarPersonal(Long personalId) {
-        return personalRepository.findById(personalId)
-                .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado con ID: " + personalId));
-    }
-
+    // --- Métodos de Mapeo y ayuda ---
     private void desactivarEstadoActual(Long personalId) {
         estadoActualRepository.findCurrentEstadoByPersonalId(personalId)
                 .ifPresent(estadoActual -> {
@@ -397,35 +418,6 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
                 .qrId(personal.getQr() != null ? personal.getQr().getId() : null)
                 .estadoActual(estadoActual)
                 .build();
-    }
-
-    @Override
-    public PersonalDTO estadoRegistrado(Long personalId) {
-        Personal personal = personalRepository.findById(personalId)
-                .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado"));
-
-        boolean pudeVolverARegistrarse = estadoActualRepository.existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
-                personalId, EstadoPersonal.CREDENCIAL_IMPRESO.getNombre());
-
-        if (!pudeVolverARegistrarse) {
-            throw new BusinessException("No puede volver a imprimir tiene que devolver el credencial.");
-        }
-
-        Estado estado = estadoRepository.findByEnum(EstadoPersonal.INACTIVO_POR_RENUNCIA)
-                .orElseThrow(() -> new BusinessException("Estado INACTIVO POR RENUNCIA no configurado"));
-
-        desactivarEstadoActual(personalId);
-
-        EstadoActual nuevoEstado = EstadoActual.builder()
-                .personal(personal)
-                .estado(estado)
-                .valor_estado_actual(true)
-                .build();
-
-        estadoActualRepository.save(nuevoEstado);
-        log.info("Se habilito para volver a imprimir el credencial. a personal con id: {}", personalId);
-
-        return mapToDTO(personal);
     }
 
     private EstadoActualDTO mapToEstadoActualDTO(EstadoActual estadoActual) {

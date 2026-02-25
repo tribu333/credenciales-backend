@@ -2,7 +2,9 @@ package com.credenciales.tribunal.repository;
 
 import com.credenciales.tribunal.model.entity.Personal;
 import com.credenciales.tribunal.model.enums.TipoPersonal;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -52,6 +54,18 @@ public interface PersonalRepository extends JpaRepository<Personal, Long> {
             "LEFT JOIN FETCH p.estadosActuales ea " +
             "LEFT JOIN FETCH ea.estado e " +
             "WHERE (hcp.activo = true OR hcp IS NULL) " +
-            "AND (ea.valor_estado_actual = true OR ea IS NULL)")
+            "AND (ea.valor_estado_actual = true OR ea IS NULL)" +
+            "ORDER BY p.createdAt DESC")
     List<Personal> findAllConTodoCargado();
+
+    /**
+     * Encuentra un personal por su ID y ADQUIERE UN BLOQUEO PESIMISTA DE ESCRITURA.
+     * Esto evita que otra transacción lea o modifique esta fila hasta que la transacción actual termine.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Personal p WHERE p.id = :id")
+    Optional<Personal> findPersonalByIdWithPessimisticLock(@Param("id") Long id);
+
+    @Query("SELECT p FROM Personal p WHERE p.id IN :ids")
+    List<Personal> findAllById(@Param("ids") List<Long> ids);
 }

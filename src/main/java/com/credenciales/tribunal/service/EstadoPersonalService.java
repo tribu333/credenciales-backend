@@ -11,7 +11,7 @@ import java.util.List;
 public interface EstadoPersonalService {
     
     // Cambios de estado principales
-    PersonalDTO registrarPersonal(CambioEstadoResquestDTO request);
+    //PersonalDTO registrarPersonal(CambioEstadoResquestDTO request);
     PersonalDTO imprimirCredencial(Long personalId);
     PersonalDTO entregarCredencial(Long personalId);
     PersonalDTO habilitarAccesoComputo(Long personalId);
