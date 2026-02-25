@@ -59,11 +59,9 @@ public interface PersonalRepository extends JpaRepository<Personal, Long> {
     List<Personal> findAllConTodoCargado();
 
     /**
-     * Encuentra un personal por su ID y ADQUIERE UN BLOQUEO PESIMISTA DE ESCRITURA.
-     * Esto evita que otra transacción lea o modifique esta fila hasta que la transacción actual termine.
+     * VERSIÓN CON QUERY NATIVA - Compatible con MariaDB 10.4
      */
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT p FROM Personal p WHERE p.id = :id")
+    @Query(value = "SELECT * FROM personal WHERE id = :id FOR UPDATE", nativeQuery = true)
     Optional<Personal> findPersonalByIdWithPessimisticLock(@Param("id") Long id);
 
     @Query("SELECT p FROM Personal p WHERE p.id IN :ids")
