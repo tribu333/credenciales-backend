@@ -27,7 +27,7 @@ RUN mkdir -p /app/uploads && \
     chmod 777 /app/uploads
 
 # Instalamos curl para healthchecks
-RUN apk add --no-cache curl
+#RUN apk add --no-cache curl
 # Copiar el JAR desde la etapa de construcción
 COPY --from=builder /app/build/libs/*.jar app.jar
 
