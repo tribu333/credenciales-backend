@@ -32,7 +32,7 @@ public class EstadoPersonalController {
 
         private final EstadoPersonalService estadoPersonalService;
 
-        @Operation(summary = "Registrar nuevo personal", description = "Registra un nuevo personal en el sistema y lo coloca en estado PERSONAL REGISTRADO")
+        /*@Operation(summary = "Registrar nuevo personal", description = "Registra un nuevo personal en el sistema y lo coloca en estado PERSONAL REGISTRADO")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "201", description = "Personal registrado exitosamente", content = @Content(schema = @Schema(implementation = PersonalDTO.class))),
                         @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos"),
@@ -43,7 +43,7 @@ public class EstadoPersonalController {
         public ResponseEntity<PersonalDTO> registrarPersonal(
                         @Valid @RequestBody @Parameter(description = "Datos para el registro del personal", required = true) CambioEstadoResquestDTO request) {
                 return new ResponseEntity<>(estadoPersonalService.registrarPersonal(request), HttpStatus.CREATED);
-        }
+        }*/
 
         @Operation(summary = "Imprimir credencial", description = "Cambia el estado del personal a CREDENCIAL IMPRESO. Requiere que el personal esté en estado REGISTRADO.")
         @ApiResponses(value = {
