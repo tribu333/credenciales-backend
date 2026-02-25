@@ -135,7 +135,6 @@ public class PersonalServiceImpl implements PersonalService {
 	@Override
 	public PersonalCompletoDTO registrarPersonalCompleto(PersonalCreateDTO registroDTO) {
 
-		// Verificar código
 		if(registroDTO.getCargoID() == 4 ) {
 			
 			if (!"220326".equals(registroDTO.getCodigoVerificacion())) {
@@ -154,7 +153,6 @@ public class PersonalServiceImpl implements PersonalService {
 			}
 		}
 
-		// Buscar TODOS los personales con ese carnet
 		List<Personal> personalList = personalRepository.findAllByCarnetIdentidad(registroDTO.getCarnetIdentidad());
 
 		if (!personalList.isEmpty()) {
@@ -174,22 +172,18 @@ public class PersonalServiceImpl implements PersonalService {
 				}
 			}
 		}
-		// Si no hay personal con estados que permitan actualización, crear nuevo
 		return crearNuevoPersonal(registroDTO);
 	}
 
 	private PersonalCompletoDTO crearNuevoPersonal(PersonalCreateDTO registroDTO) {
 
-		// 1. Obtener la imagen por ID
 		Imagen imagen = imagenService.findEntityById(registroDTO.getImagenId());
 		if (imagen == null) {
 			throw new BusinessException("Imagen no encontrada con ID: " + registroDTO.getImagenId());
 		}
 
-		// 2. Generar QR
 		Qr qr = generarQrParaPersonal(registroDTO.getCarnetIdentidad());
 
-		// 3. Crear personal
 		Personal personal = Personal.builder()
 				.nombre(registroDTO.getNombre())
 				.apellidoPaterno(registroDTO.getApellidoPaterno())
@@ -207,15 +201,12 @@ public class PersonalServiceImpl implements PersonalService {
 
 		personal = personalRepository.save(personal);
 
-		// 4. Asignar QR al personal
 		qr.setPersonal(personal);
 		qr.setEstado(EstadoQr.ASIGNADO);
 		qrRepository.save(qr);
 
-		// 5. Registrar estado inicial
 		registrarEstadoInicial(personal);
 
-		// 6. Registrar cargo según tipo
 		if (registroDTO.getTipo() == TipoPersonal.PLANTA) {
 			// Para PLANTA, usamos cargoID
 			if (registroDTO.getCargoID() == null) {
@@ -239,10 +230,8 @@ public class PersonalServiceImpl implements PersonalService {
 			Personal personalExistente,
 			PersonalCreateDTO registroDTO) {
 
-		// Obtener estado actual
 		String estadoActual = obtenerEstadoActual(personalExistente.getId());
 
-		// Validar según el estado
 		if (EstadoPersonal.CREDENCIAL_ENTREGADO.getNombre().equals(estadoActual) ||
 				EstadoPersonal.PERSONAL_ACTIVO.getNombre().equals(estadoActual) ||
 				EstadoPersonal.PERSONAL_CON_ACCESO_A_COMPUTO.getNombre().equals(estadoActual)) {
@@ -251,7 +240,6 @@ public class PersonalServiceImpl implements PersonalService {
 							"Debe devolver la credencial antes de poder registrarse nuevamente.");
 		}
 
-		// Actualizar datos básicos
 		personalExistente.setNombre(registroDTO.getNombre());
 		personalExistente.setApellidoPaterno(registroDTO.getApellidoPaterno());
 		personalExistente.setApellidoMaterno(registroDTO.getApellidoMaterno());
@@ -279,9 +267,10 @@ public class PersonalServiceImpl implements PersonalService {
 
 		personalExistente = personalRepository.save(personalExistente);
 
-		// Si está inactivo, reactivar con estado REGISTRADO
-		if (EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO.getNombre().equals(estadoActual) ||
-				EstadoPersonal.INACTIVO_POR_RENUNCIA.getNombre().equals(estadoActual)) {
+		//Si está inactivo, reactivar con estado REGISTRADO
+		if (EstadoPersonal.CREDENCIAL_IMPRESO.getNombre().equals(estadoActual) ||
+				EstadoPersonal.PERSONAL_REGISTRADO.getNombre().equals(estadoActual) ||
+				EstadoPersonal.CREDENCIAL_DEVUELTO.getNombre().equals(estadoActual)) {
 			reactivarPersonal(personalExistente);
 		}
 

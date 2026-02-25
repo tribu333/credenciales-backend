@@ -326,7 +326,6 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
             log.error("Error en entregarCredencialMasivo: {}", e.getMessage(), e);
             throw new BusinessException("Error al procesar entrega masiva: " + e.getMessage());
         }
-
         return resultado;
     }
 
@@ -427,8 +426,8 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
         try {
             Estado estadoDevuelto = estadoRepository.findByEnum(EstadoPersonal.CREDENCIAL_DEVUELTO)
                     .orElseThrow(() -> new BusinessException("Estado CREDENCIAL DEVUELTO no configurado"));
-            Estado estadoInactivo = estadoRepository.findByEnum(EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO)
-                    .orElseThrow(() -> new BusinessException("Estado INACTIVO PROCESO TERMINADO no configurado"));
+            /*stado estadoInactivo = estadoRepository.findByEnum(EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO)
+                    .orElseThrow(() -> new BusinessException("Estado INACTIVO PROCESO TERMINADO no configurado"));*/
 
             List<Personal> personales = personalRepository.findAllById(idsSolicitados);
             Set<Long> idsEncontrados = personales.stream().map(Personal::getId).collect(Collectors.toSet());
@@ -488,7 +487,7 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
             estadoActualRepository.saveAll(estadosDevueltos);
 
             // Desactivar CREDENCIAL DEVUELTO y crear INACTIVO
-            estadoActualRepository.bulkDesactivarEstadosActuales(idsValidos);
+            /*estadoActualRepository.bulkDesactivarEstadosActuales(idsValidos);
 
             List<EstadoActual> estadosInactivos = personalesValidos.stream()
                     .map(personal -> EstadoActual.builder()
@@ -497,7 +496,7 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
                             .valor_estado_actual(true)
                             .build())
                     .collect(Collectors.toList());
-            estadoActualRepository.saveAll(estadosInactivos);
+            estadoActualRepository.saveAll(estadosInactivos);*/
 
             idsExitosos.addAll(idsValidos);
             resultado.setExitosos(idsExitosos.size());
@@ -548,8 +547,8 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
         Map<Long, String> errores = new HashMap<>();
 
         try {
-            Estado estado = estadoRepository.findByEnum(EstadoPersonal.INACTIVO_POR_RENUNCIA)
-                    .orElseThrow(() -> new BusinessException("Estado INACTIVO POR RENUNCIA no configurado"));
+            Estado estado = estadoRepository.findByEnum(EstadoPersonal.PERSONAL_REGISTRADO)
+                    .orElseThrow(() -> new BusinessException("Estado PERSONAL REGISTRADO no configurado"));
 
             List<Personal> personales = personalRepository.findAllById(idsSolicitados);
             Set<Long> idsEncontrados = personales.stream().map(Personal::getId).collect(Collectors.toSet());
@@ -828,8 +827,8 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
 
         switch (estadoActualNombre) {
             case "PERSONAL REGISTRADO":
-                return nuevoEstado == EstadoPersonal.CREDENCIAL_IMPRESO ||
-                        nuevoEstado == EstadoPersonal.INACTIVO_POR_RENUNCIA;
+                return nuevoEstado == EstadoPersonal.PERSONAL_REGISTRADO ||
+                        nuevoEstado == EstadoPersonal.CREDENCIAL_IMPRESO;
             case "CREDENCIAL IMPRESO":
                 return nuevoEstado == EstadoPersonal.CREDENCIAL_ENTREGADO ||
                         nuevoEstado == EstadoPersonal.INACTIVO_POR_RENUNCIA;
@@ -837,13 +836,12 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
                 return nuevoEstado == EstadoPersonal.PERSONAL_ACTIVO;
             case "PERSONAL ACTIVO":
                 return nuevoEstado == EstadoPersonal.PERSONAL_CON_ACCESO_A_COMPUTO ||
-                        nuevoEstado == EstadoPersonal.CREDENCIAL_DEVUELTO ||
-                        nuevoEstado == EstadoPersonal.INACTIVO_POR_RENUNCIA;
+                        nuevoEstado == EstadoPersonal.CREDENCIAL_DEVUELTO;
             case "PERSONAL CON ACCESO A COMPUTO":
-                return nuevoEstado == EstadoPersonal.CREDENCIAL_DEVUELTO ||
-                        nuevoEstado == EstadoPersonal.INACTIVO_POR_RENUNCIA;
+                return nuevoEstado == EstadoPersonal.CREDENCIAL_DEVUELTO;
             case "CREDENCIAL DEVUELTO":
-                return nuevoEstado == EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO;
+                return nuevoEstado == EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO ||
+                        nuevoEstado == EstadoPersonal.INACTIVO_POR_RENUNCIA;
             default:
                 return false;
         }
@@ -885,8 +883,6 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
                 estadoActualRepository.existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
                         personalId, EstadoPersonal.PERSONAL_ACTIVO.getNombre());
     }
-
-    // --- Métodos de Mapeo y ayuda ---
 
     private void desactivarEstadoActual(Long personalId) {
         estadoActualRepository.findCurrentEstadoByPersonalId(personalId)
