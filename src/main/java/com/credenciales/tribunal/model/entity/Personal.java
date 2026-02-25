@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "personal")
@@ -68,5 +69,5 @@ public class Personal {
     private List<HistorialCargoProceso> historialCargosProceso;
 
     @OneToMany(mappedBy = "personal", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<EstadoActual> estadosActuales;
+    private Set<EstadoActual> estadosActuales;
 }

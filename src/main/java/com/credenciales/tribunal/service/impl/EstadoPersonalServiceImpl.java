@@ -51,11 +51,10 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
                 .orElseThrow(() -> new BusinessException("Estado " + nuevoEstadoEnum.getNombre() + " no configurado en el sistema"));
 
         // 2. Bloquear la fila del personal para evitar lecturas concurrentes (PESIMISTIC_WRITE)
-        //    Esto es clave para evitar la condición de carrera.
         Personal personal = personalRepository.findPersonalByIdWithPessimisticLock(personalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado con ID: " + personalId));
 
-        // 3. Validar la transición (usando el método ya existente, que ahora también se beneficia del lock)
+        // 3. Validar la transición
         if (!validarTransicionEstado(personalId, nuevoEstadoEnum)) {
             throw new BusinessException(reglaValidacionMensaje);
         }
@@ -64,7 +63,7 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
         estadoActualRepository.findCurrentEstadoByPersonalId(personalId)
                 .ifPresent(estadoActual -> {
                     estadoActual.setValor_estado_actual(false);
-                    estadoActualRepository.save(estadoActual); // Este save está dentro de la misma tx
+                    estadoActualRepository.save(estadoActual);
                 });
 
         // 5. Crear el nuevo estado
@@ -80,7 +79,7 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
         return mapToDTO(personal);
     }
 
-    // --- Métodos de Cambio de Estado (ahora usan el método genérico) ---
+    // --- Métodos de Cambio de Estado Individuales ---
 
     @Override
     public PersonalDTO imprimirCredencial(Long personalId) {
@@ -93,7 +92,6 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
 
     @Override
     public PersonalDTO entregarCredencial(Long personalId) {
-        // Lógica especial: primero a CREDENCIAL ENTREGADO, luego a PERSONAL ACTIVO
         Personal personal = personalRepository.findPersonalByIdWithPessimisticLock(personalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado con ID: " + personalId));
 
@@ -106,10 +104,8 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
         Estado estadoActivo = estadoRepository.findByEnum(EstadoPersonal.PERSONAL_ACTIVO)
                 .orElseThrow(() -> new BusinessException("Estado PERSONAL ACTIVO no configurado"));
 
-        // Desactivar actual (CREDENCIAL IMPRESO)
         desactivarEstadoActual(personalId);
 
-        // Crear CREDENCIAL ENTREGADO
         EstadoActual entregado = EstadoActual.builder()
                 .personal(personal)
                 .estado(estadoEntregado)
@@ -117,10 +113,7 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
                 .build();
         estadoActualRepository.save(entregado);
 
-        // Desactivar CREDENCIAL ENTREGADO y crear PERSONAL ACTIVO (inmediato)
-        // Nota: En un flujo real, tal vez quieras dejar un tiempo entre estos dos.
-        // Por simplicidad, lo hacemos automático como en tu código original.
-        desactivarEstadoActual(personalId); // Desactiva el que acabamos de crear (está bien porque está en la misma tx)
+        desactivarEstadoActual(personalId);
 
         EstadoActual activo = EstadoActual.builder()
                 .personal(personal)
@@ -148,7 +141,6 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
 
     @Override
     public PersonalDTO devolverCredencial(Long personalId) {
-        // Lógica especial: Primero CREDENCIAL DEVUELTO, luego INACTIVO
         Personal personal = personalRepository.findPersonalByIdWithPessimisticLock(personalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado con ID: " + personalId));
 
@@ -167,9 +159,9 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
                 .valor_estado_actual(true)
                 .build();
         estadoActualRepository.save(devuelto);
+        log.info("Credencial devuelta para personal ID: {}. Estado actual: CREDENCIAL DEVUELTO", personalId);
 
-        // Llamar a finalizar proceso (que ya maneja su propio lock, pero como estamos dentro de la misma tx, el lock ya está adquirido)
-        return finalizarProcesoElectoral(personalId);
+        return mapToDTO(personal);
     }
 
     @Override
@@ -192,20 +184,23 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
 
     @Override
     public PersonalDTO estadoRegistrado(Long personalId) {
-        // TODO: Revisar la lógica de este método. El nombre y la implementación actual no coinciden.
-        // Por ahora, lo dejo como estaba pero usando el lock.
         Personal personal = personalRepository.findPersonalByIdWithPessimisticLock(personalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado"));
 
-        boolean puedeVolverARegistrarse = estadoActualRepository.existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
-                personalId, EstadoPersonal.CREDENCIAL_IMPRESO.getNombre());
+        boolean puedeVolverARegistrarse =
+                estadoActualRepository.existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
+                        personalId, EstadoPersonal.CREDENCIAL_IMPRESO.getNombre()) ||
+                        estadoActualRepository.existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
+                                personalId, EstadoPersonal.CREDENCIAL_DEVUELTO.getNombre()) ||
+                        estadoActualRepository.existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
+                                personalId, EstadoPersonal.PERSONAL_REGISTRADO.getNombre());
 
         if (!puedeVolverARegistrarse) {
             throw new BusinessException("No puede volver a imprimir, tiene que devolver la credencial.");
         }
 
-        Estado estado = estadoRepository.findByEnum(EstadoPersonal.INACTIVO_POR_RENUNCIA)
-                .orElseThrow(() -> new BusinessException("Estado INACTIVO POR RENUNCIA no configurado"));
+        Estado estado = estadoRepository.findByEnum(EstadoPersonal.PERSONAL_REGISTRADO)
+                .orElseThrow(() -> new BusinessException("Estado PERSONAL REGISTRADO no configurado."));
 
         desactivarEstadoActual(personalId);
 
@@ -216,17 +211,609 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
                 .build();
 
         estadoActualRepository.save(nuevoEstado);
-        log.info("Se habilitó para volver a imprimir la credencial a personal con id: {}", personalId);
+        log.info("Personal ID: {} volvió a estado REGISTRADO desde estado anterior", personalId);
 
         return mapToDTO(personal);
     }
 
+    @Override
+    @Transactional
+    public ResultadoCambioMasivoDTO imprimirCredencialMasivo(CambioEstadoMasivoRequestDTO request) {
+        return procesarCambioEstadoSimpleMasivo(
+                request,
+                EstadoPersonal.CREDENCIAL_IMPRESO,
+                EstadoPersonal.PERSONAL_REGISTRADO,
+                "El personal debe estar en estado REGISTRADO para imprimir credencial"
+        );
+    }
 
-    // --- Métodos de Validación (sin cambios significativos) ---
+    @Override
+    @Transactional
+    public ResultadoCambioMasivoDTO entregarCredencialMasivo(CambioEstadoMasivoRequestDTO request) {
+        ResultadoCambioMasivoDTO resultado = new ResultadoCambioMasivoDTO();
+        List<Long> idsSolicitados = request.getPersonalIds();
+        resultado.setTotalProcesados(idsSolicitados.size());
+
+        List<Long> idsExitosos = new ArrayList<>();
+        Map<Long, String> errores = new HashMap<>();
+
+        try {
+            // 1. Obtener estados necesarios
+            Estado estadoEntregado = estadoRepository.findByEnum(EstadoPersonal.CREDENCIAL_ENTREGADO)
+                    .orElseThrow(() -> new BusinessException("Estado CREDENCIAL ENTREGADO no configurado"));
+            Estado estadoActivo = estadoRepository.findByEnum(EstadoPersonal.PERSONAL_ACTIVO)
+                    .orElseThrow(() -> new BusinessException("Estado PERSONAL ACTIVO no configurado"));
+
+            // 2. Validar personales
+            List<Personal> personales = personalRepository.findAllById(idsSolicitados);
+            Set<Long> idsEncontrados = personales.stream().map(Personal::getId).collect(Collectors.toSet());
+
+            for (Long id : idsSolicitados) {
+                if (!idsEncontrados.contains(id)) {
+                    errores.put(id, "Personal no encontrado");
+                }
+            }
+
+            if (personales.isEmpty()) {
+                return construirResultadoVacio(resultado, errores);
+            }
+
+            // 3. Obtener estados actuales
+            List<EstadoActual> estadosActuales = estadoActualRepository
+                    .findAllCurrentEstadosByPersonalIds(new ArrayList<>(idsEncontrados));
+
+            Map<Long, EstadoActual> estadoActualMap = estadosActuales.stream()
+                    .collect(Collectors.toMap(ea -> ea.getPersonal().getId(), ea -> ea));
+
+            // 4. Filtrar válidos (deben tener estado CREDENCIAL IMPRESO)
+            List<Personal> personalesValidos = new ArrayList<>();
+            for (Personal personal : personales) {
+                if (errores.containsKey(personal.getId())) continue;
+
+                EstadoActual ea = estadoActualMap.get(personal.getId());
+                if (ea == null) {
+                    errores.put(personal.getId(), "El personal no tiene un estado actual asignado");
+                } else if (!ea.getEstado().getNombre().equals(EstadoPersonal.CREDENCIAL_IMPRESO.getNombre())) {
+                    errores.put(personal.getId(), "La credencial debe estar impresa antes de entregarla");
+                } else {
+                    personalesValidos.add(personal);
+                }
+            }
+
+            if (personalesValidos.isEmpty()) {
+                return construirResultadoVacio(resultado, errores);
+            }
+
+            List<Long> idsValidos = personalesValidos.stream().map(Personal::getId).collect(Collectors.toList());
+
+            // 5. Desactivar estados actuales (CREDENCIAL IMPRESO)
+            estadoActualRepository.bulkDesactivarEstadosActuales(idsValidos);
+
+            // 6. Crear CREDENCIAL ENTREGADO para todos
+            List<EstadoActual> estadosEntregados = personalesValidos.stream()
+                    .map(personal -> EstadoActual.builder()
+                            .personal(personal)
+                            .estado(estadoEntregado)
+                            .valor_estado_actual(true)
+                            .build())
+                    .collect(Collectors.toList());
+            estadoActualRepository.saveAll(estadosEntregados);
+
+            // 7. Desactivar CREDENCIAL ENTREGADO y crear PERSONAL ACTIVO
+            estadoActualRepository.bulkDesactivarEstadosActuales(idsValidos);
+
+            List<EstadoActual> estadosActivos = personalesValidos.stream()
+                    .map(personal -> EstadoActual.builder()
+                            .personal(personal)
+                            .estado(estadoActivo)
+                            .valor_estado_actual(true)
+                            .build())
+                    .collect(Collectors.toList());
+            estadoActualRepository.saveAll(estadosActivos);
+
+            // 8. Preparar resultado
+            idsExitosos.addAll(idsValidos);
+            resultado.setExitosos(idsExitosos.size());
+            resultado.setFallidos(errores.size());
+            resultado.setIdsExitosos(idsExitosos);
+            resultado.setErrores(errores);
+            resultado.setPersonalesActualizados(personalesValidos.stream().map(this::mapToDTO).collect(Collectors.toList()));
+
+            log.info("Batch de entrega de credenciales completado. Éxitos: {}, Fallos: {}",
+                    idsExitosos.size(), errores.size());
+
+        } catch (Exception e) {
+            log.error("Error en entregarCredencialMasivo: {}", e.getMessage(), e);
+            throw new BusinessException("Error al procesar entrega masiva: " + e.getMessage());
+        }
+
+        return resultado;
+    }
+
+    @Override
+    @Transactional
+    public ResultadoCambioMasivoDTO habilitarAccesoComputoMasivo(CambioEstadoMasivoRequestDTO request) {
+        ResultadoCambioMasivoDTO resultado = new ResultadoCambioMasivoDTO();
+        List<Long> idsSolicitados = request.getPersonalIds();
+        resultado.setTotalProcesados(idsSolicitados.size());
+
+        List<Long> idsExitosos = new ArrayList<>();
+        Map<Long, String> errores = new HashMap<>();
+
+        try {
+            Estado estadoComputo = estadoRepository.findByEnum(EstadoPersonal.PERSONAL_CON_ACCESO_A_COMPUTO)
+                    .orElseThrow(() -> new BusinessException("Estado PERSONAL CON ACCESO A COMPUTO no configurado"));
+
+            List<Personal> personales = personalRepository.findAllById(idsSolicitados);
+            Set<Long> idsEncontrados = personales.stream().map(Personal::getId).collect(Collectors.toSet());
+
+            for (Long id : idsSolicitados) {
+                if (!idsEncontrados.contains(id)) {
+                    errores.put(id, "Personal no encontrado");
+                }
+            }
+
+            if (personales.isEmpty()) {
+                return construirResultadoVacio(resultado, errores);
+            }
+
+            List<EstadoActual> estadosActuales = estadoActualRepository
+                    .findAllCurrentEstadosByPersonalIds(new ArrayList<>(idsEncontrados));
+
+            Map<Long, EstadoActual> estadoActualMap = estadosActuales.stream()
+                    .collect(Collectors.toMap(ea -> ea.getPersonal().getId(), ea -> ea));
+
+            List<Personal> personalesValidos = new ArrayList<>();
+            for (Personal personal : personales) {
+                if (errores.containsKey(personal.getId())) continue;
+
+                EstadoActual ea = estadoActualMap.get(personal.getId());
+                if (ea == null) {
+                    errores.put(personal.getId(), "El personal no tiene un estado actual asignado");
+                } else if (!ea.getEstado().getNombre().equals(EstadoPersonal.PERSONAL_ACTIVO.getNombre())) {
+                    errores.put(personal.getId(), "El personal debe estar ACTIVO para habilitar acceso a cómputo");
+                } else if (Boolean.FALSE.equals(personal.getAccesoComputo())) {
+                    errores.put(personal.getId(), "El personal no tiene habilitado el acceso a cómputo");
+                } else {
+                    personalesValidos.add(personal);
+                }
+            }
+
+            if (personalesValidos.isEmpty()) {
+                return construirResultadoVacio(resultado, errores);
+            }
+
+            List<Long> idsValidos = personalesValidos.stream().map(Personal::getId).collect(Collectors.toList());
+
+            estadoActualRepository.bulkDesactivarEstadosActuales(idsValidos);
+
+            List<EstadoActual> nuevosEstados = personalesValidos.stream()
+                    .map(personal -> EstadoActual.builder()
+                            .personal(personal)
+                            .estado(estadoComputo)
+                            .valor_estado_actual(true)
+                            .build())
+                    .collect(Collectors.toList());
+            estadoActualRepository.saveAll(nuevosEstados);
+
+            idsExitosos.addAll(idsValidos);
+            resultado.setExitosos(idsExitosos.size());
+            resultado.setFallidos(errores.size());
+            resultado.setIdsExitosos(idsExitosos);
+            resultado.setErrores(errores);
+            resultado.setPersonalesActualizados(personalesValidos.stream().map(this::mapToDTO).collect(Collectors.toList()));
+
+            log.info("Batch de habilitación de acceso a cómputo completado. Éxitos: {}, Fallos: {}",
+                    idsExitosos.size(), errores.size());
+
+        } catch (Exception e) {
+            log.error("Error en habilitarAccesoComputoMasivo: {}", e.getMessage(), e);
+            throw new BusinessException("Error al procesar habilitación masiva: " + e.getMessage());
+        }
+
+        return resultado;
+    }
+
+    @Override
+    @Transactional
+    public ResultadoCambioMasivoDTO devolverCredencialMasivo(CambioEstadoMasivoRequestDTO request) {
+        ResultadoCambioMasivoDTO resultado = new ResultadoCambioMasivoDTO();
+        List<Long> idsSolicitados = request.getPersonalIds();
+        resultado.setTotalProcesados(idsSolicitados.size());
+
+        List<Long> idsExitosos = new ArrayList<>();
+        Map<Long, String> errores = new HashMap<>();
+
+        try {
+            Estado estadoDevuelto = estadoRepository.findByEnum(EstadoPersonal.CREDENCIAL_DEVUELTO)
+                    .orElseThrow(() -> new BusinessException("Estado CREDENCIAL DEVUELTO no configurado"));
+            Estado estadoInactivo = estadoRepository.findByEnum(EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO)
+                    .orElseThrow(() -> new BusinessException("Estado INACTIVO PROCESO TERMINADO no configurado"));
+
+            List<Personal> personales = personalRepository.findAllById(idsSolicitados);
+            Set<Long> idsEncontrados = personales.stream().map(Personal::getId).collect(Collectors.toSet());
+
+            for (Long id : idsSolicitados) {
+                if (!idsEncontrados.contains(id)) {
+                    errores.put(id, "Personal no encontrado");
+                }
+            }
+
+            if (personales.isEmpty()) {
+                return construirResultadoVacio(resultado, errores);
+            }
+
+            List<EstadoActual> estadosActuales = estadoActualRepository
+                    .findAllCurrentEstadosByPersonalIds(new ArrayList<>(idsEncontrados));
+
+            Map<Long, EstadoActual> estadoActualMap = estadosActuales.stream()
+                    .collect(Collectors.toMap(ea -> ea.getPersonal().getId(), ea -> ea));
+
+            List<Personal> personalesValidos = new ArrayList<>();
+            for (Personal personal : personales) {
+                if (errores.containsKey(personal.getId())) continue;
+
+                EstadoActual ea = estadoActualMap.get(personal.getId());
+                if (ea == null) {
+                    errores.put(personal.getId(), "El personal no tiene un estado actual asignado");
+                } else {
+                    String estadoNombre = ea.getEstado().getNombre();
+                    if (estadoNombre.equals(EstadoPersonal.PERSONAL_ACTIVO.getNombre()) ||
+                            estadoNombre.equals(EstadoPersonal.PERSONAL_CON_ACCESO_A_COMPUTO.getNombre())) {
+                        personalesValidos.add(personal);
+                    } else {
+                        errores.put(personal.getId(),
+                                "El personal debe estar ACTIVO o con ACCESO A COMPUTO para devolver credencial");
+                    }
+                }
+            }
+
+            if (personalesValidos.isEmpty()) {
+                return construirResultadoVacio(resultado, errores);
+            }
+
+            List<Long> idsValidos = personalesValidos.stream().map(Personal::getId).collect(Collectors.toList());
+
+            // Desactivar estados actuales
+            estadoActualRepository.bulkDesactivarEstadosActuales(idsValidos);
+
+            // Crear CREDENCIAL DEVUELTO
+            List<EstadoActual> estadosDevueltos = personalesValidos.stream()
+                    .map(personal -> EstadoActual.builder()
+                            .personal(personal)
+                            .estado(estadoDevuelto)
+                            .valor_estado_actual(true)
+                            .build())
+                    .collect(Collectors.toList());
+            estadoActualRepository.saveAll(estadosDevueltos);
+
+            // Desactivar CREDENCIAL DEVUELTO y crear INACTIVO
+            estadoActualRepository.bulkDesactivarEstadosActuales(idsValidos);
+
+            List<EstadoActual> estadosInactivos = personalesValidos.stream()
+                    .map(personal -> EstadoActual.builder()
+                            .personal(personal)
+                            .estado(estadoInactivo)
+                            .valor_estado_actual(true)
+                            .build())
+                    .collect(Collectors.toList());
+            estadoActualRepository.saveAll(estadosInactivos);
+
+            idsExitosos.addAll(idsValidos);
+            resultado.setExitosos(idsExitosos.size());
+            resultado.setFallidos(errores.size());
+            resultado.setIdsExitosos(idsExitosos);
+            resultado.setErrores(errores);
+            resultado.setPersonalesActualizados(personalesValidos.stream().map(this::mapToDTO).collect(Collectors.toList()));
+
+            log.info("Batch de devolución de credenciales completado. Éxitos: {}, Fallos: {}",
+                    idsExitosos.size(), errores.size());
+
+        } catch (Exception e) {
+            log.error("Error en devolverCredencialMasivo: {}", e.getMessage(), e);
+            throw new BusinessException("Error al procesar devolución masiva: " + e.getMessage());
+        }
+
+        return resultado;
+    }
+
+    @Override
+    @Transactional
+    public ResultadoCambioMasivoDTO finalizarProcesoElectoralMasivo(CambioEstadoMasivoRequestDTO request) {
+        return procesarCambioEstadoMasivoConValidacion(
+                request,
+                EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO,
+                "No se puede finalizar el proceso desde el estado actual"
+        );
+    }
+
+    @Override
+    @Transactional
+    public ResultadoCambioMasivoDTO renunciarMasivo(CambioEstadoMasivoRequestDTO request) {
+        return procesarCambioEstadoMasivoConValidacion(
+                request,
+                EstadoPersonal.INACTIVO_POR_RENUNCIA,
+                "No se puede renunciar desde el estado actual"
+        );
+    }
+
+    @Override
+    @Transactional
+    public ResultadoCambioMasivoDTO estadoRegistradoMasivo(CambioEstadoMasivoRequestDTO request) {
+        ResultadoCambioMasivoDTO resultado = new ResultadoCambioMasivoDTO();
+        List<Long> idsSolicitados = request.getPersonalIds();
+        resultado.setTotalProcesados(idsSolicitados.size());
+
+        List<Long> idsExitosos = new ArrayList<>();
+        Map<Long, String> errores = new HashMap<>();
+
+        try {
+            Estado estado = estadoRepository.findByEnum(EstadoPersonal.INACTIVO_POR_RENUNCIA)
+                    .orElseThrow(() -> new BusinessException("Estado INACTIVO POR RENUNCIA no configurado"));
+
+            List<Personal> personales = personalRepository.findAllById(idsSolicitados);
+            Set<Long> idsEncontrados = personales.stream().map(Personal::getId).collect(Collectors.toSet());
+
+            for (Long id : idsSolicitados) {
+                if (!idsEncontrados.contains(id)) {
+                    errores.put(id, "Personal no encontrado");
+                }
+            }
+
+            if (personales.isEmpty()) {
+                return construirResultadoVacio(resultado, errores);
+            }
+
+            // Obtener estados actuales filtrando por CREDENCIAL IMPRESO
+            List<EstadoActual> estadosActuales = estadoActualRepository
+                    .findAllCurrentEstadosByPersonalIdsAndEstado(
+                            new ArrayList<>(idsEncontrados),
+                            EstadoPersonal.CREDENCIAL_IMPRESO.getNombre()
+                    );
+
+            Set<Long> idsConEstadoValido = estadosActuales.stream()
+                    .map(ea -> ea.getPersonal().getId())
+                    .collect(Collectors.toSet());
+
+            List<Personal> personalesValidos = new ArrayList<>();
+            for (Personal personal : personales) {
+                if (errores.containsKey(personal.getId())) continue;
+
+                if (idsConEstadoValido.contains(personal.getId())) {
+                    personalesValidos.add(personal);
+                } else {
+                    errores.put(personal.getId(),
+                            "No puede volver a registrarse, debe tener credencial impresa");
+                }
+            }
+
+            if (personalesValidos.isEmpty()) {
+                return construirResultadoVacio(resultado, errores);
+            }
+
+            List<Long> idsValidos = personalesValidos.stream().map(Personal::getId).collect(Collectors.toList());
+
+            estadoActualRepository.bulkDesactivarEstadosActuales(idsValidos);
+
+            List<EstadoActual> nuevosEstados = personalesValidos.stream()
+                    .map(personal -> EstadoActual.builder()
+                            .personal(personal)
+                            .estado(estado)
+                            .valor_estado_actual(true)
+                            .build())
+                    .collect(Collectors.toList());
+            estadoActualRepository.saveAll(nuevosEstados);
+
+            idsExitosos.addAll(idsValidos);
+            resultado.setExitosos(idsExitosos.size());
+            resultado.setFallidos(errores.size());
+            resultado.setIdsExitosos(idsExitosos);
+            resultado.setErrores(errores);
+            resultado.setPersonalesActualizados(personalesValidos.stream().map(this::mapToDTO).collect(Collectors.toList()));
+
+            log.info("Batch de estado registrado completado. Éxitos: {}, Fallos: {}",
+                    idsExitosos.size(), errores.size());
+
+        } catch (Exception e) {
+            log.error("Error en estadoRegistradoMasivo: {}", e.getMessage(), e);
+            throw new BusinessException("Error al procesar estado registrado masivo: " + e.getMessage());
+        }
+
+        return resultado;
+    }
+
+    /**
+     * Método genérico para procesar cambios de estado masivos simples
+     * (donde solo se requiere un estado origen específico)
+     */
+    @Transactional
+    protected ResultadoCambioMasivoDTO procesarCambioEstadoSimpleMasivo(
+            CambioEstadoMasivoRequestDTO request,
+            EstadoPersonal nuevoEstadoEnum,
+            EstadoPersonal estadoRequeridoEnum,
+            String mensajeError) {
+
+        ResultadoCambioMasivoDTO resultado = new ResultadoCambioMasivoDTO();
+        List<Long> idsSolicitados = request.getPersonalIds();
+        resultado.setTotalProcesados(idsSolicitados.size());
+
+        List<Long> idsExitosos = new ArrayList<>();
+        Map<Long, String> errores = new HashMap<>();
+
+        try {
+            Estado nuevoEstado = estadoRepository.findByEnum(nuevoEstadoEnum)
+                    .orElseThrow(() -> new BusinessException(
+                            "Estado " + nuevoEstadoEnum.getNombre() + " no configurado"));
+
+            List<Personal> personales = personalRepository.findAllById(idsSolicitados);
+            Set<Long> idsEncontrados = personales.stream().map(Personal::getId).collect(Collectors.toSet());
+
+            for (Long id : idsSolicitados) {
+                if (!idsEncontrados.contains(id)) {
+                    errores.put(id, "Personal no encontrado");
+                }
+            }
+
+            if (personales.isEmpty()) {
+                return construirResultadoVacio(resultado, errores);
+            }
+
+            List<EstadoActual> estadosActuales = estadoActualRepository
+                    .findAllCurrentEstadosByPersonalIds(new ArrayList<>(idsEncontrados));
+
+            Map<Long, EstadoActual> estadoActualMap = estadosActuales.stream()
+                    .collect(Collectors.toMap(ea -> ea.getPersonal().getId(), ea -> ea));
+
+            List<Personal> personalesValidos = new ArrayList<>();
+            for (Personal personal : personales) {
+                if (errores.containsKey(personal.getId())) continue;
+
+                EstadoActual ea = estadoActualMap.get(personal.getId());
+                if (ea == null) {
+                    errores.put(personal.getId(), "El personal no tiene un estado actual asignado");
+                } else if (!ea.getEstado().getNombre().equals(estadoRequeridoEnum.getNombre())) {
+                    errores.put(personal.getId(), mensajeError);
+                } else {
+                    personalesValidos.add(personal);
+                }
+            }
+
+            if (personalesValidos.isEmpty()) {
+                return construirResultadoVacio(resultado, errores);
+            }
+
+            List<Long> idsValidos = personalesValidos.stream().map(Personal::getId).collect(Collectors.toList());
+
+            estadoActualRepository.bulkDesactivarEstadosActuales(idsValidos);
+
+            List<EstadoActual> nuevosEstados = personalesValidos.stream()
+                    .map(personal -> EstadoActual.builder()
+                            .personal(personal)
+                            .estado(nuevoEstado)
+                            .valor_estado_actual(true)
+                            .build())
+                    .collect(Collectors.toList());
+
+            estadoActualRepository.saveAll(nuevosEstados);
+
+            idsExitosos.addAll(idsValidos);
+            resultado.setExitosos(idsExitosos.size());
+            resultado.setFallidos(errores.size());
+            resultado.setIdsExitosos(idsExitosos);
+            resultado.setErrores(errores);
+            resultado.setPersonalesActualizados(
+                    personalesValidos.stream().map(this::mapToDTO).collect(Collectors.toList()));
+
+            log.info("Batch de cambio a estado {} completado. Éxitos: {}, Fallos: {}",
+                    nuevoEstadoEnum.getNombre(), idsExitosos.size(), errores.size());
+
+        } catch (Exception e) {
+            log.error("Error en procesamiento masivo: {}", e.getMessage(), e);
+            throw new BusinessException("Error al procesar cambio masivo: " + e.getMessage());
+        }
+
+        return resultado;
+    }
+
+    /**
+     * Método genérico para procesar cambios de estado masivos con validación
+     * usando el método validarTransicionEstado (para estados con múltiples orígenes)
+     */
+    @Transactional
+    protected ResultadoCambioMasivoDTO procesarCambioEstadoMasivoConValidacion(
+            CambioEstadoMasivoRequestDTO request,
+            EstadoPersonal nuevoEstadoEnum,
+            String mensajeError) {
+
+        ResultadoCambioMasivoDTO resultado = new ResultadoCambioMasivoDTO();
+        List<Long> idsSolicitados = request.getPersonalIds();
+        resultado.setTotalProcesados(idsSolicitados.size());
+
+        List<Long> idsExitosos = new ArrayList<>();
+        Map<Long, String> errores = new HashMap<>();
+
+        try {
+            Estado nuevoEstado = estadoRepository.findByEnum(nuevoEstadoEnum)
+                    .orElseThrow(() -> new BusinessException(
+                            "Estado " + nuevoEstadoEnum.getNombre() + " no configurado"));
+
+            List<Personal> personales = personalRepository.findAllById(idsSolicitados);
+            Set<Long> idsEncontrados = personales.stream().map(Personal::getId).collect(Collectors.toSet());
+
+            for (Long id : idsSolicitados) {
+                if (!idsEncontrados.contains(id)) {
+                    errores.put(id, "Personal no encontrado");
+                }
+            }
+
+            if (personales.isEmpty()) {
+                return construirResultadoVacio(resultado, errores);
+            }
+
+            List<Personal> personalesValidos = new ArrayList<>();
+            for (Personal personal : personales) {
+                if (errores.containsKey(personal.getId())) continue;
+
+                if (validarTransicionEstado(personal.getId(), nuevoEstadoEnum)) {
+                    personalesValidos.add(personal);
+                } else {
+                    errores.put(personal.getId(), mensajeError);
+                }
+            }
+
+            if (personalesValidos.isEmpty()) {
+                return construirResultadoVacio(resultado, errores);
+            }
+
+            List<Long> idsValidos = personalesValidos.stream().map(Personal::getId).collect(Collectors.toList());
+
+            estadoActualRepository.bulkDesactivarEstadosActuales(idsValidos);
+
+            List<EstadoActual> nuevosEstados = personalesValidos.stream()
+                    .map(personal -> EstadoActual.builder()
+                            .personal(personal)
+                            .estado(nuevoEstado)
+                            .valor_estado_actual(true)
+                            .build())
+                    .collect(Collectors.toList());
+
+            estadoActualRepository.saveAll(nuevosEstados);
+
+            idsExitosos.addAll(idsValidos);
+            resultado.setExitosos(idsExitosos.size());
+            resultado.setFallidos(errores.size());
+            resultado.setIdsExitosos(idsExitosos);
+            resultado.setErrores(errores);
+            resultado.setPersonalesActualizados(
+                    personalesValidos.stream().map(this::mapToDTO).collect(Collectors.toList()));
+
+            log.info("Batch de cambio a estado {} completado. Éxitos: {}, Fallos: {}",
+                    nuevoEstadoEnum.getNombre(), idsExitosos.size(), errores.size());
+
+        } catch (Exception e) {
+            log.error("Error en procesamiento masivo con validación: {}", e.getMessage(), e);
+            throw new BusinessException("Error al procesar cambio masivo: " + e.getMessage());
+        }
+
+        return resultado;
+    }
+
+    /**
+     * Construye un resultado vacío con los errores proporcionados
+     */
+    private ResultadoCambioMasivoDTO construirResultadoVacio(
+            ResultadoCambioMasivoDTO resultado,
+            Map<Long, String> errores) {
+        resultado.setExitosos(0);
+        resultado.setFallidos(errores.size());
+        resultado.setIdsExitosos(new ArrayList<>());
+        resultado.setErrores(errores);
+        resultado.setPersonalesActualizados(new ArrayList<>());
+        return resultado;
+    }
 
     @Override
     public boolean validarTransicionEstado(Long personalId, EstadoPersonal nuevoEstado) {
-        // Este método ahora se llama dentro del bloqueo pesimista, por lo que la lectura del estado actual es segura.
         Personal personal = personalRepository.findById(personalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado"));
 
@@ -269,7 +856,6 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
                 .collect(Collectors.toList());
     }
 
-    // --- Métodos de Consulta ---
     @Override
     public PersonalDTO obtenerPersonalConEstadoActual(Long personalId) {
         Personal personal = validarPersonal(personalId);
@@ -300,96 +886,8 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
                         personalId, EstadoPersonal.PERSONAL_ACTIVO.getNombre());
     }
 
-    // --- MÉTODO MASIVO OPTIMIZADO ---
-    @Override
-    @Transactional
-    public ResultadoCambioMasivoDTO imprimirCredencialMasivo(CambioEstadoMasivoRequestDTO request) {
-        ResultadoCambioMasivoDTO resultado = new ResultadoCambioMasivoDTO();
-        List<Long> idsSolicitados = request.getPersonalIds();
-        resultado.setTotalProcesados(idsSolicitados.size());
-
-        List<Long> idsExitosos = new ArrayList<>();
-        Map<Long, String> errores = new HashMap<>();
-
-        // 1. Obtener el estado "CREDENCIAL IMPRESO" una sola vez
-        Estado estadoImpreso = estadoRepository.findByEnum(EstadoPersonal.CREDENCIAL_IMPRESO)
-                .orElseThrow(() -> new BusinessException("Estado CREDENCIAL IMPRESO no configurado"));
-
-        // 2. Validar que todos los personales existen y están en estado correcto (PERSONAL_REGISTRADO)
-        //    Usamos una sola query para traer todos los personales y sus estados actuales.
-        List<Personal> personales = personalRepository.findAllById(idsSolicitados);
-        Set<Long> idsEncontrados = personales.stream().map(Personal::getId).collect(Collectors.toSet());
-
-        // IDs no encontrados
-        for (Long id : idsSolicitados) {
-            if (!idsEncontrados.contains(id)) {
-                errores.put(id, "Personal no encontrado");
-            }
-        }
-
-        if (personales.isEmpty()) {
-            resultado.setExitosos(0);
-            resultado.setFallidos(errores.size());
-            resultado.setErrores(errores);
-            return resultado;
-        }
-
-        // 3. Obtener los estados actuales de todos estos personales en UNA SOLA QUERY
-        List<EstadoActual> estadosActuales = estadoActualRepository.findAllCurrentEstadosByPersonalIds(new ArrayList<>(idsEncontrados));
-        Map<Long, EstadoActual> estadoActualMap = estadosActuales.stream()
-                .collect(Collectors.toMap(ea -> ea.getPersonal().getId(), ea -> ea));
-
-        // 4. Validar regla de negocio para cada uno (que su estado actual sea PERSONAL REGISTRADO)
-        List<Personal> personalesValidos = new ArrayList<>();
-        for (Personal personal : personales) {
-            EstadoActual estadoActual = estadoActualMap.get(personal.getId());
-            if (estadoActual == null) {
-                errores.put(personal.getId(), "El personal no tiene un estado actual asignado");
-            } else if (!estadoActual.getEstado().getNombre().equals(EstadoPersonal.PERSONAL_REGISTRADO.getNombre())) {
-                errores.put(personal.getId(), "El personal debe estar en estado REGISTRADO para imprimir credencial");
-            } else {
-                personalesValidos.add(personal);
-            }
-        }
-
-        if (personalesValidos.isEmpty()) {
-            resultado.setExitosos(0);
-            resultado.setFallidos(errores.size());
-            resultado.setErrores(errores);
-            return resultado;
-        }
-
-        List<Long> idsValidos = personalesValidos.stream().map(Personal::getId).collect(Collectors.toList());
-
-        // 5. Operación Masiva Atómica: Desactivar todos los estados actuales de los válidos en un solo UPDATE
-        int registrosActualizados = estadoActualRepository.bulkDesactivarEstadosActuales(idsValidos);
-        log.info("Desactivados {} estados actuales para el batch de impresión", registrosActualizados);
-
-        // 6. Crear y guardar todos los nuevos estados en un solo BATCH INSERT
-        List<EstadoActual> nuevosEstados = personalesValidos.stream()
-                .map(personal -> EstadoActual.builder()
-                        .personal(personal)
-                        .estado(estadoImpreso)
-                        .valor_estado_actual(true)
-                        .build())
-                .collect(Collectors.toList());
-
-        // Guardar todos en batch (JPA hará un batch insert gracias a la propiedad hibernate.jdbc.batch_size)
-        estadoActualRepository.saveAll(nuevosEstados);
-
-        // 7. Preparar resultado
-        idsExitosos.addAll(idsValidos);
-        resultado.setExitosos(idsExitosos.size());
-        resultado.setFallidos(errores.size());
-        resultado.setIdsExitosos(idsExitosos);
-        resultado.setErrores(errores);
-        resultado.setPersonalesActualizados(personalesValidos.stream().map(this::mapToDTO).collect(Collectors.toList()));
-
-        log.info("Batch de impresión completado. Éxitos: {}, Fallos: {}", idsExitosos.size(), errores.size());
-        return resultado;
-    }
-
     // --- Métodos de Mapeo y ayuda ---
+
     private void desactivarEstadoActual(Long personalId) {
         estadoActualRepository.findCurrentEstadoByPersonalId(personalId)
                 .ifPresent(estadoActual -> {

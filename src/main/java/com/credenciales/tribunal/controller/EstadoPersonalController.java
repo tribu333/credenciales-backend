@@ -170,17 +170,79 @@ public class EstadoPersonalController {
                         @ApiResponse(responseCode = "400", description = "Algunos personales no están en estado válido"),
                         @ApiResponse(responseCode = "404", description = "Algunos personales no fueron encontrados")
         })
-        @PutMapping("/imprimir-credencial/masivo")
-        public ResponseEntity<ResultadoCambioMasivoDTO> imprimirCredencialMasivo(
-                        @Valid @RequestBody CambioEstadoMasivoRequestDTO request) {
-
-                ResultadoCambioMasivoDTO resultado = estadoPersonalService.imprimirCredencialMasivo(request);
-                return ResponseEntity.ok(resultado);
-        }
+//        @PutMapping("/imprimir-credencial/masivo")
+//        public ResponseEntity<ResultadoCambioMasivoDTO> imprimirCredencialMasivo(
+//                        @Valid @RequestBody CambioEstadoMasivoRequestDTO request) {
+//
+//                ResultadoCambioMasivoDTO resultado = estadoPersonalService.imprimirCredencialMasivo(request);
+//                return ResponseEntity.ok(resultado);
+//        }
 
         @PutMapping("/{personalId}/estado-registrado")
         public ResponseEntity<PersonalDTO> estadoRegistrado(@PathVariable Long personalId) {
                 PersonalDTO personalDTO = estadoPersonalService.estadoRegistrado(personalId);
                 return ResponseEntity.ok(personalDTO);
+        }
+
+        @Operation(summary = "Imprimir credencial para múltiples personales",
+                description = "Cambia el estado de múltiples personales a CREDENCIAL IMPRESO")
+        @ApiResponses(value = {
+                @ApiResponse(responseCode = "200", description = "Procesado exitosamente",
+                        content = @Content(schema = @Schema(implementation = ResultadoCambioMasivoDTO.class))),
+                @ApiResponse(responseCode = "400", description = "Algunos personales no están en estado válido"),
+                @ApiResponse(responseCode = "404", description = "Algunos personales no fueron encontrados")
+        })
+        @PutMapping("/imprimir-credencial/masivo")
+        public ResponseEntity<ResultadoCambioMasivoDTO> imprimirCredencialMasivo(
+                @Valid @RequestBody CambioEstadoMasivoRequestDTO request) {
+                return ResponseEntity.ok(estadoPersonalService.imprimirCredencialMasivo(request));
+        }
+
+        @Operation(summary = "Entregar credencial para múltiples personales",
+                description = "Entrega la credencial y activa automáticamente a múltiples personales")
+        @PutMapping("/entregar-credencial/masivo")
+        public ResponseEntity<ResultadoCambioMasivoDTO> entregarCredencialMasivo(
+                @Valid @RequestBody CambioEstadoMasivoRequestDTO request) {
+                return ResponseEntity.ok(estadoPersonalService.entregarCredencialMasivo(request));
+        }
+
+        @Operation(summary = "Habilitar acceso a cómputo para múltiples personales",
+                description = "Habilita acceso a cómputo para personales autorizados")
+        @PutMapping("/habilitar-computo/masivo")
+        public ResponseEntity<ResultadoCambioMasivoDTO> habilitarAccesoComputoMasivo(
+                @Valid @RequestBody CambioEstadoMasivoRequestDTO request) {
+                return ResponseEntity.ok(estadoPersonalService.habilitarAccesoComputoMasivo(request));
+        }
+
+        @Operation(summary = "Devolver credencial para múltiples personales",
+                description = "Registra la devolución de credencial para múltiples personales")
+        @PutMapping("/devolver-credencial/masivo")
+        public ResponseEntity<ResultadoCambioMasivoDTO> devolverCredencialMasivo(
+                @Valid @RequestBody CambioEstadoMasivoRequestDTO request) {
+                return ResponseEntity.ok(estadoPersonalService.devolverCredencialMasivo(request));
+        }
+
+        @Operation(summary = "Finalizar proceso electoral para múltiples personales",
+                description = "Cambia el estado de múltiples personales a INACTIVO por fin de proceso")
+        @PutMapping("/finalizar-proceso/masivo")
+        public ResponseEntity<ResultadoCambioMasivoDTO> finalizarProcesoElectoralMasivo(
+                @Valid @RequestBody CambioEstadoMasivoRequestDTO request) {
+                return ResponseEntity.ok(estadoPersonalService.finalizarProcesoElectoralMasivo(request));
+        }
+
+        @Operation(summary = "Registrar renuncia para múltiples personales",
+                description = "Registra la renuncia de múltiples personales")
+        @PutMapping("/renunciar/masivo")
+        public ResponseEntity<ResultadoCambioMasivoDTO> renunciarMasivo(
+                @Valid @RequestBody CambioEstadoMasivoRequestDTO request) {
+                return ResponseEntity.ok(estadoPersonalService.renunciarMasivo(request));
+        }
+
+        @Operation(summary = "Cambiar a estado registrado para múltiples personales",
+                description = "Habilita para volver a imprimir credencial a múltiples personales")
+        @PutMapping("/estado-registrado/masivo")
+        public ResponseEntity<ResultadoCambioMasivoDTO> estadoRegistradoMasivo(
+                @Valid @RequestBody CambioEstadoMasivoRequestDTO request) {
+                return ResponseEntity.ok(estadoPersonalService.estadoRegistradoMasivo(request));
         }
 }
