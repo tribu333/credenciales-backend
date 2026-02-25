@@ -40,8 +40,8 @@ COPY --from=builder /app/build/libs/*.jar app.jar
 #    FILE_UPLOAD_DIR=/app/uploads
 
 # Health check para Render
-HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
-  CMD java -jar app.jar --health || exit 1
+#HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
+#  CMD java -jar app.jar --health || exit 1
 
 # Ejecutar como usuario no root (más seguro)
 RUN groupadd --system javauser && useradd --system --gid javauser javauser
