@@ -26,22 +26,12 @@ WORKDIR /app
 RUN mkdir -p /app/uploads && \
     chmod 777 /app/uploads
 
-# Instalamos curl para healthchecks
-#RUN apk add --no-cache curl
+# Crear el directorio y dar permisos antes de copiar la app
+RUN mkdir -p /app/imagenes_subidas && \
+    chmod 777 /app/imagenes_subidas
+    
 # Copiar el JAR desde la etapa de construcción
 COPY --from=builder /app/build/libs/*.jar app.jar
-
-# Puerto que usa tu aplicación (8084)
-#EXPOSE 8085
-
-# Variables de entorno que se pueden sobrescribir en Render
-#ENV SPRING_PROFILES_ACTIVE=prod \
-#    SERVER_PORT=8085 \
-#    FILE_UPLOAD_DIR=/app/uploads
-
-# Health check para Render
-#HEALTHCHECK --interval=30s --timeout=3s --start-period=30s --retries=3 \
-#  CMD java -jar app.jar --health || exit 1
 
 # Ejecutar como usuario no root (más seguro)
 RUN groupadd --system javauser && useradd --system --gid javauser javauser
