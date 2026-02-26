@@ -1,34 +1,34 @@
 package com.credenciales.tribunal.service;
 
-import com.credenciales.tribunal.model.entity.AsignacionQr;
+import com.credenciales.tribunal.dto.asignacionesqr.AsignacionRequestDTO;
+import com.credenciales.tribunal.dto.asignacionesqr.AsignacionResponseDTO;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface AsignacionQrService {
     
-    // Métodos CRUD básicos
-    List<AsignacionQr> findAll();
+    // Métodos CRUD con DTOs
+    List<AsignacionResponseDTO> findAll();
     
-    AsignacionQr findById(Long id);
+    AsignacionResponseDTO findById(Long id);
     
-    AsignacionQr save(AsignacionQr asignacionQr);
+    AsignacionResponseDTO create(AsignacionRequestDTO requestDTO);
     
-    AsignacionQr update(Long id, AsignacionQr asignacionQr);
+    AsignacionResponseDTO update(Long id, AsignacionRequestDTO requestDTO);
     
     void deleteById(Long id);
     
-    // Métodos de consulta específicos
-    List<AsignacionQr> findByExternoId(Long externoId);
+    // Métodos de consulta específicos con DTOs
+    List<AsignacionResponseDTO> findByExternoId(Long externoId);
     
-    List<AsignacionQr> findByExternoIdAndActivoTrue(Long externoId);
+    List<AsignacionResponseDTO> findByExternoIdAndActivoTrue(Long externoId);
     
-    Optional<AsignacionQr> findActivaByExternoId(Long externoId);
+    AsignacionResponseDTO findActivaByExternoId(Long externoId);
     
-    List<AsignacionQr> findByActivoTrue();
+    List<AsignacionResponseDTO> findByActivoTrue();
     
     // Métodos de negocio
-    AsignacionQr liberarAsignacion(Long id);
+    AsignacionResponseDTO liberarAsignacion(Long id);
     
     boolean existsByExternoIdAndActivoTrue(Long externoId);
 }

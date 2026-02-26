@@ -1,5 +1,7 @@
 package com.credenciales.tribunal.service.impl;
 
+import com.credenciales.tribunal.dto.asignacionesqr.AsignacionRequestDTO;
+import com.credenciales.tribunal.dto.asignacionesqr.AsignacionResponseDTO;
 import com.credenciales.tribunal.model.entity.AsignacionQr;
 import com.credenciales.tribunal.model.entity.Externo;
 import com.credenciales.tribunal.model.entity.Qr;
@@ -15,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -29,74 +31,97 @@ public class AsignacionQrServiceImpl implements AsignacionQrService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<AsignacionQr> findAll() {
+    public List<AsignacionResponseDTO> findAll() {
         log.info("Buscando todas las asignaciones QR");
-        return asignacionQrRepository.findAll();
+        return asignacionQrRepository.findAll()
+                .stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public AsignacionQr findById(Long id) {
+    public AsignacionResponseDTO findById(Long id) {
         log.info("Buscando asignación QR por ID: {}", id);
-        return asignacionQrRepository.findById(id)
+        AsignacionQr asignacion = asignacionQrRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Asignación QR no encontrada con ID: " + id));
+        return mapToResponseDTO(asignacion);
     }
 
     @Override
-    public AsignacionQr save(AsignacionQr asignacionQr) {
-        log.info("Guardando nueva asignación QR");
+    public AsignacionResponseDTO create(AsignacionRequestDTO requestDTO) {
+        log.info("Creando nueva asignación QR para externoId: {} y qrId: {}", 
+                requestDTO.getExternoId(), requestDTO.getQrId());
         
-        // Validar que el QR no esté ya asignado activamente
-        if (asignacionQr.getQr() != null && asignacionQr.getQr().getId() != null) {
-            validarQrDisponible(asignacionQr.getQr().getId());
-        }
+        // Validar que el QR no esté ya asignado activamente y desasignar
+        validarQrDisponible(requestDTO.getQrId());
         
         // Validar que el externo no tenga ya una asignación activa
-        if (asignacionQr.getExterno() != null && asignacionQr.getExterno().getId() != null) {
-            validarExternoSinAsignacionActiva(asignacionQr.getExterno().getId());
-        }
+        validarExternoSinAsignacionActiva(requestDTO.getExternoId());
         
-        // Establecer fecha de asignación si no viene
-        if (asignacionQr.getFechaAsignacion() == null) {
-            asignacionQr.setFechaAsignacion(LocalDateTime.now());
-        }
+        // Obtener entidades relacionadas
+        Externo externo = externoRepository.findById(requestDTO.getExternoId())
+                .orElseThrow(() -> new EntityNotFoundException("Externo no encontrado con ID: " + requestDTO.getExternoId()));
         
-        // Asegurar que activo sea true por defecto
-        if (asignacionQr.getActivo() == null) {
-            asignacionQr.setActivo(true);
-        }
+        Qr qr = qrRepository.findById(requestDTO.getQrId())
+                .orElseThrow(() -> new EntityNotFoundException("QR no encontrado con ID: " + requestDTO.getQrId()));
         
-        return asignacionQrRepository.save(asignacionQr);
+        // Construir la asignación
+        AsignacionQr asignacion = AsignacionQr.builder()
+                .externo(externo)
+                .qr(qr)
+                .fechaAsignacion(LocalDateTime.now())
+                .fechaLiberacion(requestDTO.getFechaLiberacion())
+                .activo(true)
+                .build();
+        
+        AsignacionQr savedAsignacion = asignacionQrRepository.save(asignacion);
+        log.info("Asignación QR creada con ID: {}", savedAsignacion.getId());
+        
+        return mapToResponseDTO(savedAsignacion);
     }
 
     @Override
-    public AsignacionQr update(Long id, AsignacionQr asignacionQr) {
+    public AsignacionResponseDTO update(Long id, AsignacionRequestDTO requestDTO) {
         log.info("Actualizando asignación QR con ID: {}", id);
         
-        AsignacionQr existingAsignacion = findById(id);
+        AsignacionQr existingAsignacion = asignacionQrRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Asignación QR no encontrada con ID: " + id));
         
-        // Actualizar campos permitidos
-        if (asignacionQr.getExterno() != null) {
-            Externo externo = externoRepository.findById(asignacionQr.getExterno().getId())
-                    .orElseThrow(() -> new EntityNotFoundException("Externo no encontrado con ID: " + asignacionQr.getExterno().getId()));
+        // Si se está cambiando el externo
+        if (requestDTO.getExternoId() != null && 
+            !requestDTO.getExternoId().equals(existingAsignacion.getExterno().getId())) {
+            
+            validarExternoSinAsignacionActiva(requestDTO.getExternoId());
+            
+            Externo externo = externoRepository.findById(requestDTO.getExternoId())
+                    .orElseThrow(() -> new EntityNotFoundException("Externo no encontrado con ID: " + requestDTO.getExternoId()));
             existingAsignacion.setExterno(externo);
         }
         
-        if (asignacionQr.getQr() != null) {
-            Qr qr = qrRepository.findById(asignacionQr.getQr().getId())
-                    .orElseThrow(() -> new EntityNotFoundException("QR no encontrado con ID: " + asignacionQr.getQr().getId()));
+        // Si se está cambiando el QR
+        if (requestDTO.getQrId() != null && 
+            !requestDTO.getQrId().equals(existingAsignacion.getQr().getId())) {
+            
+            // Verificar que el nuevo QR esté disponible
+            if (!asignacionQrRepository.findByQrIdAndActivoTrue(requestDTO.getQrId()).isEmpty()) {
+                throw new IllegalStateException("El QR con ID: " + requestDTO.getQrId() + " ya está asignado activamente");
+            }
+            
+            Qr qr = qrRepository.findById(requestDTO.getQrId())
+                    .orElseThrow(() -> new EntityNotFoundException("QR no encontrado con ID: " + requestDTO.getQrId()));
             existingAsignacion.setQr(qr);
         }
         
-        if (asignacionQr.getFechaLiberacion() != null) {
-            existingAsignacion.setFechaLiberacion(asignacionQr.getFechaLiberacion());
+        // Actualizar fecha de liberación si se proporciona
+        if (requestDTO.getFechaLiberacion() != null) {
+            existingAsignacion.setFechaLiberacion(requestDTO.getFechaLiberacion());
         }
         
-        if (asignacionQr.getActivo() != null) {
-            existingAsignacion.setActivo(asignacionQr.getActivo());
-        }
+        AsignacionQr updatedAsignacion = asignacionQrRepository.save(existingAsignacion);
+        log.info("Asignación QR actualizada con ID: {}", updatedAsignacion.getId());
         
-        return asignacionQrRepository.save(existingAsignacion);
+        return mapToResponseDTO(updatedAsignacion);
     }
 
     @Override
@@ -108,56 +133,71 @@ public class AsignacionQrServiceImpl implements AsignacionQrService {
         }
         
         asignacionQrRepository.deleteById(id);
+        log.info("Asignación QR eliminada con ID: {}", id);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<AsignacionQr> findByExternoId(Long externoId) {
+    public List<AsignacionResponseDTO> findByExternoId(Long externoId) {
         log.info("Buscando asignaciones QR por ID de externo: {}", externoId);
         
         if (!externoRepository.existsById(externoId)) {
             throw new EntityNotFoundException("Externo no encontrado con ID: " + externoId);
         }
         
-        return asignacionQrRepository.findByExternoId(externoId);
+        return asignacionQrRepository.findByExternoId(externoId)
+                .stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<AsignacionQr> findByExternoIdAndActivoTrue(Long externoId) {
+    public List<AsignacionResponseDTO> findByExternoIdAndActivoTrue(Long externoId) {
         log.info("Buscando asignaciones QR activas por ID de externo: {}", externoId);
         
         if (!externoRepository.existsById(externoId)) {
             throw new EntityNotFoundException("Externo no encontrado con ID: " + externoId);
         }
         
-        return asignacionQrRepository.findByExternoIdAndActivoTrue(externoId);
+        return asignacionQrRepository.findByExternoIdAndActivoTrue(externoId)
+                .stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<AsignacionQr> findActivaByExternoId(Long externoId) {
+    public AsignacionResponseDTO findActivaByExternoId(Long externoId) {
         log.info("Buscando asignación QR activa por ID de externo: {}", externoId);
         
         if (!externoRepository.existsById(externoId)) {
             throw new EntityNotFoundException("Externo no encontrado con ID: " + externoId);
         }
         
-        return asignacionQrRepository.findActivaByExternoId(externoId);
+        AsignacionQr asignacion = asignacionQrRepository.findActivaByExternoId(externoId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                    "No se encontró una asignación activa para el externo con ID: " + externoId));
+        
+        return mapToResponseDTO(asignacion);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<AsignacionQr> findByActivoTrue() {
+    public List<AsignacionResponseDTO> findByActivoTrue() {
         log.info("Buscando todas las asignaciones QR activas");
-        return asignacionQrRepository.findByActivoTrue();
+        return asignacionQrRepository.findByActivoTrue()
+                .stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public AsignacionQr liberarAsignacion(Long id) {
+    public AsignacionResponseDTO liberarAsignacion(Long id) {
         log.info("Liberando asignación QR con ID: {}", id);
         
-        AsignacionQr asignacion = findById(id);
+        AsignacionQr asignacion = asignacionQrRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Asignación QR no encontrada con ID: " + id));
         
         if (!asignacion.getActivo()) {
             throw new IllegalStateException("La asignación ya se encuentra liberada");
@@ -166,7 +206,10 @@ public class AsignacionQrServiceImpl implements AsignacionQrService {
         asignacion.setActivo(false);
         asignacion.setFechaLiberacion(LocalDateTime.now());
         
-        return asignacionQrRepository.save(asignacion);
+        AsignacionQr liberatedAsignacion = asignacionQrRepository.save(asignacion);
+        log.info("Asignación QR liberada con ID: {}", id);
+        
+        return mapToResponseDTO(liberatedAsignacion);
     }
 
     @Override
@@ -176,11 +219,27 @@ public class AsignacionQrServiceImpl implements AsignacionQrService {
     }
 
     /**
+     * Método para mapear entidad a DTO de respuesta
+     */
+    private AsignacionResponseDTO mapToResponseDTO(AsignacionQr asignacion) {
+        return AsignacionResponseDTO.builder()
+                .id(asignacion.getId())
+                .externoNombre(asignacion.getExterno() != null ? 
+                        asignacion.getExterno().getNombreCompleto(): null)
+                .qrCodigo(asignacion.getQr() != null ? 
+                        asignacion.getQr().getCodigo() : null)
+                .fechaAsignacion(asignacion.getFechaAsignacion())
+                .fechaLiberacion(asignacion.getFechaLiberacion())
+                .activo(asignacion.getActivo())
+                .build();
+    }
+
+    /**
      * Valida que un QR esté disponible para ser asignado
      */
     private void validarQrDisponible(Long qrId) {
-        Optional<AsignacionQr> asignacionActiva = asignacionQrRepository.findByQrIdAndActivoTrue(qrId);
-        if (asignacionActiva.isPresent()) {
+        if (asignacionQrRepository.findByQrIdAndActivoTrue(qrId).isPresent()) {
+            //despues de lanzar este mensaje deberia poder dejarte desasignar (solo si es de 'externo' no de 'personal')
             throw new IllegalStateException("El QR con ID: " + qrId + " ya está asignado activamente");
         }
     }
