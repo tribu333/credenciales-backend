@@ -3,6 +3,7 @@ package com.credenciales.tribunal.service;
 import com.credenciales.tribunal.dto.email.VerificacionCodigoRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionEmailRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionResponseDTO;
+import com.credenciales.tribunal.dto.estadoActual.CambioEstadoMasivoRequestDTO;
 import com.credenciales.tribunal.dto.personal.*;
 import com.credenciales.tribunal.model.entity.Estado;
 import com.credenciales.tribunal.model.enums.EstadoPersonal;
@@ -52,8 +53,10 @@ public interface PersonalService {
 
     PersonalDetallesDTO verificarAcceso(String codQr);
 
-    ApiResponseDTO cambiarEstadoAcceso(Long id);
+    ApiResponseDTO cambiarEstadoAccesoComputo(Long id);
     PersonalDetallesDTO obtenernPersonalQr(String codigQr);
 
     List<PersonalNotarioDTO> filtroNotarios(String nroCircunscrip);
+
+    ApiResponseDTO cambiarEstadoAccesoComputoMasivo(CambioEstadoMasivoRequestDTO request);
 }
