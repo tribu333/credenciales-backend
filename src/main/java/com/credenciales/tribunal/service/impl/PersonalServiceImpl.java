@@ -3,6 +3,7 @@ package com.credenciales.tribunal.service.impl;
 import com.credenciales.tribunal.dto.email.VerificacionCodigoRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionEmailRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionResponseDTO;
+import com.credenciales.tribunal.dto.estadoActual.CambioEstadoMasivoRequestDTO;
 import com.credenciales.tribunal.dto.personal.*;
 import com.credenciales.tribunal.dto.qr.QrGenerarDTO;
 import com.credenciales.tribunal.dto.qr.QrResponseDTO;
@@ -57,30 +58,24 @@ public class PersonalServiceImpl implements PersonalService {
 
 		log.info("Solicitando código para email: {}, CI: {}", request.getCorreo(), request.getCarnetIdentidad());
 
-		// Validar si el correo ya existe en personal activo
 		if (existeCorreoActivo(request.getCorreo())) {
 			throw new BusinessException("El correo electrónico ya está registrado por otro personal activo");
 		}
 
-		// Verificar si puede registrarse nuevamente (si el CI ya existe) y no está
-		// activo aún
 		String mensajeEstado = obtenerMensajeEstadoActual(request.getCarnetIdentidad());
 		if (!puedeRegistrarseNuevamente(request.getCarnetIdentidad())) {
 			if (mensajeEstado != null) {
 				throw new BusinessException(mensajeEstado);
 			}
 		}
-		// Si el correo ya existe registrado o impreso asociado a un personal que tiene
-		// diferente ci al que se esta queriendo solicitar codigo de verificacion
+
 		if (existeCorreoRegistradoImpreso(request.getCorreo(), request.getCarnetIdentidad())) {
 			throw new BusinessException(
 					"El correo electronico ya esta asociado a otro personal registrado con diferente CI");
 		}
 
-		// Generar código aleatorio de 6 dígitos
 		String codigo = generarCodigoVerificacion();
 
-		// Guardar en base de datos
 		VerificacionEmail verificacion = VerificacionEmail.builder()
 				.email(request.getCorreo())
 				.codigo(codigo)
@@ -91,10 +86,8 @@ public class PersonalServiceImpl implements PersonalService {
 
 		verificacionEmailRepository.save(verificacion);
 
-		// Enviar código por email
 		emailService.enviarCodigoVerificacion(request.getCorreo(), codigo, request.getCarnetIdentidad());
 
-		// Limpiar códigos expirados
 		verificacionEmailRepository.eliminarExpirados(LocalDateTime.now());
 
 		log.info("Código de verificación enviado a: {} para CI: {}", request.getCorreo(), request.getCarnetIdentidad());
@@ -816,26 +809,58 @@ public class PersonalServiceImpl implements PersonalService {
 	}
 
 	@Override
-	public ApiResponseDTO cambiarEstadoAcceso(Long id) {
-		Personal personal = personalRepository.findById(id)
-				.orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado con ID: " + id));
+	public ApiResponseDTO cambiarEstadoAccesoComputo(Long id) {
+		try {
+			Personal personal = personalRepository.findById(id)
+					.orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado con ID: " + id));
 
-		if(!estadoPersonalService.puedeHabilitarseAccesoComputo(personal.getId()))
-		{
-			log.error("Personal no es Activo");
-			throw new RuntimeException("La persona no esta activa para tener acceso a computo");
+			boolean esActivo = estadoActualRepository
+					.existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
+							id, EstadoPersonal.PERSONAL_ACTIVO.getNombre());
+
+			if (!esActivo) {
+				log.error("Personal ID {} no está ACTIVO para cambiar acceso a cómputo", id);
+				return ApiResponseDTO.builder()
+						.success(false)
+						.message("El personal debe estar ACTIVO para cambiar el acceso a cómputo")
+						.status(HttpStatus.BAD_REQUEST.value())
+						.build();
+			}
+
+			boolean nuevoEstado = !Boolean.TRUE.equals(personal.getAccesoComputo());
+			personal.setAccesoComputo(nuevoEstado);
+			personalRepository.save(personal);
+
+			String mensaje = nuevoEstado ?
+					"Acceso a cómputo HABILITADO correctamente" :
+					"Acceso a cómputo DESHABILITADO correctamente";
+
+			log.info("Acceso a cómputo cambiado a {} para personal ID: {}", nuevoEstado, id);
+
+			return ApiResponseDTO.builder()
+					.success(true)
+					.message(mensaje)
+					.status(HttpStatus.OK.value())
+					.data(Map.of(
+							"personalId", id,
+							"accesoComputo", nuevoEstado
+					))
+					.build();
+
+		} catch (ResourceNotFoundException e) {
+			return ApiResponseDTO.builder()
+					.success(false)
+					.message(e.getMessage())
+					.status(HttpStatus.NOT_FOUND.value())
+					.build();
+		} catch (Exception e) {
+			log.error("Error inesperado al cambiar acceso a cómputo: {}", e.getMessage(), e);
+			return ApiResponseDTO.builder()
+					.success(false)
+					.message("Error interno del servidor")
+					.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+					.build();
 		}
-
-		boolean nuevoEstado = !Boolean.TRUE.equals(personal.getAccesoComputo());
-		personal.setAccesoComputo(nuevoEstado);
-
-		personalRepository.save(personal);
-
-		return ApiResponseDTO.builder()
-				.success(true)
-				.message("Estado de acceso a cómputo actualizado correctamente")
-				.status(HttpStatus.OK.value())
-				.build();
 	}
 
 	private PersonalDetallesDTO mapearAPersonalDetallesDTOConMapa(
@@ -947,4 +972,87 @@ public class PersonalServiceImpl implements PersonalService {
             .filter(s -> !s.trim().isEmpty())
             .collect(Collectors.joining(" "));
     }
+
+	@Override
+	public ApiResponseDTO cambiarEstadoAccesoComputoMasivo(CambioEstadoMasivoRequestDTO request) {
+		try {
+			List<Long> ids = request.getPersonalIds();
+			List<Personal> personales = personalRepository.findAllById(ids);
+			Set<Long> idsEncontrados = personales.stream().map(Personal::getId).collect(Collectors.toSet());
+
+			List<Long> idsExitosos = new ArrayList<>();
+			Map<Long, String> errores = new HashMap<>();
+
+			for (Long id : ids) {
+				if (!idsEncontrados.contains(id)) {
+					errores.put(id, "Personal no encontrado");
+				}
+			}
+
+			if (personales.isEmpty()) {
+				return ApiResponseDTO.builder()
+						.success(false)
+						.message("No se encontraron personales para procesar")
+						.status(HttpStatus.BAD_REQUEST.value())
+						.data(Map.of(
+								"totalProcesados", ids.size(),
+								"errores", errores
+						))
+						.build();
+			}
+
+			List<EstadoActual> estadosActuales = estadoActualRepository
+					.findAllCurrentEstadosByPersonalIds(new ArrayList<>(idsEncontrados));
+
+			Set<Long> idsActivos = estadosActuales.stream()
+					.filter(ea -> ea.getEstado().getNombre().equals(EstadoPersonal.PERSONAL_ACTIVO.getNombre()))
+					.map(ea -> ea.getPersonal().getId())
+					.collect(Collectors.toSet());
+
+			for (Personal personal : personales) {
+				Long id = personal.getId();
+
+				if (errores.containsKey(id)) continue;
+
+				if (!idsActivos.contains(id)) {
+					errores.put(id, "El personal debe estar ACTIVO para cambiar el acceso a cómputo");
+					continue;
+				}
+
+				personal.setAccesoComputo(!Boolean.TRUE.equals(personal.getAccesoComputo()));
+				idsExitosos.add(id);
+			}
+
+			if (!idsExitosos.isEmpty()) {
+				personalRepository.saveAll(personales.stream()
+						.filter(p -> idsExitosos.contains(p.getId()))
+						.collect(Collectors.toList()));
+			}
+
+			boolean exitoParcial = !idsExitosos.isEmpty() && !errores.isEmpty();
+			boolean exitoTotal = idsExitosos.size() == ids.size();
+
+			return ApiResponseDTO.builder()
+					.success(exitoParcial || exitoTotal)
+					.message(exitoTotal ? "Todos los personales fueron actualizados" :
+							exitoParcial ? "Actualización parcial completada" : "No se pudo actualizar ningún personal")
+					.status(HttpStatus.OK.value())
+					.data(Map.of(
+							"totalProcesados", ids.size(),
+							"exitosos", idsExitosos.size(),
+							"fallidos", errores.size(),
+							"idsExitosos", idsExitosos,
+							"errores", errores
+					))
+					.build();
+
+		} catch (Exception e) {
+			log.error("Error en cambio masivo: {}", e.getMessage(), e);
+			return ApiResponseDTO.builder()
+					.success(false)
+					.message("Error interno: " + e.getMessage())
+					.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+					.build();
+		}
+	}
 }
