@@ -14,10 +14,7 @@ import com.credenciales.tribunal.model.enums.EstadoQr;
 import com.credenciales.tribunal.model.enums.TipoPersonal;
 import com.credenciales.tribunal.model.enums.TipoQr;
 import com.credenciales.tribunal.repository.*;
-import com.credenciales.tribunal.service.EmailService;
-import com.credenciales.tribunal.service.PersonalService;
-import com.credenciales.tribunal.service.QrService;
-import com.credenciales.tribunal.service.ImagenService;
+import com.credenciales.tribunal.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -51,6 +48,7 @@ public class PersonalServiceImpl implements PersonalService {
 	private final HistorialCargoProcesoRepository historialCargoProcesoRepository;
 	private final CargoRepository cargoRepository;
 	private final CargoProcesoRepository cargoProcesoRepository;
+	private final EstadoPersonalService estadoPersonalService;
 
 	private static final int EXPIRACION_MINUTOS = 15;
 
@@ -822,10 +820,15 @@ public class PersonalServiceImpl implements PersonalService {
 		Personal personal = personalRepository.findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado con ID: " + id));
 
+		if(!estadoPersonalService.puedeHabilitarseAccesoComputo(personal.getId()))
+		{
+			log.error("Personal no es Activo");
+			throw new RuntimeException("La persona no esta activa para tener acceso a computo");
+		}
+
 		boolean nuevoEstado = !Boolean.TRUE.equals(personal.getAccesoComputo());
 		personal.setAccesoComputo(nuevoEstado);
 
-		// Guardar cambios
 		personalRepository.save(personal);
 
 		return ApiResponseDTO.builder()

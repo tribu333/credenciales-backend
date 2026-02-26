@@ -32,8 +32,6 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
     private final EstadoRepository estadoRepository;
     private final EstadoActualRepository estadoActualRepository;
 
-    // --- Métodos Privados de Ayuda ---
-
     private Personal validarPersonal(Long personalId) {
         return personalRepository.findById(personalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado con ID: " + personalId));
@@ -46,27 +44,22 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
      */
     @Transactional
     protected PersonalDTO cambiarEstadoPersonal(Long personalId, EstadoPersonal nuevoEstadoEnum, String reglaValidacionMensaje) {
-        // 1. Validar que el nuevo estado existe en la BD
         Estado nuevoEstado = estadoRepository.findByEnum(nuevoEstadoEnum)
                 .orElseThrow(() -> new BusinessException("Estado " + nuevoEstadoEnum.getNombre() + " no configurado en el sistema"));
 
-        // 2. Bloquear la fila del personal para evitar lecturas concurrentes (PESIMISTIC_WRITE)
         Personal personal = personalRepository.findPersonalByIdWithPessimisticLock(personalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado con ID: " + personalId));
 
-        // 3. Validar la transición
         if (!validarTransicionEstado(personalId, nuevoEstadoEnum)) {
             throw new BusinessException(reglaValidacionMensaje);
         }
 
-        // 4. Desactivar el estado actual (si existe)
         estadoActualRepository.findCurrentEstadoByPersonalId(personalId)
                 .ifPresent(estadoActual -> {
                     estadoActual.setValor_estado_actual(false);
                     estadoActualRepository.save(estadoActual);
                 });
 
-        // 5. Crear el nuevo estado
         EstadoActual nuevoEstadoActual = EstadoActual.builder()
                 .personal(personal)
                 .estado(nuevoEstado)
@@ -78,8 +71,6 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
 
         return mapToDTO(personal);
     }
-
-    // --- Métodos de Cambio de Estado Individuales ---
 
     @Override
     public PersonalDTO imprimirCredencial(Long personalId) {
@@ -129,9 +120,23 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
     @Override
     public PersonalDTO habilitarAccesoComputo(Long personalId) {
         Personal personal = validarPersonal(personalId);
-        if (Boolean.FALSE.equals(personal.getAccesoComputo())) {
-            throw new BusinessException("Este personal no tiene habilitado el acceso a cómputo");
+
+        boolean puedeTenerAccesoAComputo =
+                estadoActualRepository.existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
+                        personalId, EstadoPersonal.PERSONAL_ACTIVO.getNombre()) ;
+
+        if (!puedeTenerAccesoAComputo) {
+            throw new BusinessException("Para tener Acceso a Computo tiene que ser Personal Activo.");
         }
+
+        boolean yaTieneAcceso = estadoActualRepository
+                .existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
+                        personalId, EstadoPersonal.PERSONAL_CON_ACCESO_A_COMPUTO.getNombre());
+
+        if (yaTieneAcceso) {
+            throw new BusinessException("El personal ya tiene habilitado el acceso a cómputo");
+        }
+
         return cambiarEstadoPersonal(
                 personalId,
                 EstadoPersonal.PERSONAL_CON_ACCESO_A_COMPUTO,
@@ -238,13 +243,11 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
         Map<Long, String> errores = new HashMap<>();
 
         try {
-            // 1. Obtener estados necesarios
             Estado estadoEntregado = estadoRepository.findByEnum(EstadoPersonal.CREDENCIAL_ENTREGADO)
                     .orElseThrow(() -> new BusinessException("Estado CREDENCIAL ENTREGADO no configurado"));
             Estado estadoActivo = estadoRepository.findByEnum(EstadoPersonal.PERSONAL_ACTIVO)
                     .orElseThrow(() -> new BusinessException("Estado PERSONAL ACTIVO no configurado"));
 
-            // 2. Validar personales
             List<Personal> personales = personalRepository.findAllById(idsSolicitados);
             Set<Long> idsEncontrados = personales.stream().map(Personal::getId).collect(Collectors.toSet());
 
@@ -258,14 +261,12 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
                 return construirResultadoVacio(resultado, errores);
             }
 
-            // 3. Obtener estados actuales
             List<EstadoActual> estadosActuales = estadoActualRepository
                     .findAllCurrentEstadosByPersonalIds(new ArrayList<>(idsEncontrados));
 
             Map<Long, EstadoActual> estadoActualMap = estadosActuales.stream()
                     .collect(Collectors.toMap(ea -> ea.getPersonal().getId(), ea -> ea));
 
-            // 4. Filtrar válidos (deben tener estado CREDENCIAL IMPRESO)
             List<Personal> personalesValidos = new ArrayList<>();
             for (Personal personal : personales) {
                 if (errores.containsKey(personal.getId())) continue;
@@ -286,10 +287,8 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
 
             List<Long> idsValidos = personalesValidos.stream().map(Personal::getId).collect(Collectors.toList());
 
-            // 5. Desactivar estados actuales (CREDENCIAL IMPRESO)
             estadoActualRepository.bulkDesactivarEstadosActuales(idsValidos);
 
-            // 6. Crear CREDENCIAL ENTREGADO para todos
             List<EstadoActual> estadosEntregados = personalesValidos.stream()
                     .map(personal -> EstadoActual.builder()
                             .personal(personal)
@@ -299,7 +298,6 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
                     .collect(Collectors.toList());
             estadoActualRepository.saveAll(estadosEntregados);
 
-            // 7. Desactivar CREDENCIAL ENTREGADO y crear PERSONAL ACTIVO
             estadoActualRepository.bulkDesactivarEstadosActuales(idsValidos);
 
             List<EstadoActual> estadosActivos = personalesValidos.stream()
@@ -311,7 +309,6 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
                     .collect(Collectors.toList());
             estadoActualRepository.saveAll(estadosActivos);
 
-            // 8. Preparar resultado
             idsExitosos.addAll(idsValidos);
             resultado.setExitosos(idsExitosos.size());
             resultado.setFallidos(errores.size());
@@ -473,10 +470,8 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
 
             List<Long> idsValidos = personalesValidos.stream().map(Personal::getId).collect(Collectors.toList());
 
-            // Desactivar estados actuales
             estadoActualRepository.bulkDesactivarEstadosActuales(idsValidos);
 
-            // Crear CREDENCIAL DEVUELTO
             List<EstadoActual> estadosDevueltos = personalesValidos.stream()
                     .map(personal -> EstadoActual.builder()
                             .personal(personal)
@@ -563,26 +558,43 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
                 return construirResultadoVacio(resultado, errores);
             }
 
-            // Obtener estados actuales filtrando por CREDENCIAL IMPRESO
+            // Obtener TODOS los estados actuales de las personas encontradas
             List<EstadoActual> estadosActuales = estadoActualRepository
-                    .findAllCurrentEstadosByPersonalIdsAndEstado(
-                            new ArrayList<>(idsEncontrados),
-                            EstadoPersonal.CREDENCIAL_IMPRESO.getNombre()
-                    );
+                    .findAllCurrentEstadosByPersonalIds(new ArrayList<>(idsEncontrados));
 
-            Set<Long> idsConEstadoValido = estadosActuales.stream()
-                    .map(ea -> ea.getPersonal().getId())
-                    .collect(Collectors.toSet());
+            // Definir los estados permitidos para volver a REGISTRADO
+            Set<String> estadosPermitidos = Set.of(
+                    EstadoPersonal.CREDENCIAL_IMPRESO.getNombre(),
+                    EstadoPersonal.PERSONAL_REGISTRADO.getNombre(),
+                    EstadoPersonal.CREDENCIAL_DEVUELTO.getNombre()
+            );
+
+            // Mapear personal ID a su estado actual
+            Map<Long, EstadoActual> estadoActualMap = estadosActuales.stream()
+                    .collect(Collectors.toMap(ea -> ea.getPersonal().getId(), ea -> ea));
 
             List<Personal> personalesValidos = new ArrayList<>();
             for (Personal personal : personales) {
                 if (errores.containsKey(personal.getId())) continue;
 
-                if (idsConEstadoValido.contains(personal.getId())) {
-                    personalesValidos.add(personal);
+                EstadoActual ea = estadoActualMap.get(personal.getId());
+
+                if (ea == null) {
+                    errores.put(personal.getId(), "El personal no tiene un estado actual asignado");
                 } else {
-                    errores.put(personal.getId(),
-                            "No puede volver a registrarse, debe tener credencial impresa");
+                    String estadoActualNombre = ea.getEstado().getNombre();
+
+                    // Validar si el estado actual está en la lista de permitidos
+                    if (estadosPermitidos.contains(estadoActualNombre)) {
+                        personalesValidos.add(personal);
+                    } else {
+                        errores.put(personal.getId(),
+                                String.format("No puede volver a registrarse. Estados permitidos: %s, %s, %s. Estado actual: %s",
+                                        EstadoPersonal.CREDENCIAL_IMPRESO.getNombre(),
+                                        EstadoPersonal.PERSONAL_REGISTRADO.getNombre(),
+                                        EstadoPersonal.CREDENCIAL_DEVUELTO.getNombre(),
+                                        estadoActualNombre));
+                    }
                 }
             }
 
@@ -592,8 +604,10 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
 
             List<Long> idsValidos = personalesValidos.stream().map(Personal::getId).collect(Collectors.toList());
 
+            // Desactivar estados actuales
             estadoActualRepository.bulkDesactivarEstadosActuales(idsValidos);
 
+            // Crear nuevos estados REGISTRADO
             List<EstadoActual> nuevosEstados = personalesValidos.stream()
                     .map(personal -> EstadoActual.builder()
                             .personal(personal)
