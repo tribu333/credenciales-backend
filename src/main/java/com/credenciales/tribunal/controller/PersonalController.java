@@ -3,6 +3,7 @@ package com.credenciales.tribunal.controller;
 import com.credenciales.tribunal.dto.email.VerificacionCodigoRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionEmailRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionResponseDTO;
+import com.credenciales.tribunal.dto.estadoActual.CambioEstadoMasivoRequestDTO;
 import com.credenciales.tribunal.dto.personal.*;
 import com.credenciales.tribunal.model.enums.EstadoPersonal;
 import com.credenciales.tribunal.service.PersonalService;
@@ -118,7 +119,7 @@ public class PersonalController {
     @PutMapping("/{id}")
     public ResponseEntity<PersonalCompletoDTO> actualizarPersonal(
             @PathVariable Long id,
-            @Valid @RequestBody PersonalCreateDTO actualizacionDTO) { // ← Sin MultipartFile
+            @Valid @RequestBody PersonalCreateDTO actualizacionDTO) {
         return ResponseEntity.ok(
                 personalService.actualizarPersonal(id, actualizacionDTO));
     }
@@ -161,9 +162,6 @@ public class PersonalController {
         return ResponseEntity.ok(personalService.obtenerDetallesPersonal());
     }
 
-    // En PersonalController.java
-    // En PersonalController.java - Versión simplificada SIN metadata
-
     @GetMapping("/detalles/estado/{estado}")
     @Operation(summary = "Obtener detalles de personales por estado")
     public ResponseEntity<ApiResponseDTO> obtenerPersonalesPorEstado(
@@ -198,7 +196,7 @@ public class PersonalController {
     @PutMapping("/{id}/acceso")
     @Operation(summary = "Cambiar Acceso de Computo")
     public ResponseEntity<ApiResponseDTO> cambiarEstadoAcceso(@PathVariable Long id) {
-        ApiResponseDTO response = personalService.cambiarEstadoAcceso(id);
+        ApiResponseDTO response = personalService.cambiarEstadoAccesoComputo(id);
         return ResponseEntity.ok(response);
     }
     @GetMapping("/detalles/qrComputo/{qr}")
@@ -215,5 +213,14 @@ public class PersonalController {
             @PathVariable String cir) {
               List<PersonalNotarioDTO> res = personalService.filtroNotarios(cir);
               return res;
+    }
+
+    @Operation(summary = "Cambiar acceso a cómputo de múltiples personales (toggle masivo)")
+    @PutMapping("/accesoMasivo")
+    public ResponseEntity<ApiResponseDTO> cambiarEstadoAccesoComputoMasivo(
+            @Valid @RequestBody CambioEstadoMasivoRequestDTO request) {
+
+        ApiResponseDTO response = personalService.cambiarEstadoAccesoComputoMasivo(request);
+        return new ResponseEntity<>(response, HttpStatus.valueOf(response.getStatus()));
     }
 }
