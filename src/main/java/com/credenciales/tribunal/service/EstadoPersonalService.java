@@ -9,25 +9,32 @@ import com.credenciales.tribunal.model.enums.EstadoPersonal;
 import java.util.List;
 
 public interface EstadoPersonalService {
-    
-    // Cambios de estado principales
-    PersonalDTO registrarPersonal(CambioEstadoResquestDTO request);
+
+    // Cambios de estado individuales
     PersonalDTO imprimirCredencial(Long personalId);
     PersonalDTO entregarCredencial(Long personalId);
     PersonalDTO habilitarAccesoComputo(Long personalId);
     PersonalDTO devolverCredencial(Long personalId);
     PersonalDTO finalizarProcesoElectoral(Long personalId);
     PersonalDTO renunciar(Long personalId);
-    PersonalDTO estadoRegistrado (Long personalId);
+    PersonalDTO estadoRegistrado(Long personalId);
+
+    // CAMBIOS DE ESTADO MASIVOS
+    ResultadoCambioMasivoDTO imprimirCredencialMasivo(CambioEstadoMasivoRequestDTO request);
+    ResultadoCambioMasivoDTO entregarCredencialMasivo(CambioEstadoMasivoRequestDTO request);
+    ResultadoCambioMasivoDTO habilitarAccesoComputoMasivo(CambioEstadoMasivoRequestDTO request);
+    ResultadoCambioMasivoDTO devolverCredencialMasivo(CambioEstadoMasivoRequestDTO request);
+    ResultadoCambioMasivoDTO finalizarProcesoElectoralMasivo(CambioEstadoMasivoRequestDTO request);
+    ResultadoCambioMasivoDTO renunciarMasivo(CambioEstadoMasivoRequestDTO request);
+    ResultadoCambioMasivoDTO estadoRegistradoMasivo(CambioEstadoMasivoRequestDTO request);
 
     // Validaciones
     boolean validarTransicionEstado(Long personalId, EstadoPersonal nuevoEstado);
     List<EstadoPersonal> obtenerEstadosPermitidos(Long personalId);
-    
+
     // Consultas
     PersonalDTO obtenerPersonalConEstadoActual(Long personalId);
     List<PersonalDTO> listarPersonalPorEstado(EstadoPersonal estado);
     List<EstadoActualDTO> obtenerHistorialEstados(Long personalId);
     boolean puedeHabilitarseAccesoComputo(Long personalId);
-    ResultadoCambioMasivoDTO imprimirCredencialMasivo(CambioEstadoMasivoRequestDTO request);
 }

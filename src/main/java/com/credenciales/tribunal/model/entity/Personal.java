@@ -6,7 +6,8 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "personal")

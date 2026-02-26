@@ -3,6 +3,7 @@ package com.credenciales.tribunal.service.impl;
 import com.credenciales.tribunal.dto.email.VerificacionCodigoRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionEmailRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionResponseDTO;
+import com.credenciales.tribunal.dto.estadoActual.CambioEstadoMasivoRequestDTO;
 import com.credenciales.tribunal.dto.personal.*;
 import com.credenciales.tribunal.dto.qr.QrGenerarDTO;
 import com.credenciales.tribunal.dto.qr.QrResponseDTO;
@@ -14,10 +15,7 @@ import com.credenciales.tribunal.model.enums.EstadoQr;
 import com.credenciales.tribunal.model.enums.TipoPersonal;
 import com.credenciales.tribunal.model.enums.TipoQr;
 import com.credenciales.tribunal.repository.*;
-import com.credenciales.tribunal.service.EmailService;
-import com.credenciales.tribunal.service.PersonalService;
-import com.credenciales.tribunal.service.QrService;
-import com.credenciales.tribunal.service.ImagenService;
+import com.credenciales.tribunal.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -51,6 +49,7 @@ public class PersonalServiceImpl implements PersonalService {
 	private final HistorialCargoProcesoRepository historialCargoProcesoRepository;
 	private final CargoRepository cargoRepository;
 	private final CargoProcesoRepository cargoProcesoRepository;
+	private final EstadoPersonalService estadoPersonalService;
 
 	private static final int EXPIRACION_MINUTOS = 15;
 
@@ -59,30 +58,24 @@ public class PersonalServiceImpl implements PersonalService {
 
 		log.info("Solicitando código para email: {}, CI: {}", request.getCorreo(), request.getCarnetIdentidad());
 
-		// Validar si el correo ya existe en personal activo
 		if (existeCorreoActivo(request.getCorreo())) {
 			throw new BusinessException("El correo electrónico ya está registrado por otro personal activo");
 		}
 
-		// Verificar si puede registrarse nuevamente (si el CI ya existe) y no está
-		// activo aún
 		String mensajeEstado = obtenerMensajeEstadoActual(request.getCarnetIdentidad());
 		if (!puedeRegistrarseNuevamente(request.getCarnetIdentidad())) {
 			if (mensajeEstado != null) {
 				throw new BusinessException(mensajeEstado);
 			}
 		}
-		// Si el correo ya existe registrado o impreso asociado a un personal que tiene
-		// diferente ci al que se esta queriendo solicitar codigo de verificacion
+
 		if (existeCorreoRegistradoImpreso(request.getCorreo(), request.getCarnetIdentidad())) {
 			throw new BusinessException(
 					"El correo electronico ya esta asociado a otro personal registrado con diferente CI");
 		}
 
-		// Generar código aleatorio de 6 dígitos
 		String codigo = generarCodigoVerificacion();
 
-		// Guardar en base de datos
 		VerificacionEmail verificacion = VerificacionEmail.builder()
 				.email(request.getCorreo())
 				.codigo(codigo)
@@ -93,10 +86,8 @@ public class PersonalServiceImpl implements PersonalService {
 
 		verificacionEmailRepository.save(verificacion);
 
-		// Enviar código por email
 		emailService.enviarCodigoVerificacion(request.getCorreo(), codigo, request.getCarnetIdentidad());
 
-		// Limpiar códigos expirados
 		verificacionEmailRepository.eliminarExpirados(LocalDateTime.now());
 
 		log.info("Código de verificación enviado a: {} para CI: {}", request.getCorreo(), request.getCarnetIdentidad());
@@ -135,7 +126,6 @@ public class PersonalServiceImpl implements PersonalService {
 	@Override
 	public PersonalCompletoDTO registrarPersonalCompleto(PersonalCreateDTO registroDTO) {
 
-		// Verificar código
 		if(registroDTO.getCargoID() == 4 ) {
 			
 			if (!"220326".equals(registroDTO.getCodigoVerificacion())) {
@@ -154,7 +144,6 @@ public class PersonalServiceImpl implements PersonalService {
 			}
 		}
 
-		// Buscar TODOS los personales con ese carnet
 		List<Personal> personalList = personalRepository.findAllByCarnetIdentidad(registroDTO.getCarnetIdentidad());
 
 		if (!personalList.isEmpty()) {
@@ -174,22 +163,18 @@ public class PersonalServiceImpl implements PersonalService {
 				}
 			}
 		}
-		// Si no hay personal con estados que permitan actualización, crear nuevo
 		return crearNuevoPersonal(registroDTO);
 	}
 
 	private PersonalCompletoDTO crearNuevoPersonal(PersonalCreateDTO registroDTO) {
 
-		// 1. Obtener la imagen por ID
 		Imagen imagen = imagenService.findEntityById(registroDTO.getImagenId());
 		if (imagen == null) {
 			throw new BusinessException("Imagen no encontrada con ID: " + registroDTO.getImagenId());
 		}
 
-		// 2. Generar QR
 		Qr qr = generarQrParaPersonal(registroDTO.getCarnetIdentidad());
 
-		// 3. Crear personal
 		Personal personal = Personal.builder()
 				.nombre(registroDTO.getNombre())
 				.apellidoPaterno(registroDTO.getApellidoPaterno())
@@ -207,15 +192,12 @@ public class PersonalServiceImpl implements PersonalService {
 
 		personal = personalRepository.save(personal);
 
-		// 4. Asignar QR al personal
 		qr.setPersonal(personal);
 		qr.setEstado(EstadoQr.ASIGNADO);
 		qrRepository.save(qr);
 
-		// 5. Registrar estado inicial
 		registrarEstadoInicial(personal);
 
-		// 6. Registrar cargo según tipo
 		if (registroDTO.getTipo() == TipoPersonal.PLANTA) {
 			// Para PLANTA, usamos cargoID
 			if (registroDTO.getCargoID() == null) {
@@ -239,10 +221,8 @@ public class PersonalServiceImpl implements PersonalService {
 			Personal personalExistente,
 			PersonalCreateDTO registroDTO) {
 
-		// Obtener estado actual
 		String estadoActual = obtenerEstadoActual(personalExistente.getId());
 
-		// Validar según el estado
 		if (EstadoPersonal.CREDENCIAL_ENTREGADO.getNombre().equals(estadoActual) ||
 				EstadoPersonal.PERSONAL_ACTIVO.getNombre().equals(estadoActual) ||
 				EstadoPersonal.PERSONAL_CON_ACCESO_A_COMPUTO.getNombre().equals(estadoActual)) {
@@ -251,7 +231,6 @@ public class PersonalServiceImpl implements PersonalService {
 							"Debe devolver la credencial antes de poder registrarse nuevamente.");
 		}
 
-		// Actualizar datos básicos
 		personalExistente.setNombre(registroDTO.getNombre());
 		personalExistente.setApellidoPaterno(registroDTO.getApellidoPaterno());
 		personalExistente.setApellidoMaterno(registroDTO.getApellidoMaterno());
@@ -279,9 +258,10 @@ public class PersonalServiceImpl implements PersonalService {
 
 		personalExistente = personalRepository.save(personalExistente);
 
-		// Si está inactivo, reactivar con estado REGISTRADO
-		if (EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO.getNombre().equals(estadoActual) ||
-				EstadoPersonal.INACTIVO_POR_RENUNCIA.getNombre().equals(estadoActual)) {
+		//Si está inactivo, reactivar con estado REGISTRADO
+		if (EstadoPersonal.CREDENCIAL_IMPRESO.getNombre().equals(estadoActual) ||
+				EstadoPersonal.PERSONAL_REGISTRADO.getNombre().equals(estadoActual) ||
+				EstadoPersonal.CREDENCIAL_DEVUELTO.getNombre().equals(estadoActual)) {
 			reactivarPersonal(personalExistente);
 		}
 
@@ -829,21 +809,58 @@ public class PersonalServiceImpl implements PersonalService {
 	}
 
 	@Override
-	public ApiResponseDTO cambiarEstadoAcceso(Long id) {
-		Personal personal = personalRepository.findById(id)
-				.orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado con ID: " + id));
+	public ApiResponseDTO cambiarEstadoAccesoComputo(Long id) {
+		try {
+			Personal personal = personalRepository.findById(id)
+					.orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado con ID: " + id));
 
-		boolean nuevoEstado = !Boolean.TRUE.equals(personal.getAccesoComputo());
-		personal.setAccesoComputo(nuevoEstado);
+			boolean esActivo = estadoActualRepository
+					.existsByPersonalIdAndEstadoNombreAndValorEstadoActualTrue(
+							id, EstadoPersonal.PERSONAL_ACTIVO.getNombre());
 
-		// Guardar cambios
-		personalRepository.save(personal);
+			if (!esActivo) {
+				log.error("Personal ID {} no está ACTIVO para cambiar acceso a cómputo", id);
+				return ApiResponseDTO.builder()
+						.success(false)
+						.message("El personal debe estar ACTIVO para cambiar el acceso a cómputo")
+						.status(HttpStatus.BAD_REQUEST.value())
+						.build();
+			}
 
-		return ApiResponseDTO.builder()
-				.success(true)
-				.message("Estado de acceso a cómputo actualizado correctamente")
-				.status(HttpStatus.OK.value())
-				.build();
+			boolean nuevoEstado = !Boolean.TRUE.equals(personal.getAccesoComputo());
+			personal.setAccesoComputo(nuevoEstado);
+			personalRepository.save(personal);
+
+			String mensaje = nuevoEstado ?
+					"Acceso a cómputo HABILITADO correctamente" :
+					"Acceso a cómputo DESHABILITADO correctamente";
+
+			log.info("Acceso a cómputo cambiado a {} para personal ID: {}", nuevoEstado, id);
+
+			return ApiResponseDTO.builder()
+					.success(true)
+					.message(mensaje)
+					.status(HttpStatus.OK.value())
+					.data(Map.of(
+							"personalId", id,
+							"accesoComputo", nuevoEstado
+					))
+					.build();
+
+		} catch (ResourceNotFoundException e) {
+			return ApiResponseDTO.builder()
+					.success(false)
+					.message(e.getMessage())
+					.status(HttpStatus.NOT_FOUND.value())
+					.build();
+		} catch (Exception e) {
+			log.error("Error inesperado al cambiar acceso a cómputo: {}", e.getMessage(), e);
+			return ApiResponseDTO.builder()
+					.success(false)
+					.message("Error interno del servidor")
+					.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+					.build();
+		}
 	}
 
 	private PersonalDetallesDTO mapearAPersonalDetallesDTOConMapa(
@@ -955,4 +972,87 @@ public class PersonalServiceImpl implements PersonalService {
             .filter(s -> !s.trim().isEmpty())
             .collect(Collectors.joining(" "));
     }
+
+	@Override
+	public ApiResponseDTO cambiarEstadoAccesoComputoMasivo(CambioEstadoMasivoRequestDTO request) {
+		try {
+			List<Long> ids = request.getPersonalIds();
+			List<Personal> personales = personalRepository.findAllById(ids);
+			Set<Long> idsEncontrados = personales.stream().map(Personal::getId).collect(Collectors.toSet());
+
+			List<Long> idsExitosos = new ArrayList<>();
+			Map<Long, String> errores = new HashMap<>();
+
+			for (Long id : ids) {
+				if (!idsEncontrados.contains(id)) {
+					errores.put(id, "Personal no encontrado");
+				}
+			}
+
+			if (personales.isEmpty()) {
+				return ApiResponseDTO.builder()
+						.success(false)
+						.message("No se encontraron personales para procesar")
+						.status(HttpStatus.BAD_REQUEST.value())
+						.data(Map.of(
+								"totalProcesados", ids.size(),
+								"errores", errores
+						))
+						.build();
+			}
+
+			List<EstadoActual> estadosActuales = estadoActualRepository
+					.findAllCurrentEstadosByPersonalIds(new ArrayList<>(idsEncontrados));
+
+			Set<Long> idsActivos = estadosActuales.stream()
+					.filter(ea -> ea.getEstado().getNombre().equals(EstadoPersonal.PERSONAL_ACTIVO.getNombre()))
+					.map(ea -> ea.getPersonal().getId())
+					.collect(Collectors.toSet());
+
+			for (Personal personal : personales) {
+				Long id = personal.getId();
+
+				if (errores.containsKey(id)) continue;
+
+				if (!idsActivos.contains(id)) {
+					errores.put(id, "El personal debe estar ACTIVO para cambiar el acceso a cómputo");
+					continue;
+				}
+
+				personal.setAccesoComputo(!Boolean.TRUE.equals(personal.getAccesoComputo()));
+				idsExitosos.add(id);
+			}
+
+			if (!idsExitosos.isEmpty()) {
+				personalRepository.saveAll(personales.stream()
+						.filter(p -> idsExitosos.contains(p.getId()))
+						.collect(Collectors.toList()));
+			}
+
+			boolean exitoParcial = !idsExitosos.isEmpty() && !errores.isEmpty();
+			boolean exitoTotal = idsExitosos.size() == ids.size();
+
+			return ApiResponseDTO.builder()
+					.success(exitoParcial || exitoTotal)
+					.message(exitoTotal ? "Todos los personales fueron actualizados" :
+							exitoParcial ? "Actualización parcial completada" : "No se pudo actualizar ningún personal")
+					.status(HttpStatus.OK.value())
+					.data(Map.of(
+							"totalProcesados", ids.size(),
+							"exitosos", idsExitosos.size(),
+							"fallidos", errores.size(),
+							"idsExitosos", idsExitosos,
+							"errores", errores
+					))
+					.build();
+
+		} catch (Exception e) {
+			log.error("Error en cambio masivo: {}", e.getMessage(), e);
+			return ApiResponseDTO.builder()
+					.success(false)
+					.message("Error interno: " + e.getMessage())
+					.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+					.build();
+		}
+	}
 }
