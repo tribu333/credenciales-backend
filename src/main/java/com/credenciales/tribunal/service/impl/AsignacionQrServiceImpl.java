@@ -249,6 +249,7 @@ public class AsignacionQrServiceImpl implements AsignacionQrService {
      */
     private void validarExternoSinAsignacionActiva(Long externoId) {
         if (asignacionQrRepository.existsByExternoIdAndActivoTrue(externoId)) {
+            //si tiene asignacion activa entonces no se le puede asignar por que no devolvio su ficha (creo que se borrar y solo se desactivara la otra asignacion)
             throw new IllegalStateException("El externo con ID: " + externoId + " ya tiene una asignación activa");
         }
     }
