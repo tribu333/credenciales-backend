@@ -203,4 +203,11 @@ public class CargoServiceImpl implements CargoService {
         log.debug("Verificando existencia de cargo '{}' en unidad ID: {}", nombre, unidadId);
         return cargoRepository.existsByNombreAndUnidadId(nombre, unidadId);
     }
+
+    /* @Override
+    public List<CargoResponseDto> getAllCargosProceso() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getAllCargosProceso'");
+    } */
+
 }

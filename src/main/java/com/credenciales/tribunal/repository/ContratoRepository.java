@@ -36,7 +36,7 @@ public interface ContratoRepository extends JpaRepository<Contrato, Long> {
     // Buscar por rango de fechas
     List<Contrato> findByFechaInicioBetween(LocalDateTime inicio, LocalDateTime fin);
 
-    @Query("")
-    List<Contrato> findByPersonalIdWithCargoProceso (@Param("procesoId") Long procesoId);
+    /* @Query("")
+    List<Contrato> findByPersonalIdWithCargoProceso (@Param("procesoId") Long procesoId); */
 
 }

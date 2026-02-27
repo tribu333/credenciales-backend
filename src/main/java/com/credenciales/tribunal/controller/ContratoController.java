@@ -63,10 +63,8 @@ public class ContratoController {
     public ResponseEntity<ContratoResponseDTO> getContratoById(
             @Parameter(description = "ID del contrato", required = true, example = "1")
             @PathVariable Long id) {
-
-        return contratoService.getContratoById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                ContratoResponseDTO contratoResp=contratoService.getContratoById(id);
+        return ResponseEntity.ok(contratoResp);
     }
 
     @GetMapping

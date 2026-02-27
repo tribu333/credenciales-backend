@@ -16,9 +16,9 @@ public interface CargoService {
     
     List<CargoResponseDTO> getAllCargos();
     
-    List<CargoResponseDto> getAllCargosProceso();
+    //List<CargoResponseDto> getAllCargosProceso();
 
-    List<CargoResponseDto> getAllCargosProcesoByUnidad(long id);
+    //List<CargoResponseDto> getAllCargosProcesoByUnidad(long id);
 
     Page<CargoResponseDTO> getAllCargosPaged(Pageable pageable);
     

@@ -221,7 +221,7 @@ public class CargoController {
         return ResponseEntity.ok(count);
     }
     
-    @GetMapping("/proceso/unidad/{unidadId}")
+    /* @GetMapping("/proceso/unidad/{unidadId}")
     public ResponseEntity<List<CargoProcesoResponseDTO>> getCargosProcesoByUnidad(
             @PathVariable Long unidadId) {
         List<CargoProcesoResponseDTO> cargosProceso = cargoService.getAllCargosProcesoByUnidad(unidadId);
@@ -229,10 +229,10 @@ public class CargoController {
     }
 
     @GetMapping("/proceso")
-    public ResponseEntity<List<CargoResponseDTO>> getAllCargosProceso () {
+    public ResponseEntity<List<CargoResponseDTO>> getAllCargosProcesos() {
         List <CargoResponseDTO> cargosProceso = cargoService.getAllCargosProceso();
         return ResponseEntity.ok(cargosProceso);
-    }
+    } */
 
     @GetMapping("/exists")
     @Operation(
