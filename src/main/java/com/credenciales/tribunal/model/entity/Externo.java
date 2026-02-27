@@ -22,8 +22,8 @@ public class Externo {
     @Column(name = "carnet_identidad", length = 50)
     private String carnetIdentidad;
 
-    @Column(length = 100)
-    private String identificador;
+    @Column(name = "identificador_prensa",length = 100)
+    private String identificadorPrensa;
 
     @Column(name = "org_politica", length = 150)
     private String orgPolitica;
