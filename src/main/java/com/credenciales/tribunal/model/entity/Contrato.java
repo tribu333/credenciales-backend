@@ -1,4 +1,3 @@
-Contrato.java
 package com.credenciales.tribunal.model.entity;
 
 import lombok.*;
