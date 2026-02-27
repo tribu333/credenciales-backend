@@ -1,14 +1,16 @@
 package com.credenciales.tribunal.repository;
 
 import com.credenciales.tribunal.model.entity.Contrato;
-import com.credenciales.tribunal.model.entity.Personal;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Query;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Repository
-public interface ContratoRepository extends JpaRepository<Contrato, Long> {
-    @Repository
 public interface ContratoRepository extends JpaRepository<Contrato, Long> {
 
     // Buscar contratos por personal
@@ -36,7 +38,5 @@ public interface ContratoRepository extends JpaRepository<Contrato, Long> {
 
     @Query("")
     List<Contrato> findByPersonalIdWithCargoProceso (@Param("procesoId") Long procesoId);
-
-}
 
 }
