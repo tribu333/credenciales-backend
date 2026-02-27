@@ -100,7 +100,7 @@ public class ContratoController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/{id}")
+    /* @DeleteMapping("/{id}")
     @Operation(
         summary = "Eliminar contrato",
         description = "Elimina lógicamente un contrato"
@@ -115,5 +115,5 @@ public class ContratoController {
 
         contratoService.deleteContrato(id);
         return ResponseEntity.noContent().build();
-    }
+    } */
 }

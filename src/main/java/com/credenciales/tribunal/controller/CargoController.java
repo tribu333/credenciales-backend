@@ -2,6 +2,7 @@ package com.credenciales.tribunal.controller;
 
 import com.credenciales.tribunal.dto.cargo.CargoRequestDTO;
 import com.credenciales.tribunal.dto.cargo.CargoResponseDTO;
+import com.credenciales.tribunal.dto.cargoproceso.CargoProcesoResponseDTO;
 import com.credenciales.tribunal.service.CargoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
