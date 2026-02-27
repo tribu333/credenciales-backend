@@ -21,9 +21,6 @@ public class Contrato {
 	@Column(nullable = false, columnDefinition = "TINYINT DEFAULT 1")
     @Builder.Default
     private Boolean activo = true;
-    
-    @Column(nullable = false, length = 20)
-    private String tipo;
 
     @Column(name = "fecha_inicio", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime fechaInicio;
