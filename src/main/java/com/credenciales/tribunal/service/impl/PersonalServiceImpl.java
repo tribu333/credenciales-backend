@@ -743,7 +743,7 @@ public class PersonalServiceImpl implements PersonalService {
 				: null;
 
 		String urlQr = personal.getQr() != null
-				? baseUrl + "/api/qr/" + personal.getQr().getId() + "/ver"
+				? personal.getQr().getCodigo()
 				: null;
 
 		return PersonalDetallesDTO.builder()
