@@ -1,7 +1,6 @@
 package com.credenciales.tribunal.model.entity;
 
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
