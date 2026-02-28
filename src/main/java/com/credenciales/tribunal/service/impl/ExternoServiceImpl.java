@@ -161,7 +161,7 @@ public class ExternoServiceImpl implements ExternoService {
     public List<ExternoDTO> listarPorIdentificador(String identificadorPrensa) {
         log.debug("Listando externos por identificadorPrensa exacto: {}", identificadorPrensa);
         
-        List<Externo> externos = externoRepository.findByIdentificador(identificadorPrensa);
+        List<Externo> externos = externoRepository.findByIdentificadorPrensa(identificadorPrensa);
         
         if (externos.isEmpty()) {
             log.warn("No se encontraron externos con el identificadorPrensa: {}", identificadorPrensa);
@@ -175,7 +175,7 @@ public class ExternoServiceImpl implements ExternoService {
     public List<ExternoDTO> listarPorIdentificadorParcial(String identificadorPrensa) {
         log.debug("Listando externos por identificadorPrensa parcial: {}", identificadorPrensa);
         
-        List<Externo> externos = externoRepository.findByIdentificadorContainingIgnoreCase(identificadorPrensa);
+        List<Externo> externos = externoRepository.findByIdentificadorPrensaContainingIgnoreCase(identificadorPrensa);
         
         if (externos.isEmpty()) {
             log.warn("No se encontraron externos con identificadorPrensa que contenga: {}", identificadorPrensa);
@@ -207,7 +207,7 @@ public class ExternoServiceImpl implements ExternoService {
     @Override
     @Transactional(readOnly = true)
     public boolean existeAlgunoPorIdentificador(String identificadorPrensa) {
-        return externoRepository.findByIdentificador(identificadorPrensa).isEmpty();
+        return externoRepository.findByIdentificadorPrensa(identificadorPrensa).isEmpty();
     }
 
     @Override
@@ -225,7 +225,7 @@ public class ExternoServiceImpl implements ExternoService {
     @Override
     @Transactional(readOnly = true)
     public long contarPorIdentificador(String identificadorPrensa) {
-        return externoRepository.findByIdentificador(identificadorPrensa).size();
+        return externoRepository.findByIdentificadorPrensa(identificadorPrensa).size();
     }
     // Métodos privados de ayuda
     private Imagen obtenerImagenSiExiste(Long imagenId) {
