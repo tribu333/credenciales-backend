@@ -1,5 +1,7 @@
 package com.credenciales.tribunal.service.impl;
 
+import com.credenciales.tribunal.dto.historialcargoproceso.ActualizarFechasHistorialRequest;
+import com.credenciales.tribunal.dto.historialcargoproceso.ActualizarFechasHistorialResponse;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoCreateRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoSearchRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoUpdateRequestDTO;
@@ -303,7 +305,7 @@ public class HistorialCargoProcesoServiceImpl implements HistorialCargoProcesoSe
         // Implementación básica - se puede mejorar con Specifications
         List<HistorialCargoProceso> historiales = historialRepository.findAll();
         
-        LocalDateTime ahora = LocalDateTime.now();
+        //LocalDateTime ahora = LocalDateTime.now();
         
         return historiales.stream()
                 .filter(h -> searchRequest.getCargoProcesoId() == null || 
@@ -539,7 +541,87 @@ public class HistorialCargoProcesoServiceImpl implements HistorialCargoProcesoSe
         
         return historialMapper.toResponseDTOList(historiales);
     }
-    
+
+    /**
+     * Actualiza las fechas de todos los historiales de un cargo específico en un proceso
+     */
+    @Override
+    public ActualizarFechasHistorialResponse actualizarFechasHistoriales(
+            ActualizarFechasHistorialRequest request) {
+        
+        log.info("Iniciando actualización de fechas para cargo_proceso: {} en proceso: {}", 
+                request.getCargoProcesoId(), request.getProcesoElectoralId());
+        
+        // Validar que el proceso existe
+        ProcesoElectoral proceso = procesoRepository.findById(request.getProcesoElectoralId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                    "Proceso electoral no encontrado con ID: " + request.getProcesoElectoralId()));
+        
+        // Validar que el cargo_proceso existe y pertenece al proceso
+        CargoProceso cargoProceso = cargoProcesoRepository
+                .findByIdAndProcesoId(request.getCargoProcesoId(), request.getProcesoElectoralId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                    "Cargo proceso no encontrado con ID: " + request.getCargoProcesoId() + 
+                    " en el proceso: " + request.getProcesoElectoralId()));
+        
+        // Validar las fechas
+        validarFechas(request.getFechaInicio(), request.getFechaFin(), proceso);
+        
+        // Actualizar los historiales
+        int actualizados = historialRepository.actualizarFechasPorCargoProceso(
+                request.getCargoProcesoId(),
+                request.getFechaInicio(),
+                request.getFechaFin());
+        
+        log.info("Se actualizaron {} historiales para el cargo: {}", actualizados, cargoProceso.getNombre());
+        
+        // Construir respuesta
+        return ActualizarFechasHistorialResponse.builder()
+                .procesoElectoralId(proceso.getId())
+                .nombreProceso(proceso.getNombre())
+                .cargoProcesoId(cargoProceso.getId())
+                .nombreCargo(cargoProceso.getNombre())
+                .historialesActualizados(actualizados)
+                .nuevaFechaInicio(request.getFechaInicio())
+                .nuevaFechaFin(request.getFechaFin())
+                .build();
+    }
+     /**
+     * Versión alternativa que retorna los historiales actualizados
+     */
+    @Override
+    public List<HistorialCargoProceso> actualizarFechasYRetornarHistoriales(
+            Long procesoId, Long cargoProcesoId, 
+            LocalDateTime fechaInicio, LocalDateTime fechaFin) {
+        
+        // Validaciones similares al método anterior
+        validarExistenciaYRelacion(procesoId, cargoProcesoId);
+       // validarFechas(fechaInicio, fechaFin, procesoId); //implementar despues la validacion de fechas para este metodo
+        
+        List<HistorialCargoProceso> historiales = historialRepository
+                .findByCargoProceso_Proceso_IdAndCargoProceso_Id(procesoId, cargoProcesoId);
+        
+        if (historiales.isEmpty()) {
+            throw new BusinessException("No hay historiales para actualizar en este cargo proceso");
+        }
+        
+        historiales.forEach(historial -> {
+            historial.setFechaInicio(fechaInicio);
+            historial.setFechaFin(fechaFin);
+        });
+        
+        return historialRepository.saveAll(historiales);
+    }
+    private void validarExistenciaYRelacion(Long procesoId, Long cargoProcesoId) {
+        boolean existe = historialRepository
+                .existsByCargoProceso_Proceso_IdAndCargoProceso_Id(procesoId, cargoProcesoId);
+        
+        if (!existe) {
+            throw new ResourceNotFoundException(
+                "No existe el cargo_proceso " + cargoProcesoId + 
+                " en el proceso " + procesoId);
+        }
+    }
     // Métodos privados de validación
     private void validarFechas(LocalDateTime fechaInicio, LocalDateTime fechaFin, 
                                ProcesoElectoral proceso) {

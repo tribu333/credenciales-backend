@@ -1,12 +1,17 @@
 package com.credenciales.tribunal.controller;
 
+import com.credenciales.tribunal.dto.historialcargoproceso.ActualizarFechasHistorialRequest;
+import com.credenciales.tribunal.dto.historialcargoproceso.ActualizarFechasHistorialResponse;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoCreateRequestDTO;
 //import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoSearchRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoUpdateRequestDTO;
+import com.credenciales.tribunal.model.entity.HistorialCargoProceso;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoResponseDTO;
 import com.credenciales.tribunal.service.HistorialCargoProcesoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.format.annotation.DateTimeFormat;
 /* import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -15,6 +20,8 @@ import org.springframework.format.annotation.DateTimeFormat; */
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 //import java.time.LocalDateTime;
 import java.util.List;
 import io.swagger.v3.oas.annotations.Operation;
@@ -147,6 +154,30 @@ public class HistorialCargoProcesoController {
             @PathVariable Long personalId) {
         List<HistorialCargoProcesoResponseDTO> historiales = 
                 historialService.getHistorialesByPersonal(personalId);
+        return ResponseEntity.ok(historiales);
+    }
+    @PostMapping("/actualizar-fechas")
+    @Operation(summary = "Actualiza las fechas de todos los historiales de un cargo en un proceso")
+    public ResponseEntity<ActualizarFechasHistorialResponse> actualizarFechas(
+            @Valid @RequestBody ActualizarFechasHistorialRequest request) {
+        
+        ActualizarFechasHistorialResponse response = historialService
+                .actualizarFechasHistoriales(request);
+        
+        return ResponseEntity.ok(response);
+    }
+    
+    @PutMapping("/proceso/{procesoId}/cargo/{cargoId}/fechas")
+    @Operation(summary = "Actualiza fechas mediante parámetros en la URL")
+    public ResponseEntity<List<HistorialCargoProceso>> actualizarFechasPorUrl(
+            @PathVariable Long procesoId,
+            @PathVariable Long cargoId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fechaInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fechaFin) {
+        
+        List<HistorialCargoProceso> historiales = historialService
+                .actualizarFechasYRetornarHistoriales(procesoId, cargoId, fechaInicio, fechaFin);
+        
         return ResponseEntity.ok(historiales);
     }
 }

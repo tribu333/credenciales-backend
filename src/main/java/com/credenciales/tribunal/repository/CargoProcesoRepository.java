@@ -1,5 +1,6 @@
 package com.credenciales.tribunal.repository;
 
+import com.credenciales.tribunal.model.entity.Cargo;
 import com.credenciales.tribunal.model.entity.CargoProceso;
 import com.credenciales.tribunal.model.entity.ProcesoElectoral;
 import com.credenciales.tribunal.model.entity.Unidad;
@@ -23,6 +24,7 @@ public interface CargoProcesoRepository extends JpaRepository<CargoProceso, Long
     List<CargoProceso> findByUnidadId(Long unidadId);
     // Buscar por nombre (exacto) en un proceso
     Optional<CargoProceso> findByProcesoIdAndNombre(Long procesoId, String nombre);
+    Optional<CargoProceso> findByIdAndProcesoId(Long cargoProcesoId, Long procesoId);
     // Buscar por nombre que contenga
     List<CargoProceso> findByNombreContainingIgnoreCase(String nombre);
     
