@@ -23,7 +23,7 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/asignaciones-qr")
+@RequestMapping("/api/asignaciones-qr")
 @RequiredArgsConstructor
 @Tag(name = "Asignaciones QR", description = "Endpoints para gestionar asignaciones de QR a externos")
 @CrossOrigin(origins = "*")
@@ -42,7 +42,7 @@ public class AsignacionQrController {
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     public ResponseEntity<List<AsignacionResponseDTO>> findAll() {
-        log.info("GET /api/v1/asignaciones-qr - Listando todas las asignaciones");
+        log.info("GET /api/asignaciones-qr - Listando todas las asignaciones");
         List<AsignacionResponseDTO> asignaciones = asignacionQrService.findAll();
         return ResponseEntity.ok(asignaciones);
     }
@@ -58,7 +58,7 @@ public class AsignacionQrController {
     public ResponseEntity<AsignacionResponseDTO> findById(
             @Parameter(description = "ID de la asignación", required = true)
             @PathVariable Long id) {
-        log.info("GET /api/v1/asignaciones-qr/{} - Buscando asignación por ID", id);
+        log.info("GET /api/asignaciones-qr/{} - Buscando asignación por ID", id);
         AsignacionResponseDTO asignacion = asignacionQrService.findById(id);
         return ResponseEntity.ok(asignacion);
     }
@@ -71,7 +71,7 @@ public class AsignacionQrController {
         @ApiResponse(responseCode = "500", description = "Error interno del servidor")
     })
     public ResponseEntity<List<AsignacionResponseDTO>> findByActivoTrue() {
-        log.info("GET /api/v1/asignaciones-qr/activas - Listando asignaciones activas");
+        log.info("GET /api/asignaciones-qr/activas - Listando asignaciones activas");
         List<AsignacionResponseDTO> asignaciones = asignacionQrService.findByActivoTrue();
         return ResponseEntity.ok(asignaciones);
     }
@@ -88,7 +88,7 @@ public class AsignacionQrController {
     public ResponseEntity<List<AsignacionResponseDTO>> findByExternoId(
             @Parameter(description = "ID del externo", required = true)
             @PathVariable Long externoId) {
-        log.info("GET /api/v1/asignaciones-qr/externo/{} - Buscando asignaciones por externo", externoId);
+        log.info("GET /api/asignaciones-qr/externo/{} - Buscando asignaciones por externo", externoId);
         List<AsignacionResponseDTO> asignaciones = asignacionQrService.findByExternoId(externoId);
         return ResponseEntity.ok(asignaciones);
     }
@@ -105,7 +105,7 @@ public class AsignacionQrController {
     public ResponseEntity<List<AsignacionResponseDTO>> findByExternoIdAndActivoTrue(
             @Parameter(description = "ID del externo", required = true)
             @PathVariable Long externoId) {
-        log.info("GET /api/v1/asignaciones-qr/externo/{}/activas - Buscando asignaciones activas por externo", externoId);
+        log.info("GET /api/asignaciones-qr/externo/{}/activas - Buscando asignaciones activas por externo", externoId);
         List<AsignacionResponseDTO> asignaciones = asignacionQrService.findByExternoIdAndActivoTrue(externoId);
         return ResponseEntity.ok(asignaciones);
     }
@@ -121,7 +121,7 @@ public class AsignacionQrController {
     public ResponseEntity<AsignacionResponseDTO> findActivaByExternoId(
             @Parameter(description = "ID del externo", required = true)
             @PathVariable Long externoId) {
-        log.info("GET /api/v1/asignaciones-qr/externo/{}/activa - Buscando asignación activa por externo", externoId);
+        log.info("GET /api/asignaciones-qr/externo/{}/activa - Buscando asignación activa por externo", externoId);
         AsignacionResponseDTO asignacion = asignacionQrService.findActivaByExternoId(externoId);
         return ResponseEntity.ok(asignacion);
     }
@@ -136,7 +136,7 @@ public class AsignacionQrController {
     public ResponseEntity<Map<String, Boolean>> existsByExternoIdAndActivoTrue(
             @Parameter(description = "ID del externo", required = true)
             @PathVariable Long externoId) {
-        log.info("GET /api/v1/asignaciones-qr/externo/{}/existe-activa - Verificando si externo tiene asignación activa", externoId);
+        log.info("GET /api/asignaciones-qr/externo/{}/existe-activa - Verificando si externo tiene asignación activa", externoId);
         
         boolean existe = asignacionQrService.existsByExternoIdAndActivoTrue(externoId);
         
@@ -161,7 +161,7 @@ public class AsignacionQrController {
     public ResponseEntity<AsignacionResponseDTO> create(
             @Parameter(description = "Datos de la asignación", required = true)
             @Valid @RequestBody AsignacionRequestDTO requestDTO) {
-        log.info("POST /api/v1/asignaciones-qr - Creando nueva asignación: {}", requestDTO);
+        log.info("POST /api/asignaciones-qr - Creando nueva asignación: {}", requestDTO);
         
         AsignacionResponseDTO createdAsignacion = asignacionQrService.create(requestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAsignacion);
@@ -185,7 +185,7 @@ public class AsignacionQrController {
             @PathVariable Long id,
             @Parameter(description = "Nuevos datos de la asignación", required = true)
             @Valid @RequestBody AsignacionRequestDTO requestDTO) {
-        log.info("PUT /api/v1/asignaciones-qr/{} - Actualizando asignación: {}", id, requestDTO);
+        log.info("PUT /api/asignaciones-qr/{} - Actualizando asignación: {}", id, requestDTO);
         
         AsignacionResponseDTO updatedAsignacion = asignacionQrService.update(id, requestDTO);
         return ResponseEntity.ok(updatedAsignacion);
@@ -203,7 +203,7 @@ public class AsignacionQrController {
     public ResponseEntity<AsignacionResponseDTO> liberarAsignacion(
             @Parameter(description = "ID de la asignación a liberar", required = true)
             @PathVariable Long id) {
-        log.info("PUT /api/v1/asignaciones-qr/{}/liberar - Liberando asignación", id);
+        log.info("PUT /api/asignaciones-qr/{}/liberar - Liberando asignación", id);
         
         AsignacionResponseDTO liberatedAsignacion = asignacionQrService.liberarAsignacion(id);
         return ResponseEntity.ok(liberatedAsignacion);
@@ -222,7 +222,7 @@ public class AsignacionQrController {
     public ResponseEntity<Void> deleteById(
             @Parameter(description = "ID de la asignación a eliminar", required = true)
             @PathVariable Long id) {
-        log.info("DELETE /api/v1/asignaciones-qr/{} - Eliminando asignación (soft delete)", id);
+        log.info("DELETE /api/asignaciones-qr/{} - Eliminando asignación (soft delete)", id);
         
         asignacionQrService.deleteById(id);
         return ResponseEntity.noContent().build();
