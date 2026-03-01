@@ -158,13 +158,13 @@ public class ExternoServiceImpl implements ExternoService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ExternoDTO> listarPorIdentificador(String identificador) {
-        log.debug("Listando externos por identificador exacto: {}", identificador);
+    public List<ExternoDTO> listarPorIdentificador(String identificadorPrensa) {
+        log.debug("Listando externos por identificadorPrensa exacto: {}", identificadorPrensa);
         
-        List<Externo> externos = externoRepository.findByIdentificador(identificador);
+        List<Externo> externos = externoRepository.findByIdentificadorPrensa(identificadorPrensa);
         
         if (externos.isEmpty()) {
-            log.warn("No se encontraron externos con el identificador: {}", identificador);
+            log.warn("No se encontraron externos con el identificadorPrensa: {}", identificadorPrensa);
         }
         
         return externoMapper.toDTOList(externos);
@@ -172,13 +172,13 @@ public class ExternoServiceImpl implements ExternoService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ExternoDTO> listarPorIdentificadorParcial(String identificador) {
-        log.debug("Listando externos por identificador parcial: {}", identificador);
+    public List<ExternoDTO> listarPorIdentificadorParcial(String identificadorPrensa) {
+        log.debug("Listando externos por identificadorPrensa parcial: {}", identificadorPrensa);
         
-        List<Externo> externos = externoRepository.findByIdentificadorContainingIgnoreCase(identificador);
+        List<Externo> externos = externoRepository.findByIdentificadorPrensaContainingIgnoreCase(identificadorPrensa);
         
         if (externos.isEmpty()) {
-            log.warn("No se encontraron externos con identificador que contenga: {}", identificador);
+            log.warn("No se encontraron externos con identificadorPrensa que contenga: {}", identificadorPrensa);
         }
         
         return externoMapper.toDTOList(externos);
@@ -206,8 +206,8 @@ public class ExternoServiceImpl implements ExternoService {
 
     @Override
     @Transactional(readOnly = true)
-    public boolean existeAlgunoPorIdentificador(String identificador) {
-        return externoRepository.findByIdentificador(identificador).isEmpty();
+    public boolean existeAlgunoPorIdentificador(String identificadorPrensa) {
+        return externoRepository.findByIdentificadorPrensa(identificadorPrensa).isEmpty();
     }
 
     @Override
@@ -224,8 +224,8 @@ public class ExternoServiceImpl implements ExternoService {
 
     @Override
     @Transactional(readOnly = true)
-    public long contarPorIdentificador(String identificador) {
-        return externoRepository.findByIdentificador(identificador).size();
+    public long contarPorIdentificador(String identificadorPrensa) {
+        return externoRepository.findByIdentificadorPrensa(identificadorPrensa).size();
     }
     // Métodos privados de ayuda
     private Imagen obtenerImagenSiExiste(Long imagenId) {
@@ -249,7 +249,7 @@ public class ExternoServiceImpl implements ExternoService {
                     });
         }
         
-        // Nota: identificador NO es único, puede haber múltiples personas
+        // Nota: identificadorPrensa NO es único, puede haber múltiples personas
         // de la misma organización, por eso no se valida duplicado aquí
     }
 }

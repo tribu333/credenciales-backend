@@ -5,6 +5,7 @@ import com.credenciales.tribunal.model.entity.Personal;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -119,4 +120,18 @@ public interface HistorialCargoProcesoRepository extends JpaRepository<Historial
        "LEFT JOIN FETCH cp.unidad u " +
        "WHERE h.personal.id IN :personalIds AND h.activo = true")
     List<HistorialCargoProceso> findByPersonalIdInAndActivoTrue(@Param("personalIds") List<Long> personalIds);
+
+    List<HistorialCargoProceso> findByCargoProceso_Proceso_IdAndCargoProceso_Id(
+        Long procesoId, Long cargoProcesoId);
+
+    @Modifying
+    @Query("UPDATE HistorialCargoProceso h SET h.fechaInicio = :fechaInicio, " +
+           "h.fechaFin = :fechaFin WHERE h.cargoProceso.id = :cargoProcesoId")
+    int actualizarFechasPorCargoProceso(
+        @Param("cargoProcesoId") Long cargoProcesoId,
+        @Param("fechaInicio") LocalDateTime fechaInicio,
+        @Param("fechaFin") LocalDateTime fechaFin);
+
+    boolean existsByCargoProceso_Proceso_IdAndCargoProceso_Id(
+        Long procesoId, Long cargoProcesoId);
 }

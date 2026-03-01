@@ -34,10 +34,10 @@ public interface ExternoService {
     ExternoDTO obtenerPorCarnetIdentidad(String carnetIdentidad);
     
     // Cambiado: ahora devuelve List<ExternoDTO>
-    List<ExternoDTO> listarPorIdentificador(String identificador);
+    List<ExternoDTO> listarPorIdentificador(String identificadorPrensa);
     
-    // Nueva búsqueda: por identificador parcial
-    List<ExternoDTO> listarPorIdentificadorParcial(String identificador);
+    // Nueva búsqueda: por identificadorPrensa parcial
+    List<ExternoDTO> listarPorIdentificadorParcial(String identificadorPrensa);
     
     List<ExternoDTO> listarPorTipoExterno(TipoExterno tipoExterno);
     
@@ -46,11 +46,11 @@ public interface ExternoService {
     // Métodos de verificación
     boolean existePorCarnetIdentidad(String carnetIdentidad);
     
-    boolean existeAlgunoPorIdentificador(String identificador);
+    boolean existeAlgunoPorIdentificador(String identificadorPrensa);
     
     // Métodos de conteo
     long contarTotal();
     
     long contarPorTipoExterno(TipoExterno tipoExterno);
-    long contarPorIdentificador(String identificador);
+    long contarPorIdentificador(String identificadorPrensa);
 }

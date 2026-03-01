@@ -11,7 +11,6 @@ public class ImagenMapper {
         
         return ImagenBasicaDTO.builder()
                 .idImagen(imagen.getIdImagen())
-                .nombreOriginal(imagen.getNombreOriginal())
                 .urlDescarga(imagen.getRutaCompleta())
                 .build();
     }

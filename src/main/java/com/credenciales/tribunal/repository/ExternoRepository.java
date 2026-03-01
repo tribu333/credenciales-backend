@@ -14,13 +14,13 @@ public interface ExternoRepository extends JpaRepository<Externo, Long> {
     
     Optional<Externo> findByCarnetIdentidad(String carnetIdentidad);
     
-    List<Externo> findByIdentificador(String identificador);
+    List<Externo> findByIdentificadorPrensa(String identificadorPrensa);
     
     List<Externo> findByTipoExterno(TipoExterno tipoExterno);
     
     List<Externo> findByOrgPoliticaContainingIgnoreCase(String orgPolitica);
-    // Búsqueda por identificador que contenga el texto (búsqueda parcial)
-    List<Externo> findByIdentificadorContainingIgnoreCase(String identificador);
+    // Búsqueda por identificadorPrensa que contenga el texto (búsqueda parcial)
+    List<Externo> findByIdentificadorPrensaContainingIgnoreCase(String identificadorPrensa);
     @Query("SELECT DISTINCT e FROM Externo e " +
            "LEFT JOIN FETCH e.imagen " +
            "LEFT JOIN FETCH e.asignaciones")

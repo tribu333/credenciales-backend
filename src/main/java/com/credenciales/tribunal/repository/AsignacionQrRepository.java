@@ -38,4 +38,11 @@ public interface AsignacionQrRepository extends JpaRepository<AsignacionQr, Long
 
     // Verificar si un externo tiene asignación activa
     boolean existsByExternoIdAndActivoTrue(Long externoId);
+    @Query("SELECT a FROM AsignacionQr a WHERE a.qr.id = :qrId AND a.activo = true")
+    Optional<AsignacionQr> findActiveByQrId(@Param("qrId") Long qrId);
+    @Query("SELECT COUNT(a) > 0 FROM AsignacionQr a WHERE a.qr.id = :qrId AND a.activo = true")
+    boolean existsActiveByQrId(@Param("qrId") Long qrId);
+    // Para auditoría/historial
+    List<AsignacionQr> findByQrIdOrderByFechaAsignacionDesc(Long qrId);
+    //List<AsignacionQr> findByExternoIdOrderByFechaAsignacionDesc(Long externoId);
 }
