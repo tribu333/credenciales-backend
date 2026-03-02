@@ -98,7 +98,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/estados-personal/personal/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/estados-personal/estado/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/personal/*/acceso").permitAll()
-
+                        
                         // Endpoints de cambio de estado (requieren autenticación)
                         .requestMatchers(HttpMethod.POST, "/api/estados-personal/registrar").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/api/estados-personal/*/**").hasRole("ADMINISTRADOR")
@@ -112,6 +112,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/historiales-cargo-proceso/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/imagenes/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/externos/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/asignaciones-qr/**").permitAll()
                         
                         .requestMatchers(HttpMethod.DELETE, "/api/imagenes/**").hasRole("ADMINISTRADOR")
                         // Restringir POST, PUT, DELETE a ADMINISTRADOR
