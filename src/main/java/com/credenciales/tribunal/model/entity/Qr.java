@@ -40,8 +40,6 @@ public class Qr {
     @OneToOne(mappedBy = "qr")
     private Personal personal;
 
-    @OneToMany(mappedBy = "qr")
-    private List<AsignacionQr> asignaciones;
 
     @OneToMany(mappedBy = "qr")
     private List<Acceso> accesos;

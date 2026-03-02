@@ -13,7 +13,7 @@ import jakarta.validation.constraints.NotNull;
 public class AsignacionRequestDTO {
     @NotNull(message = "El externoId no puede estar vacío")
     private Long externoId;
-    @NotNull(message = "El qrId no puede ser nulo")
-    private Long qrId;
+    @NotBlank(message = "El qrCod no puede ser estar vacio")
+    private String qrCod;
     private LocalDateTime fechaLiberacion; // opcional
 }
