@@ -16,7 +16,7 @@ public class ExternoResponseDTO {
     private Long id;
     private String nombreCompleto;
     private String carnetIdentidad;
-    private String identificador;
+    private String identificadorPrensa;
     private String orgPolitica;
     private TipoExterno tipoExterno;
     private LocalDateTime createdAt;

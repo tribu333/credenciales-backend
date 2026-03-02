@@ -201,7 +201,7 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
                                 personalId, EstadoPersonal.PERSONAL_REGISTRADO.getNombre());
 
         if (!puedeVolverARegistrarse) {
-            throw new BusinessException("No puede volver a imprimir, tiene que devolver la credencial.");
+            throw new BusinessException("No puede volver a registrarse, tiene que devolver la credencial.");
         }
 
         Estado estado = estadoRepository.findByEnum(EstadoPersonal.PERSONAL_REGISTRADO)

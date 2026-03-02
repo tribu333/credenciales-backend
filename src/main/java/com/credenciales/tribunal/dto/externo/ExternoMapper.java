@@ -19,7 +19,7 @@ public class ExternoMapper {
                 .id(externo.getId())
                 .nombreCompleto(externo.getNombreCompleto())
                 .carnetIdentidad(externo.getCarnetIdentidad())
-                .identificador(externo.getIdentificador())
+                .identificadorPrensa(externo.getIdentificadorPrensa())
                 .orgPolitica(externo.getOrgPolitica())
                 .tipoExterno(externo.getTipoExterno())
                 .createdAt(externo.getCreatedAt())
@@ -36,7 +36,7 @@ public class ExternoMapper {
                 .id(externo.getId())
                 .nombreCompleto(externo.getNombreCompleto())
                 .carnetIdentidad(externo.getCarnetIdentidad())
-                .identificador(externo.getIdentificador())
+                .identificadorPrensa(externo.getIdentificadorPrensa())
                 .orgPolitica(externo.getOrgPolitica())
                 .tipoExterno(externo.getTipoExterno())
                 .createdAt(externo.getCreatedAt())
@@ -54,7 +54,7 @@ public class ExternoMapper {
                 .id(externo.getId())
                 .nombreCompleto(externo.getNombreCompleto())
                 .carnetIdentidad(externo.getCarnetIdentidad())
-                .identificador(externo.getIdentificador())
+                .identificadorPrensa(externo.getIdentificadorPrensa())
                 .orgPolitica(externo.getOrgPolitica())
                 .tipoExterno(externo.getTipoExterno())
                 .createdAt(externo.getCreatedAt())
@@ -71,7 +71,7 @@ public class ExternoMapper {
         return Externo.builder()
                 .nombreCompleto(requestDTO.getNombreCompleto())
                 .carnetIdentidad(requestDTO.getCarnetIdentidad())
-                .identificador(requestDTO.getIdentificador())
+                .identificadorPrensa(requestDTO.getIdentificadorPrensa())
                 .orgPolitica(requestDTO.getOrgPolitica())
                 .tipoExterno(requestDTO.getTipoExterno())
                 .imagen(imagen)
@@ -83,7 +83,7 @@ public class ExternoMapper {
         
         externo.setNombreCompleto(requestDTO.getNombreCompleto());
         externo.setCarnetIdentidad(requestDTO.getCarnetIdentidad());
-        externo.setIdentificador(requestDTO.getIdentificador());
+        externo.setIdentificadorPrensa(requestDTO.getIdentificadorPrensa());
         externo.setOrgPolitica(requestDTO.getOrgPolitica());
         externo.setTipoExterno(requestDTO.getTipoExterno());
         

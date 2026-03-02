@@ -23,8 +23,8 @@ public class ExternoRequestDTO {
     @Size(max = 50, message = "El carnet de identidad no puede exceder los 50 caracteres")
     private String carnetIdentidad;
 
-    @Size(max = 100, message = "El identificador no puede exceder los 100 caracteres")
-    private String identificador;
+    @Size(max = 100, message = "El identificadorPrensa no puede exceder los 100 caracteres")
+    private String identificadorPrensa;
 
     @Size(max = 150, message = "La organización política no puede exceder los 150 caracteres")
     private String orgPolitica;

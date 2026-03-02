@@ -1,8 +1,11 @@
 package com.credenciales.tribunal.service;
 
+import com.credenciales.tribunal.dto.historialcargoproceso.ActualizarFechasHistorialRequest;
+import com.credenciales.tribunal.dto.historialcargoproceso.ActualizarFechasHistorialResponse;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoCreateRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoSearchRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoUpdateRequestDTO;
+import com.credenciales.tribunal.model.entity.HistorialCargoProceso;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoResponseDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -89,4 +92,8 @@ public interface HistorialCargoProcesoService {
     
     List<HistorialCargoProcesoResponseDTO> getUltimosHistorialesByPersonal(
             Long personalId, int limite);
+ActualizarFechasHistorialResponse actualizarFechasHistoriales(ActualizarFechasHistorialRequest request);
+List<HistorialCargoProceso> actualizarFechasYRetornarHistoriales(
+            Long procesoId, Long cargoProcesoId, 
+            LocalDateTime fechaInicio, LocalDateTime fechaFin);
 }

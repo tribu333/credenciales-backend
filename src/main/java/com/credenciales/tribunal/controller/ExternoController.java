@@ -6,6 +6,8 @@ import com.credenciales.tribunal.dto.externo.ExternoRequestDTO;
 import com.credenciales.tribunal.dto.externo.ExternoResponseDTO;
 import com.credenciales.tribunal.model.enums.TipoExterno;
 import com.credenciales.tribunal.service.ExternoService;
+
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -69,6 +71,7 @@ public class ExternoController {
         return ResponseEntity.ok(externoService.actualizarExterno(id, requestDTO));
     }
 
+    @Hidden
     @DeleteMapping("/{id}")
     @Operation(
         summary = "Eliminar un externo",
@@ -120,6 +123,7 @@ public class ExternoController {
         return ResponseEntity.ok(externoService.obtenerExternoDetallePorId(id));
     }
 
+    @Hidden
     @GetMapping
     @Operation(
         summary = "Listar todos los externos",
@@ -130,6 +134,7 @@ public class ExternoController {
         return ResponseEntity.ok(externoService.listarTodos());
     }
 
+    @Hidden
     @GetMapping("/response")
     @Operation(
         summary = "Listar externos con información de imagen",
@@ -140,6 +145,7 @@ public class ExternoController {
         return ResponseEntity.ok(externoService.listarTodosResponse());
     }
 
+    @Hidden
     @GetMapping("/detalles")
     @Operation(
         summary = "Listar externos con detalles completos",
@@ -167,28 +173,29 @@ public class ExternoController {
         return ResponseEntity.ok(externoService.obtenerPorCarnetIdentidad(carnetIdentidad));
     }
 
-    @GetMapping("/identificador/{identificador}")
+    @GetMapping("/identificadorPrensa/{identificadorPrensa}")
     @Operation(
-        summary = "Listar externos por identificador exacto",
+        summary = "Listar externos por identificadorPrensa exacto",
         description = "Retorna todos los externos que pertenecen a una organización específica (ej: TVU, Los Tiempos)"
     )
     @ApiResponse(responseCode = "200", description = "Lista de externos de la organización")
     public ResponseEntity<List<ExternoDTO>> listarPorIdentificador(
             @PathVariable 
-            @Parameter(description = "Nombre de la organización/identificador", example = "TVU", required = true) 
-            String identificador) {
-        return ResponseEntity.ok(externoService.listarPorIdentificador(identificador));
+            @Parameter(description = "Nombre de la organización/identificadorPrensa", example = "TVU", required = true) 
+            String identificadorPrensa) {
+        return ResponseEntity.ok(externoService.listarPorIdentificador(identificadorPrensa));
     }
 
-    @GetMapping("/identificador/buscar")
+    @Hidden
+    @GetMapping("/identificadorPrensa/buscar")
     @Operation(
-        summary = "Buscar externos por identificador parcial",
-        description = "Retorna externos cuyo identificador contenga el texto proporcionado (búsqueda parcial)"
+        summary = "Buscar externos por identificadorPrensa parcial",
+        description = "Retorna externos cuyo identificadorPrensa contenga el texto proporcionado (búsqueda parcial)"
     )
     @ApiResponse(responseCode = "200", description = "Lista de externos que coinciden con la búsqueda")
     public ResponseEntity<List<ExternoDTO>> listarPorIdentificadorParcial(
             @RequestParam 
-            @Parameter(description = "Texto a buscar en el identificador", example = "TV", required = true) 
+            @Parameter(description = "Texto a buscar en el identificadorPrensa", example = "TV", required = true) 
             String texto) {
         return ResponseEntity.ok(externoService.listarPorIdentificadorParcial(texto));
     }
@@ -206,6 +213,7 @@ public class ExternoController {
         return ResponseEntity.ok(externoService.listarPorTipoExterno(tipoExterno));
     }
 
+    @Hidden
     @GetMapping("/organizacion")
     @Operation(
         summary = "Buscar externos por organización política",
@@ -232,18 +240,20 @@ public class ExternoController {
         return ResponseEntity.ok(externoService.existePorCarnetIdentidad(carnetIdentidad));
     }
 
-    @GetMapping("/existe/identificador")
+    @Hidden
+    @GetMapping("/existe/identificadorPrensa")
     @Operation(
-        summary = "Verificar si existe algún externo con un identificador",
-        description = "Retorna true si existe al menos un externo con el identificador proporcionado"
+        summary = "Verificar si existe algún externo con un identificadorPrensa",
+        description = "Retorna true si existe al menos un externo con el identificadorPrensa proporcionado"
     )
     @ApiResponse(responseCode = "200", description = "Resultado de la verificación")
     public ResponseEntity<Boolean> existeAlgunoPorIdentificador(
             @RequestParam 
-            @Parameter(description = "Identificador a verificar", example = "TVU", required = true) 
-            String identificador) {
-        return ResponseEntity.ok(externoService.existeAlgunoPorIdentificador(identificador));
+            @Parameter(description = "identificadorPrensa a verificar", example = "TVU", required = true) 
+            String identificadorPrensa) {
+        return ResponseEntity.ok(externoService.existeAlgunoPorIdentificador(identificadorPrensa));
     }
+
 
     @GetMapping("/count")
     @Operation(
@@ -255,6 +265,7 @@ public class ExternoController {
         return ResponseEntity.ok(externoService.contarTotal());
     }
 
+    @Hidden
     @GetMapping("/count/tipo/{tipoExterno}")
     @Operation(
         summary = "Contar externos por tipo",
@@ -268,16 +279,17 @@ public class ExternoController {
         return ResponseEntity.ok(externoService.contarPorTipoExterno(tipoExterno));
     }
 
-    @GetMapping("/count/identificador/{identificador}")
+    @Hidden
+    @GetMapping("/count/identificadorPrensa/{identificadorPrensa}")
     @Operation(
-        summary = "Contar externos por identificador",
+        summary = "Contar externos por identificadorPrensa",
         description = "Retorna el número de externos que pertenecen a una organización específica"
     )
     @ApiResponse(responseCode = "200", description = "Cantidad de externos de la organización")
     public ResponseEntity<Long> contarPorIdentificador(
             @PathVariable 
             @Parameter(description = "Nombre de la organización", example = "TVU", required = true) 
-            String identificador) {
-        return ResponseEntity.ok(externoService.contarPorIdentificador(identificador));
+            String identificadorPrensa) {
+        return ResponseEntity.ok(externoService.contarPorIdentificador(identificadorPrensa));
     }
 }
