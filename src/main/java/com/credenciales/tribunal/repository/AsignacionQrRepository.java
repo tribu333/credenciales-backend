@@ -37,4 +37,5 @@ public interface AsignacionQrRepository extends JpaRepository<AsignacionQr, Long
     // Verificar si un externo tiene asignación activa
     boolean existsByExternoIdAndActivoTrue(Long externoId);
 
+    Optional<AsignacionQr> findByQrAndActivoTrue(String qr);
 }

@@ -56,7 +56,7 @@ public class AsignacionQrServiceImpl implements AsignacionQrService {
         liberarAsignacionesPreviasSiExisten(requestDTO.getQrCod(), requestDTO.getExternoId());
         
         // 2. Validar que el QR esté disponible AHORA (después de liberar)
-        
+        validarQrDisponible(requestDTO.getQrCod());
         
         // 3. Validar que el externo esté disponible AHORA (después de liberar)
         validarExternoSinAsignacionActiva(requestDTO.getExternoId());
@@ -235,28 +235,20 @@ public class AsignacionQrServiceImpl implements AsignacionQrService {
     /**
      * Valida que un QR esté disponible para ser asignado
      */
-/*     private void validarQrDisponible(Long qrId) {
-        Optional<AsignacionQr> asignacionActiva = asignacionQrRepository.findByQrIdAndActivoTrue(qrId);
+    private void validarQrDisponible(String qrId) {
+        Optional<AsignacionQr> asignacionActiva = asignacionQrRepository.findByQrAndActivoTrue(qrId);
         
         if (asignacionActiva.isPresent()) {
             AsignacionQr asignacion = asignacionActiva.get();
             throw new IllegalStateException(
-                String.format("El QR con ID: %d ya está asignado activamente al externo: %s (desde: %s)", 
+                String.format("El QR con codigo: %d ya está asignado activamente al externo: %s (desde: %s)", 
                     qrId, 
                     asignacion.getExterno().getNombreCompleto(),
                     asignacion.getFechaAsignacion().toString()
                 )
             );
         }
-        
-        // Verificar también que el QR no esté en estado INACTIVO
-        Qr qr = qrRepository.findById(qrId)
-            .orElseThrow(() -> new EntityNotFoundException("QR no encontrado con ID: " + qrId));
-            
-        if (qr.getEstado() == EstadoQr.INACTIVO) {
-            throw new IllegalStateException("El QR con ID: " + qrId + " está INACTIVO y no puede asignarse");
-        }
-    } */
+    }
 
     /**
      * Valida que un externo no tenga una asignación activa
