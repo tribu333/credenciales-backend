@@ -2,7 +2,6 @@ package com.credenciales.tribunal.service.impl;
 
 import com.credenciales.tribunal.config.QrStorageProperties;
 import com.credenciales.tribunal.dto.qr.QrGenerarDTO;
-import com.credenciales.tribunal.dto.qr.QrGenerarExternoDTO;
 import com.credenciales.tribunal.dto.qr.QrResponseDTO;
 import com.credenciales.tribunal.dto.qr.QrResponseExternoDTO;
 import com.credenciales.tribunal.exception.BusinessException;
@@ -14,23 +13,13 @@ import com.credenciales.tribunal.model.enums.TipoQr;
 import com.credenciales.tribunal.repository.PersonalRepository;
 import com.credenciales.tribunal.repository.QrRepository;
 import com.credenciales.tribunal.service.QrService;
-import com.google.zxing.BarcodeFormat;
-import com.google.zxing.client.j2se.MatrixToImageWriter;
-import com.google.zxing.common.BitMatrix;
-import com.google.zxing.qrcode.QRCodeWriter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -45,10 +34,6 @@ public class QrServiceImpl implements QrService {
     private final PersonalRepository personalRepository;
     private final QrStorageProperties storageProperties;
 
-    @Value("${qr.base-url-images}")
-    private String baseUrl;
-
-    private static final int QR_SIZE = 300;
 
     @Override
     public QrResponseDTO generarQrPersonal(QrGenerarDTO qrGenerarDTO) {
@@ -56,7 +41,6 @@ public class QrServiceImpl implements QrService {
             throw new BusinessException("El método generarQrPersonal solo acepta tipo PERSONAL");
         }
 
-        // Verificar si ya existe un QR para este carnet
         String codigoEsperado = generarCodigoQr(qrGenerarDTO.getCarnetIdentidad());
         if (qrRepository.existsByCodigo(codigoEsperado)) {
             throw new BusinessException(
@@ -66,28 +50,15 @@ public class QrServiceImpl implements QrService {
         return generarQr(qrGenerarDTO);
     }
 
-    @Override
-    @Transactional
-    public List<QrResponseExternoDTO> generarQrExterno(QrGenerarExternoDTO qrGenerarExternoDTO) {
-        // Validar que el tipo sea EXTERNO
-        if (qrGenerarExternoDTO.getTipo() != TipoQr.EXTERNO) {
-            throw new BusinessException("El método generarQrExterno solo acepta tipo EXTERNO");
-        }
-
-        return generarQrEx(qrGenerarExternoDTO);
-    }
-
     private QrResponseDTO generarQr(QrGenerarDTO qrGenerarDTO) {
         try {
             String codigo = generarCodigoQr(qrGenerarDTO.getCarnetIdentidad());
-
-            String rutaImagen = generarImagenQr(codigo, qrGenerarDTO.getCarnetIdentidad());
 
             Qr qr = Qr.builder()
                     .codigo(codigo)
                     .tipo(qrGenerarDTO.getTipo())
                     .estado(EstadoQr.LIBRE)
-                    .rutaImagenQr(rutaImagen)
+                    .rutaImagenQr("No image")
                     .build();
 
             qr = qrRepository.save(qr);
@@ -101,91 +72,11 @@ public class QrServiceImpl implements QrService {
         }
     }
 
-    private List<QrResponseExternoDTO> generarQrEx(QrGenerarExternoDTO qrGenerarExternoDTO) {
-        log.info("Iniciando generación masiva de {} QR para tipo_externo: {}",
-                qrGenerarExternoDTO.getCantidad(), qrGenerarExternoDTO.getTipo_externo());
-
-        long startTime = System.currentTimeMillis();
-        List<QrResponseExternoDTO> resultados = new ArrayList<>();
-        List<Qr> qrsParaGuardar = new ArrayList<>();
-
-        try {
-            for (int i = 0; i < qrGenerarExternoDTO.getCantidad(); i++) {
-                String codigo = generarCodigoQrExterno(qrGenerarExternoDTO.getTipo_externo());
-
-                Qr qr = Qr.builder()
-                        .codigo(codigo)
-                        .tipo(qrGenerarExternoDTO.getTipo())
-                        .estado(EstadoQr.LIBRE)
-                        .rutaImagenQr("No")
-                        .build();
-
-                qrsParaGuardar.add(qr);
-
-                if ((i + 1) % 100 == 0) {
-                    log.debug("Generados {} QR de {}", i + 1, qrGenerarExternoDTO.getCantidad());
-                }
-            }
-
-            List<Qr> qrsGuardados = qrRepository.saveAll(qrsParaGuardar);
-
-            for (Qr qr : qrsGuardados) {
-                resultados.add(mapToExDTO(qr, qrGenerarExternoDTO.getTipo_externo()));
-            }
-
-            long duration = System.currentTimeMillis() - startTime;
-            log.info("Generación masiva completada: {} QR generados en {} ms ({} ms/QR)",
-                    resultados.size(), duration,
-                    resultados.size() > 0 ? duration / (double) resultados.size() : 0);
-
-            return resultados;
-
-        } catch (Exception e) {
-            log.error("Error en generación masiva de QR: {}", e.getMessage(), e);
-            throw new BusinessException("Error al generar códigos QR masivos: " + e.getMessage());
-        }
-    }
-
     private String generarCodigoQr(String carnetIdentidad) {
         // Formato: QR-CARNET-YYYYMMDD-UUID único
         String fecha = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String uniqueId = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         return String.format("QR-%s-%s-%s", carnetIdentidad, fecha, uniqueId);
-    }
-
-    private String generarCodigoQrExterno(String tipo_externo) {
-        // Formato: QR-TIPO_EXTERNO-YYYYMMDD-UUID único
-        String fecha = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        String uniqueId = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-        return String.format("QR-%s-%s-%s", tipo_externo, fecha, uniqueId);
-    }
-
-    private String generarImagenQr(String codigo, String carnetIdentidad) throws Exception {
-        // Crear directorio si no existe
-        Path storagePath = Paths.get(storageProperties.getPath()).toAbsolutePath().normalize();
-
-        if (!Files.exists(storagePath)) {
-            Files.createDirectories(storagePath);
-            log.info("Directorio QR creado: {}", storagePath);
-        }
-
-        // Verificar permisos
-        if (!Files.isWritable(storagePath)) {
-            throw new BusinessException("No hay permisos de escritura en: " + storagePath);
-        }
-
-        String fileName = String.format("qr-%s-%d.png", carnetIdentidad, System.currentTimeMillis());
-        Path filePath = storagePath.resolve(fileName);
-
-        // Generar QR...
-        QRCodeWriter qrCodeWriter = new QRCodeWriter();
-        BitMatrix bitMatrix = qrCodeWriter.encode(codigo, BarcodeFormat.QR_CODE, 300, 300);
-        MatrixToImageWriter.writeToPath(bitMatrix, "PNG", filePath);
-
-        log.info("QR guardado en: {}", filePath);
-
-        // IMPORTANTE: Guardar la ruta completa en BD
-        return filePath.toString(); // Guarda la ruta completa C:/qr/qr-1234567.png
     }
 
     @Override
@@ -282,26 +173,6 @@ public class QrServiceImpl implements QrService {
         return qr;
     }
 
-    @Override
-    public byte[] descargarImagenQr(Long qrId) {
-        Qr qr = qrRepository.findById(qrId)
-                .orElseThrow(() -> new ResourceNotFoundException("QR no encontrado con ID: " + qrId));
-
-        try {
-            Path imagePath = Paths.get(qr.getRutaImagenQr());
-            return Files.readAllBytes(imagePath);
-        } catch (IOException e) {
-            log.error("Error al leer la imagen QR: {}", e.getMessage());
-            throw new BusinessException("Error al leer la imagen QR");
-        }
-    }
-
-    @Override
-    public String getUrlPublicaQr(String rutaImagen) {
-        String fileName = Paths.get(rutaImagen).getFileName().toString();
-        return baseUrl + storageProperties.getUrlPrefix() + fileName;
-    }
-
     private QrResponseDTO mapToDTO(Qr qr) {
         return QrResponseDTO.builder()
                 .id(qr.getId())
@@ -309,19 +180,8 @@ public class QrServiceImpl implements QrService {
                 .tipo(qr.getTipo())
                 .estado(qr.getEstado())
                 .rutaImagenQr(qr.getRutaImagenQr())
-                .urlPublica(getUrlPublicaQr(qr.getRutaImagenQr()))
+                .urlPublica("No url")
                 .createdAt(qr.getCreatedAt())
                 .build();
-    }
-
-    private QrResponseExternoDTO mapToExDTO(Qr qr, String tipoExterno) {
-        return QrResponseExternoDTO.builder()
-            .id(qr.getId())
-            .codigo(qr.getCodigo())
-            .tipo(qr.getTipo())
-            .estado(qr.getEstado())
-            .tipo_externo(TipoQr.valueOf(tipoExterno))
-            .createdAt(qr.getCreatedAt())
-            .build();
     }
 }

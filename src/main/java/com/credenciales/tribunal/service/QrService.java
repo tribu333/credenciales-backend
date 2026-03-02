@@ -1,20 +1,15 @@
 package com.credenciales.tribunal.service;
 
 import com.credenciales.tribunal.dto.qr.QrGenerarDTO;
-import com.credenciales.tribunal.dto.qr.QrGenerarExternoDTO;
 import com.credenciales.tribunal.dto.qr.QrResponseDTO;
-import com.credenciales.tribunal.dto.qr.QrResponseExternoDTO;
 import com.credenciales.tribunal.model.entity.Qr;
 import com.credenciales.tribunal.model.enums.TipoQr;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 public interface QrService {
     
     QrResponseDTO generarQrPersonal(QrGenerarDTO qrGenerarDTO);
-    
-    List<QrResponseExternoDTO> generarQrExterno(QrGenerarExternoDTO qrGenerarExternoDTO);
     
     QrResponseDTO obtenerQrPorId(Long id);
     
@@ -31,8 +26,5 @@ public interface QrService {
     Qr liberarQr(Long qrId);
     
     Qr inactivarQr(Long qrId);
-    
-    byte[] descargarImagenQr(Long qrId);
-    
-    String getUrlPublicaQr(String rutaImagen);
+
 }
