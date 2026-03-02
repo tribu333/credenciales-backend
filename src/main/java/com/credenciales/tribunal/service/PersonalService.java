@@ -59,4 +59,6 @@ public interface PersonalService {
     List<PersonalNotarioDTO> filtroNotarios(String nroCircunscrip);
 
     ApiResponseDTO cambiarEstadoAccesoComputoMasivo(CambioEstadoMasivoRequestDTO request);
+
+    List<PersonalCertificadoDTO> obtenerCertificadosPersonal(List<Long> ids);
 }

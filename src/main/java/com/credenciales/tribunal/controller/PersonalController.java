@@ -5,6 +5,7 @@ import com.credenciales.tribunal.dto.email.VerificacionEmailRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionResponseDTO;
 import com.credenciales.tribunal.dto.estadoActual.CambioEstadoMasivoRequestDTO;
 import com.credenciales.tribunal.dto.personal.*;
+import com.credenciales.tribunal.exception.ResourceNotFoundException;
 import com.credenciales.tribunal.model.enums.EstadoPersonal;
 import com.credenciales.tribunal.service.PersonalService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -193,26 +195,28 @@ public class PersonalController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+
     @PutMapping("/{id}/acceso")
     @Operation(summary = "Cambiar Acceso de Computo")
     public ResponseEntity<ApiResponseDTO> cambiarEstadoAcceso(@PathVariable Long id) {
         ApiResponseDTO response = personalService.cambiarEstadoAccesoComputo(id);
         return ResponseEntity.ok(response);
     }
+
     @GetMapping("/detalles/qrComputo/{qr}")
     @Operation(summary = "Obtener detalles de personales por estado")
     public PersonalDetallesDTO obtenerPersonalesPorcodQr(
             @PathVariable String qr) {
-              PersonalDetallesDTO res = personalService.obtenernPersonalQr(qr);
-              return res;
+        PersonalDetallesDTO res = personalService.obtenernPersonalQr(qr);
+        return res;
     }
 
     @GetMapping("/por/circunscripcion/{cir}")
     @Operation(summary = "Filtra personal por circunscripcion")
     public List<PersonalNotarioDTO> obtenerPorCircunscirpcion(
             @PathVariable String cir) {
-              List<PersonalNotarioDTO> res = personalService.filtroNotarios(cir);
-              return res;
+        List<PersonalNotarioDTO> res = personalService.filtroNotarios(cir);
+        return res;
     }
 
     @Operation(summary = "Cambiar acceso a cómputo de múltiples personales (toggle masivo)")
@@ -222,5 +226,36 @@ public class PersonalController {
 
         ApiResponseDTO response = personalService.cambiarEstadoAccesoComputoMasivo(request);
         return new ResponseEntity<>(response, HttpStatus.valueOf(response.getStatus()));
+    }
+
+    @Operation(summary = "Obtener certificados de personal por IDs", description = "Retorna la lista de certificados para los IDs proporcionados")
+    @PostMapping("/certificados/data")
+    public ResponseEntity<List<PersonalCertificadoDTO>> obtenerDatosCertificados(
+            @RequestBody List<Long> ids) {
+
+        // Validaciones
+        if (ids == null || ids.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        if (ids.size() > 2000) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        List<PersonalCertificadoDTO> datos = personalService.obtenerCertificadosPersonal(ids);
+
+        return ResponseEntity.ok(datos);
+    }
+
+    @GetMapping("/certificados")
+    public ResponseEntity<List<PersonalCertificadoDTO>> obtenerCertificadosGet(
+            @RequestParam List<Long> ids) {
+
+        if (ids == null || ids.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        List<PersonalCertificadoDTO> datos = personalService.obtenerCertificadosPersonal(ids);
+        return ResponseEntity.ok(datos);
     }
 }

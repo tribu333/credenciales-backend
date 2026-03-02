@@ -16,11 +16,22 @@ import com.credenciales.tribunal.model.enums.TipoPersonal;
 import com.credenciales.tribunal.model.enums.TipoQr;
 import com.credenciales.tribunal.repository.*;
 import com.credenciales.tribunal.service.*;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.persistence.Tuple;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.beans.factory.annotation.Value;
 import java.util.function.Function;
 
@@ -52,6 +63,7 @@ public class PersonalServiceImpl implements PersonalService {
 	private final EstadoPersonalService estadoPersonalService;
 
 	private static final int EXPIRACION_MINUTOS = 15;
+	private static final int BATCH_SIZE = 500;
 
 	@Override
 	public VerificacionResponseDTO solicitarCodigoVerificacion(VerificacionEmailRequestDTO request) {
@@ -126,8 +138,8 @@ public class PersonalServiceImpl implements PersonalService {
 	@Override
 	public PersonalCompletoDTO registrarPersonalCompleto(PersonalCreateDTO registroDTO) {
 
-		if(registroDTO.getCargoID() == 4 ) {
-			
+		if (registroDTO.getCargoID() == 4) {
+
 			if (!"220326".equals(registroDTO.getCodigoVerificacion())) {
 				throw new BusinessException("Código de verificación inválido 222");
 			}
@@ -148,10 +160,11 @@ public class PersonalServiceImpl implements PersonalService {
 
 		if (!personalList.isEmpty()) {
 			// Si hay múltiples registros, loguear warning
-			//			if (personalList.size() > 1) {
-			//				logger.warn("Múltiples registros ({}) encontrados para el carnet: {}. Procesando el primero con estado válido.",
-			//						personalList.size(), registroDTO.getCarnetIdentidad());
-			//			}
+			// if (personalList.size() > 1) {
+			// logger.warn("Múltiples registros ({}) encontrados para el carnet: {}.
+			// Procesando el primero con estado válido.",
+			// personalList.size(), registroDTO.getCarnetIdentidad());
+			// }
 
 			// Buscar el primer personal con estado PERSONAL_REGISTRADO o CREDENCIAL_IMPRESO
 			for (Personal personal : personalList) {
@@ -258,7 +271,7 @@ public class PersonalServiceImpl implements PersonalService {
 
 		personalExistente = personalRepository.save(personalExistente);
 
-		//Si está inactivo, reactivar con estado REGISTRADO
+		// Si está inactivo, reactivar con estado REGISTRADO
 		if (EstadoPersonal.CREDENCIAL_IMPRESO.getNombre().equals(estadoActual) ||
 				EstadoPersonal.PERSONAL_REGISTRADO.getNombre().equals(estadoActual) ||
 				EstadoPersonal.CREDENCIAL_DEVUELTO.getNombre().equals(estadoActual)) {
@@ -768,7 +781,6 @@ public class PersonalServiceImpl implements PersonalService {
 				.build();
 	}
 
-
 	@Transactional(readOnly = true)
 	@Override
 	public List<PersonalDetallesDTO> listarPersonalPorEstado(EstadoPersonal estado) {
@@ -831,9 +843,8 @@ public class PersonalServiceImpl implements PersonalService {
 			personal.setAccesoComputo(nuevoEstado);
 			personalRepository.save(personal);
 
-			String mensaje = nuevoEstado ?
-					"Acceso a cómputo HABILITADO correctamente" :
-					"Acceso a cómputo DESHABILITADO correctamente";
+			String mensaje = nuevoEstado ? "Acceso a cómputo HABILITADO correctamente"
+					: "Acceso a cómputo DESHABILITADO correctamente";
 
 			log.info("Acceso a cómputo cambiado a {} para personal ID: {}", nuevoEstado, id);
 
@@ -843,8 +854,7 @@ public class PersonalServiceImpl implements PersonalService {
 					.status(HttpStatus.OK.value())
 					.data(Map.of(
 							"personalId", id,
-							"accesoComputo", nuevoEstado
-					))
+							"accesoComputo", nuevoEstado))
 					.build();
 
 		} catch (ResourceNotFoundException e) {
@@ -924,54 +934,53 @@ public class PersonalServiceImpl implements PersonalService {
 				.qrId(personal.getQr() != null ? personal.getQr().getId() : null)
 				.build();
 	}
-    @Override
-    public List<PersonalNotarioDTO> filtroNotarios(String nroCircunscrip){
-         // Validación de entrada
-        if (nroCircunscrip == null || nroCircunscrip.trim().isEmpty()) {
-            log.warn("Se recibió número de circunscripción nulo o vacío");
-            return Collections.emptyList();
-        }
-        
-        try {
-            // Obtener personal filtrado y ordenado
-            List<Personal> personal = personalRepository
-                .findByNroCircunscripcion(
-                    nroCircunscrip.trim()
-                );
-            
-            // Convertir a DTOs
-            return personal.stream()
-                .map(this::buildPersonalNotarioDTO)
-                .collect(Collectors.toList());
-                
-        } catch (Exception e) {
-            log.error("Error al filtrar notarios por circunscripción: {}", nroCircunscrip, e);
-            throw new RuntimeException("Error al obtener el listado de notarios", e);
-        }
-    }
 
-    private PersonalNotarioDTO buildPersonalNotarioDTO(Personal personal) {
-        return PersonalNotarioDTO.builder()
-            .id(personal.getId())
-            .nombreCompleto(formatNombreCompleto(personal))
-            .carnetIdentidad(personal.getCarnetIdentidad())
-            .correo(personal.getCorreo())
-            .celular(personal.getCelular())
-            .nroCircunscripcion(personal.getNroCircunscripcion())
-            .tipo(personal.getTipo())
-            .build();
-    }
-    
-    private String formatNombreCompleto(Personal personal) {
-        return Stream.of(
-                personal.getNombre(),
-                personal.getApellidoPaterno(),
-                personal.getApellidoMaterno()
-            )
-            .filter(Objects::nonNull)
-            .filter(s -> !s.trim().isEmpty())
-            .collect(Collectors.joining(" "));
-    }
+	@Override
+	public List<PersonalNotarioDTO> filtroNotarios(String nroCircunscrip) {
+		// Validación de entrada
+		if (nroCircunscrip == null || nroCircunscrip.trim().isEmpty()) {
+			log.warn("Se recibió número de circunscripción nulo o vacío");
+			return Collections.emptyList();
+		}
+
+		try {
+			// Obtener personal filtrado y ordenado
+			List<Personal> personal = personalRepository
+					.findByNroCircunscripcion(
+							nroCircunscrip.trim());
+
+			// Convertir a DTOs
+			return personal.stream()
+					.map(this::buildPersonalNotarioDTO)
+					.collect(Collectors.toList());
+
+		} catch (Exception e) {
+			log.error("Error al filtrar notarios por circunscripción: {}", nroCircunscrip, e);
+			throw new RuntimeException("Error al obtener el listado de notarios", e);
+		}
+	}
+
+	private PersonalNotarioDTO buildPersonalNotarioDTO(Personal personal) {
+		return PersonalNotarioDTO.builder()
+				.id(personal.getId())
+				.nombreCompleto(formatNombreCompleto(personal))
+				.carnetIdentidad(personal.getCarnetIdentidad())
+				.correo(personal.getCorreo())
+				.celular(personal.getCelular())
+				.nroCircunscripcion(personal.getNroCircunscripcion())
+				.tipo(personal.getTipo())
+				.build();
+	}
+
+	private String formatNombreCompleto(Personal personal) {
+		return Stream.of(
+				personal.getNombre(),
+				personal.getApellidoPaterno(),
+				personal.getApellidoMaterno())
+				.filter(Objects::nonNull)
+				.filter(s -> !s.trim().isEmpty())
+				.collect(Collectors.joining(" "));
+	}
 
 	@Override
 	public ApiResponseDTO cambiarEstadoAccesoComputoMasivo(CambioEstadoMasivoRequestDTO request) {
@@ -996,8 +1005,7 @@ public class PersonalServiceImpl implements PersonalService {
 						.status(HttpStatus.BAD_REQUEST.value())
 						.data(Map.of(
 								"totalProcesados", ids.size(),
-								"errores", errores
-						))
+								"errores", errores))
 						.build();
 			}
 
@@ -1012,7 +1020,8 @@ public class PersonalServiceImpl implements PersonalService {
 			for (Personal personal : personales) {
 				Long id = personal.getId();
 
-				if (errores.containsKey(id)) continue;
+				if (errores.containsKey(id))
+					continue;
 
 				if (!idsActivos.contains(id)) {
 					errores.put(id, "El personal debe estar ACTIVO para cambiar el acceso a cómputo");
@@ -1034,16 +1043,16 @@ public class PersonalServiceImpl implements PersonalService {
 
 			return ApiResponseDTO.builder()
 					.success(exitoParcial || exitoTotal)
-					.message(exitoTotal ? "Todos los personales fueron actualizados" :
-							exitoParcial ? "Actualización parcial completada" : "No se pudo actualizar ningún personal")
+					.message(exitoTotal ? "Todos los personales fueron actualizados"
+							: exitoParcial ? "Actualización parcial completada"
+									: "No se pudo actualizar ningún personal")
 					.status(HttpStatus.OK.value())
 					.data(Map.of(
 							"totalProcesados", ids.size(),
 							"exitosos", idsExitosos.size(),
 							"fallidos", errores.size(),
 							"idsExitosos", idsExitosos,
-							"errores", errores
-					))
+							"errores", errores))
 					.build();
 
 		} catch (Exception e) {
@@ -1054,5 +1063,63 @@ public class PersonalServiceImpl implements PersonalService {
 					.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
 					.build();
 		}
+	}
+
+	@Override
+	public List<PersonalCertificadoDTO> obtenerCertificadosPersonal(List<Long> ids) {
+		if (ids == null || ids.isEmpty()) {
+			return Collections.emptyList();
+		}
+
+		log.info("Iniciando carga de {} personales para certificados", ids.size());
+		long startTime = System.currentTimeMillis();
+
+		try {
+			List<PersonalCertificadoDTO> resultados = new ArrayList<>(ids.size());
+
+			for (int i = 0; i < ids.size(); i += BATCH_SIZE) {
+				int end = Math.min(i + BATCH_SIZE, ids.size());
+				List<Long> lote = ids.subList(i, end);
+
+				log.debug("Procesando lote {}-{}", i, end);
+
+				List<Object[]> loteResultados = personalRepository
+						.findCertificadosDataNative(lote);
+
+				for (Object[] row : loteResultados) {
+					resultados.add(mapearACertificadoDTO(row));
+				}
+			}
+
+			long duration = System.currentTimeMillis() - startTime;
+			log.info("Carga completada: {} registros en {} ms ({} ms/registro)",
+					resultados.size(), duration,
+					resultados.size() > 0 ? duration / (double) resultados.size() : 0);
+
+			return resultados;
+
+		} catch (Exception e) {
+			log.error("Error cargando certificados: {}", e.getMessage(), e);
+			throw new RuntimeException("Error al obtener datos para certificados", e);
+		}
+	}
+
+	private PersonalCertificadoDTO mapearACertificadoDTO(Object[] row) {
+		PersonalCertificadoDTO dto = new PersonalCertificadoDTO();
+
+		// Mapeo seguro con índices
+		dto.setId(row[0] != null ? ((Number) row[0]).longValue() : null);
+		dto.setNombre((String) row[1]);
+		dto.setApellidoPaterno((String) row[2]);
+		dto.setApellidoMaterno((String) row[3]);
+		dto.setCarnetIdentidad((String) row[4]);
+		dto.setEstadoActual((String) row[5]);
+		dto.setCargo((String) row[6]);
+		dto.setDescripcion((String) row[7]);
+		dto.setProceso((String) row[8]);
+		dto.setFecha_ini((String) row[9]);
+		dto.setFecha_fin((String) row[10]);
+
+		return dto;
 	}
 }
