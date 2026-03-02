@@ -4,11 +4,8 @@ import com.credenciales.tribunal.dto.asignacionesqr.AsignacionRequestDTO;
 import com.credenciales.tribunal.dto.asignacionesqr.AsignacionResponseDTO;
 import com.credenciales.tribunal.model.entity.AsignacionQr;
 import com.credenciales.tribunal.model.entity.Externo;
-import com.credenciales.tribunal.model.entity.Qr;
-import com.credenciales.tribunal.model.enums.EstadoQr;
 import com.credenciales.tribunal.repository.AsignacionQrRepository;
 import com.credenciales.tribunal.repository.ExternoRepository;
-import com.credenciales.tribunal.repository.QrRepository;
 import com.credenciales.tribunal.service.AsignacionQrService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +27,6 @@ public class AsignacionQrServiceImpl implements AsignacionQrService {
 
     private final AsignacionQrRepository asignacionQrRepository;
     private final ExternoRepository externoRepository;
-    private final QrRepository qrRepository;
 
     @Override
     @Transactional(readOnly = true)
