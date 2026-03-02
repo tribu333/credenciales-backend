@@ -17,9 +17,8 @@ public class AsignacionQr {
     @JoinColumn(name = "externo_id")
     private Externo externo;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "qr_id", nullable = false)
-    private Qr qr;
+    @Column(name = "qr", nullable = false, length = 255) // Ajusta el length según necesites
+    private String qr;
 
     @Column(name = "fecha_asignacion", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime fechaAsignacion;
