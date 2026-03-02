@@ -1,8 +1,6 @@
 package com.credenciales.tribunal.controller;
 
-import com.credenciales.tribunal.dto.qr.QrAsignacionDTO;
-import com.credenciales.tribunal.dto.qr.QrGenerarDTO;
-import com.credenciales.tribunal.dto.qr.QrResponseDTO;
+import com.credenciales.tribunal.dto.qr.*;
 import com.credenciales.tribunal.model.entity.Qr;
 import com.credenciales.tribunal.model.enums.TipoQr;
 import com.credenciales.tribunal.service.QrService;
@@ -46,9 +44,9 @@ public class QrController {
 
     @Operation(summary = "Generar QR para externo", description = "Genera un nuevo código QR para uso externo")
     @PostMapping("/generar/externo")
-    public ResponseEntity<QrResponseDTO> generarQrExterno(
-            @Valid @RequestBody QrGenerarDTO qrGenerarDTO) {
-        return new ResponseEntity<>(qrService.generarQrExterno(qrGenerarDTO), HttpStatus.CREATED);
+    public ResponseEntity<List<QrResponseExternoDTO>> generarQrExterno(
+            @Valid @RequestBody QrGenerarExternoDTO qrGenerarExternoDTO) {
+        return new ResponseEntity<>(qrService.generarQrExterno(qrGenerarExternoDTO), HttpStatus.CREATED);
     }
 
     @Operation(summary = "Obtener QR por ID", description = "Obtiene la información de un QR por su ID")
