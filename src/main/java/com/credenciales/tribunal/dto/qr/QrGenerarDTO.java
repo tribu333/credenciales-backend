@@ -21,7 +21,6 @@ public class QrGenerarDTO {
     
     @NotBlank(message = "El código del personal es requerido")
     @Size(min = 5, max = 20, message = "El carnet de identidad debe tener entre 5 y 20 caracteres")
-    @Pattern(regexp = "^[0-9]+[A-Za-z]?$", message = "El carnet debe contener solo números y opcionalmente una letra")
     @Schema(description = "Carnet de identidad del personal", example = "1234567", required = true)
     private String carnetIdentidad;
     

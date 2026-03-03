@@ -1,8 +1,6 @@
 package com.credenciales.tribunal.controller;
 
-import com.credenciales.tribunal.dto.qr.QrAsignacionDTO;
-import com.credenciales.tribunal.dto.qr.QrGenerarDTO;
-import com.credenciales.tribunal.dto.qr.QrResponseDTO;
+import com.credenciales.tribunal.dto.qr.*;
 import com.credenciales.tribunal.model.entity.Qr;
 import com.credenciales.tribunal.model.enums.TipoQr;
 import com.credenciales.tribunal.service.QrService;
@@ -15,9 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,13 +38,6 @@ public class QrController {
     public ResponseEntity<QrResponseDTO> generarQrPersonal(
             @Valid @RequestBody @Parameter(description = "Datos para generar QR", required = true) QrGenerarDTO qrGenerarDTO) {
         return new ResponseEntity<>(qrService.generarQrPersonal(qrGenerarDTO), HttpStatus.CREATED);
-    }
-
-    @Operation(summary = "Generar QR para externo", description = "Genera un nuevo código QR para uso externo")
-    @PostMapping("/generar/externo")
-    public ResponseEntity<QrResponseDTO> generarQrExterno(
-            @Valid @RequestBody QrGenerarDTO qrGenerarDTO) {
-        return new ResponseEntity<>(qrService.generarQrExterno(qrGenerarDTO), HttpStatus.CREATED);
     }
 
     @Operation(summary = "Obtener QR por ID", description = "Obtiene la información de un QR por su ID")
@@ -108,33 +97,5 @@ public class QrController {
             @Parameter(description = "ID del QR", required = true, example = "1") @PathVariable Long qrId) {
         Qr qr = qrService.inactivarQr(qrId);
         return ResponseEntity.ok(qrService.obtenerQrPorId(qr.getId()));
-    }
-
-    @Operation(summary = "Descargar imagen QR", description = "Descarga la imagen del QR en formato PNG")
-    @GetMapping("/{qrId}/imagen")
-    public ResponseEntity<byte[]> descargarImagenQr(
-            @Parameter(description = "ID del QR", required = true, example = "1") @PathVariable Long qrId) {
-        byte[] imagen = qrService.descargarImagenQr(qrId);
-
-        QrResponseDTO qrInfo = qrService.obtenerQrPorId(qrId);
-        String filename = qrInfo.getCodigo() + ".png";
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.IMAGE_PNG);
-        headers.setContentDispositionFormData("attachment", filename);
-
-        return new ResponseEntity<>(imagen, headers, HttpStatus.OK);
-    }
-
-    @Operation(summary = "Ver imagen QR", description = "Visualiza la imagen del QR en el navegador")
-    @GetMapping("/{qrId}/ver")
-    public ResponseEntity<byte[]> verImagenQr(
-            @Parameter(description = "ID del QR", required = true, example = "1") @PathVariable Long qrId) {
-        byte[] imagen = qrService.descargarImagenQr(qrId);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.IMAGE_PNG);
-
-        return new ResponseEntity<>(imagen, headers, HttpStatus.OK);
     }
 }
