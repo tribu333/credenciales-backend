@@ -32,6 +32,9 @@ public class Externo {
     @Column(name = "tipo_externo_id", nullable = false, length = 30)
     private TipoExterno tipoExterno;
 
+    @Column(name = "nro_celular", nullable = false)
+    private String nroCelular;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
