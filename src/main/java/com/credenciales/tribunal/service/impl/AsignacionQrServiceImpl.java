@@ -233,6 +233,8 @@ public class AsignacionQrServiceImpl implements AsignacionQrService {
                 .id(asignacion.getId())
                 .externoNombre(asignacion.getExterno() != null ? 
                         asignacion.getExterno().getNombreCompleto(): null)
+                .nroCelular(asignacion.getExterno() != null ? 
+                        asignacion.getExterno().getNroCelular(): null)
                 .qrCodigo(asignacion.getQr() != null ? 
                         asignacion.getQr() : null)
                 .fechaAsignacion(asignacion.getFechaAsignacion())
