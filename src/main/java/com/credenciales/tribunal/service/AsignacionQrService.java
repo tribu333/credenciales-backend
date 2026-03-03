@@ -2,6 +2,7 @@ package com.credenciales.tribunal.service;
 
 import com.credenciales.tribunal.dto.asignacionesqr.AsignacionRequestDTO;
 import com.credenciales.tribunal.dto.asignacionesqr.AsignacionResponseDTO;
+import com.credenciales.tribunal.dto.asignacionesqr.AsignacionResponseDetalDTO;
 
 import java.util.List;
 
@@ -31,4 +32,5 @@ public interface AsignacionQrService {
     AsignacionResponseDTO liberarAsignacion(Long id);
     
     boolean existsByExternoIdAndActivoTrue(Long externoId);
+    AsignacionResponseDetalDTO findByExternoCodQr(String codQr);
 }

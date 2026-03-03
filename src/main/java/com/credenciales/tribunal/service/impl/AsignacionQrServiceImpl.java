@@ -2,6 +2,8 @@ package com.credenciales.tribunal.service.impl;
 
 import com.credenciales.tribunal.dto.asignacionesqr.AsignacionRequestDTO;
 import com.credenciales.tribunal.dto.asignacionesqr.AsignacionResponseDTO;
+import com.credenciales.tribunal.dto.asignacionesqr.AsignacionResponseDetalDTO;
+import com.credenciales.tribunal.dto.externo.ExternoMapper;
 import com.credenciales.tribunal.model.entity.AsignacionQr;
 import com.credenciales.tribunal.model.entity.Externo;
 import com.credenciales.tribunal.repository.AsignacionQrRepository;
@@ -27,7 +29,7 @@ public class AsignacionQrServiceImpl implements AsignacionQrService {
 
     private final AsignacionQrRepository asignacionQrRepository;
     private final ExternoRepository externoRepository;
-
+    private final ExternoMapper externoMapper;
     @Override
     @Transactional(readOnly = true)
     public List<AsignacionResponseDTO> findAll() {
@@ -145,7 +147,16 @@ public class AsignacionQrServiceImpl implements AsignacionQrService {
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
-
+    @Override
+    @Transactional(readOnly = true)
+    public AsignacionResponseDetalDTO findByExternoCodQr(String codQr) {
+        log.info("Buscando asignaciones QR por codQr: {}", codQr);
+        
+        AsignacionQr asignacion = asignacionQrRepository.findByQrAndActivoTrue(codQr)
+                .orElseThrow(() -> new EntityNotFoundException("Asignación QR no encontrada con ID: " + codQr));
+        
+        return mapToResponseDetalDTO(asignacion);
+    }
     @Override
     @Transactional(readOnly = true)
     public List<AsignacionResponseDTO> findByExternoIdAndActivoTrue(Long externoId) {
@@ -224,11 +235,23 @@ public class AsignacionQrServiceImpl implements AsignacionQrService {
                 .id(asignacion.getId())
                 .externoNombre(asignacion.getExterno() != null ? 
                         asignacion.getExterno().getNombreCompleto(): null)
+                .nroCelular(asignacion.getExterno() != null ? 
+                        asignacion.getExterno().getNroCelular(): null)
                 .qrCodigo(asignacion.getQr() != null ? 
                         asignacion.getQr() : null)
                 .fechaAsignacion(asignacion.getFechaAsignacion())
                 .fechaLiberacion(asignacion.getFechaLiberacion())
                 .activo(asignacion.getActivo())
+                .build();
+    }
+
+    private AsignacionResponseDetalDTO mapToResponseDetalDTO(AsignacionQr asignacion){
+        return AsignacionResponseDetalDTO.builder()
+                .id(asignacion.getId())
+                .fechaAsignacion(asignacion.getFechaAsignacion())
+                .fechaLiberacion(asignacion.getFechaLiberacion())
+                .activo(asignacion.getActivo())
+                .externo(externoMapper.toDTO(asignacion.getExterno()))
                 .build();
     }
 

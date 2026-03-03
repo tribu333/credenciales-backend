@@ -18,6 +18,7 @@ public class ExternoDTO {
     private String carnetIdentidad;
     private String identificadorPrensa;
     private String orgPolitica;
+    private String nroCelular;
     private TipoExterno tipoExterno;
     private LocalDateTime createdAt;
     private Long imagenId;

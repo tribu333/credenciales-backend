@@ -2,6 +2,8 @@ package com.credenciales.tribunal.controller;
 
 import com.credenciales.tribunal.dto.asignacionesqr.AsignacionRequestDTO;
 import com.credenciales.tribunal.dto.asignacionesqr.AsignacionResponseDTO;
+import com.credenciales.tribunal.dto.asignacionesqr.AsignacionResponseDetalDTO;
+import com.credenciales.tribunal.model.entity.AsignacionQr;
 import com.credenciales.tribunal.service.AsignacionQrService;
 
 import io.swagger.v3.oas.annotations.Hidden;
@@ -10,6 +12,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -226,5 +229,17 @@ public class AsignacionQrController {
         
         asignacionQrService.deleteById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/qr/{codQr}")
+    @Operation(summary = "Verificar si externo tiene asignación activa por codQr", 
+               description = "Verifica si un externo tiene alguna asignación activa por codQr")
+    public ResponseEntity<AsignacionResponseDetalDTO> encontrarPorQr(
+        @Parameter(description = "codQr a buscar", required = true)
+        @PathVariable String codQr) {
+        
+        AsignacionResponseDetalDTO asignacion = asignacionQrService.findByExternoCodQr(codQr);
+        
+        return ResponseEntity.ok(asignacion);
     }
 }

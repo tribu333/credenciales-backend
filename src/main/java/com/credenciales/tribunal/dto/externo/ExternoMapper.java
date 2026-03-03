@@ -21,6 +21,7 @@ public class ExternoMapper {
                 .carnetIdentidad(externo.getCarnetIdentidad())
                 .identificadorPrensa(externo.getIdentificadorPrensa())
                 .orgPolitica(externo.getOrgPolitica())
+                .nroCelular(externo.getNroCelular())
                 .tipoExterno(externo.getTipoExterno())
                 .createdAt(externo.getCreatedAt())
                 .imagenId(externo.getImagen() != null ? externo.getImagen().getIdImagen() : null)
@@ -38,6 +39,7 @@ public class ExternoMapper {
                 .carnetIdentidad(externo.getCarnetIdentidad())
                 .identificadorPrensa(externo.getIdentificadorPrensa())
                 .orgPolitica(externo.getOrgPolitica())
+                .nroCelular(externo.getNroCelular())
                 .tipoExterno(externo.getTipoExterno())
                 .createdAt(externo.getCreatedAt())
                 .imagenId(externo.getImagen() != null ? externo.getImagen().getIdImagen() : null)
@@ -56,6 +58,7 @@ public class ExternoMapper {
                 .carnetIdentidad(externo.getCarnetIdentidad())
                 .identificadorPrensa(externo.getIdentificadorPrensa())
                 .orgPolitica(externo.getOrgPolitica())
+                .nroCelular(externo.getNroCelular())
                 .tipoExterno(externo.getTipoExterno())
                 .createdAt(externo.getCreatedAt())
                 // Usamos el ImagenMapper para convertir la imagen
@@ -73,6 +76,7 @@ public class ExternoMapper {
                 .carnetIdentidad(requestDTO.getCarnetIdentidad())
                 .identificadorPrensa(requestDTO.getIdentificadorPrensa())
                 .orgPolitica(requestDTO.getOrgPolitica())
+                .orgPolitica(requestDTO.getNroCelular())
                 .tipoExterno(requestDTO.getTipoExterno())
                 .imagen(imagen)
                 .build();
@@ -85,6 +89,7 @@ public class ExternoMapper {
         externo.setCarnetIdentidad(requestDTO.getCarnetIdentidad());
         externo.setIdentificadorPrensa(requestDTO.getIdentificadorPrensa());
         externo.setOrgPolitica(requestDTO.getOrgPolitica());
+        externo.setNroCelular(requestDTO.getNroCelular());
         externo.setTipoExterno(requestDTO.getTipoExterno());
         
         if (imagen != null) {

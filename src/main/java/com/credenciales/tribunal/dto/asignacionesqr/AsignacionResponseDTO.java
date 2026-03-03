@@ -8,6 +8,7 @@ import java.time.*;
 public class AsignacionResponseDTO {
     private Long id;
     private String externoNombre;
+    private String nroCelular;
     private String qrCodigo;
     private LocalDateTime fechaAsignacion;
     private LocalDateTime fechaLiberacion;

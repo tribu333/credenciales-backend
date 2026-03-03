@@ -18,6 +18,8 @@ public interface AsignacionQrRepository extends JpaRepository<AsignacionQr, Long
     
     List<AsignacionQr> findByExternoId(Long externoId);
     
+    List<AsignacionQr> findByQr(String qr);
+    
     List<AsignacionQr> findByExternoIdAndActivoTrue(Long externoId);
 
     // Buscar asignaciones activas vencidas
