@@ -2,7 +2,6 @@ package com.credenciales.tribunal.repository;
 
 import com.credenciales.tribunal.model.entity.AsignacionQr;
 import com.credenciales.tribunal.model.entity.Externo;
-import com.credenciales.tribunal.model.entity.Qr;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -29,7 +28,6 @@ public interface AsignacionQrRepository extends JpaRepository<AsignacionQr, Long
 
     // Historial de asignaciones de un externo
     List<AsignacionQr> findByExternoIdOrderByFechaAsignacionDesc(Long externoId);
-    Optional<AsignacionQr> findByQrIdAndActivoTrue(Long qrId);
     
     List<AsignacionQr> findByActivoTrue();
     
@@ -38,11 +36,6 @@ public interface AsignacionQrRepository extends JpaRepository<AsignacionQr, Long
 
     // Verificar si un externo tiene asignación activa
     boolean existsByExternoIdAndActivoTrue(Long externoId);
-    @Query("SELECT a FROM AsignacionQr a WHERE a.qr.id = :qrId AND a.activo = true")
-    Optional<AsignacionQr> findActiveByQrId(@Param("qrId") Long qrId);
-    @Query("SELECT COUNT(a) > 0 FROM AsignacionQr a WHERE a.qr.id = :qrId AND a.activo = true")
-    boolean existsActiveByQrId(@Param("qrId") Long qrId);
-    // Para auditoría/historial
-    List<AsignacionQr> findByQrIdOrderByFechaAsignacionDesc(Long qrId);
-    //List<AsignacionQr> findByExternoIdOrderByFechaAsignacionDesc(Long externoId);
+
+    Optional<AsignacionQr> findByQrAndActivoTrue(String qr);
 }
