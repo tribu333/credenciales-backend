@@ -54,6 +54,7 @@ public class Personal {
     @NotNull(message = "El acceso a cómputo es obligatorio")
     @Column(name = "acceso_computo", nullable = false, columnDefinition = "TINYINT default 0")
     @ColumnDefault("0")
+    @Builder.Default
     private Boolean accesoComputo = false;  // Valor por defecto en Java
 
     @Column(name = "nro_circunscripcion", length = 10)
@@ -64,6 +65,7 @@ public class Personal {
 
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
+    @Builder.Default
     private TipoPersonal tipo = TipoPersonal.EVENTUAL;
 
     @CreationTimestamp
