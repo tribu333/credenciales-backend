@@ -28,6 +28,9 @@ public class ExternoRequestDTO {
 
     @Size(max = 150, message = "La organización política no puede exceder los 150 caracteres")
     private String orgPolitica;
+    
+    @Size(max = 20, message = "El nro celular no puede exceder los 20 caracteres")
+    private String nroCelular;
 
     @NotNull(message = "El tipo de externo es obligatorio")
     private TipoExterno tipoExterno;
