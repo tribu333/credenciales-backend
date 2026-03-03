@@ -54,7 +54,7 @@ public interface PersonalService {
     PersonalDetallesDTO verificarAcceso(String codQr);
 
     ApiResponseDTO cambiarEstadoAccesoComputo(Long id);
-    PersonalDetallesDTO obtenernPersonalQr(String codigQr);
+    PersonalAccesoDTO obtenerPersonalQr(String codigQr);
 
     List<PersonalNotarioDTO> filtroNotarios(String nroCircunscrip);
 

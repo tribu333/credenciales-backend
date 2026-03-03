@@ -13,7 +13,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AccesoDTO {
-    private Long id;
     private LocalDateTime fechaHora;
     private TipoEventoAcceso tipoEvento;
     private Long qrId;

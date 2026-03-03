@@ -10,10 +10,7 @@ import com.credenciales.tribunal.dto.qr.QrResponseDTO;
 import com.credenciales.tribunal.exception.BusinessException;
 import com.credenciales.tribunal.exception.ResourceNotFoundException;
 import com.credenciales.tribunal.model.entity.*;
-import com.credenciales.tribunal.model.enums.EstadoPersonal;
-import com.credenciales.tribunal.model.enums.EstadoQr;
-import com.credenciales.tribunal.model.enums.TipoPersonal;
-import com.credenciales.tribunal.model.enums.TipoQr;
+import com.credenciales.tribunal.model.enums.*;
 import com.credenciales.tribunal.repository.*;
 import com.credenciales.tribunal.service.*;
 
@@ -61,6 +58,8 @@ public class PersonalServiceImpl implements PersonalService {
 	private final CargoRepository cargoRepository;
 	private final CargoProcesoRepository cargoProcesoRepository;
 	private final EstadoPersonalService estadoPersonalService;
+	private final AccesoRepository  accesoRepository;
+	private final AccesoService accesoService;
 
 	private static final int EXPIRACION_MINUTOS = 15;
 	private static final int BATCH_SIZE = 500;
@@ -426,60 +425,62 @@ public class PersonalServiceImpl implements PersonalService {
 	}
 
 	@Override
-	public PersonalDetallesDTO obtenernPersonalQr(String codigQr) {
-		String carnet = codigQr.split("-")[1];
-		// log.info("Cargo PLANTA registrado: {} para personal {}", cargo.getNombre(),
-		// personal.getId());
-		Optional<Personal> oPpersonal = personalRepository.findByCarnetIdentidad(carnet);
-		/*
-		 * Personal personal = personalRepository.findById(id)
-		 * .orElseThrow(() -> new
-		 * ResourceNotFoundException("Personal no encontrado con ID: " + id));
-		 */
-		// solo tipo eventual
-		if (oPpersonal.isPresent()) {
-			Personal personal = oPpersonal.get();
-			/*
-			 * if(!personal.getAccesoComputo()){
-			 * throw new BusinessException(
-			 * "No tiene Acceso a Computo");
-			 * }
-			 */
-			List<HistorialCargoProceso> listaCargo = historialCargoProcesoRepository
-					.findByPersonalIdAndActivoTrue(personal.getId());
-			CargoProceso cargoProceso = listaCargo.isEmpty() ? null : listaCargo.get(0).getCargoProceso();
-			Unidad unidad = cargoProceso != null ? cargoProceso.getUnidad() : null;
+	public PersonalAccesoDTO obtenerPersonalQr(String codigoQr) {
 
-			String nombreUnidad = unidad != null ? unidad.getNombre() : null;
-			String nombreCargo = cargoProceso != null ? cargoProceso.getNombre() : null;
-			String urlImagen = baseUrl + "/api/imagenes/" + personal.getImagen().getIdImagen() + "/descargar";
-			String urlQr = baseUrl + "/api/qr/" + personal.getQr().getId() + "/ver";
-			return PersonalDetallesDTO.builder()
-					.id(personal.getId())
-					.nombre(personal.getNombre())
-					.apellidoPaterno(personal.getApellidoPaterno())
-					.apellidoMaterno(personal.getApellidoMaterno())
-					.carnetIdentidad(personal.getCarnetIdentidad())
-					.correo(personal.getCorreo())
-					.celular(personal.getCelular())
-					.accesoComputo(personal.getAccesoComputo())
-					.nroCircunscripcion(personal.getNroCircunscripcion())
-					.tipo(personal.getTipo())
-					.estadoActual(obtenerEstadoActual(personal.getId()))
-					.createdAt(personal.getCreatedAt())
-					.cargo(nombreCargo)
-					.unidad(nombreUnidad)
-					.imagenId(personal.getImagen() != null ? personal.getImagen().getIdImagen() : null)
-					.qrId(personal.getQr() != null ? personal.getQr().getId() : null)
-					.imagen(urlImagen)
-					.qr(urlQr)
-					.build();
-		} else {
-			throw new BusinessException(
-					"No existe esa persona " +
-							"");
+		Qr qr = qrRepository.findByCodigo(codigoQr)
+				.orElseThrow(() -> new ResourceNotFoundException("QR no encontrado con código: " + codigoQr));
+		Personal personal = personalRepository.findByQrId(qr.getId())
+				.orElseThrow(() -> new ResourceNotFoundException("No existe personal con el qr: " + codigoQr));
+
+		List<HistorialCargoProceso> listaCargo = historialCargoProcesoRepository
+				.findByPersonalIdAndActivoTrue(personal.getId());
+		CargoProceso cargoProceso = listaCargo.isEmpty() ? null : listaCargo.get(0).getCargoProceso();
+		Unidad unidad = cargoProceso != null ? cargoProceso.getUnidad() : null;
+
+		String nombreUnidad = unidad != null ? unidad.getNombre() : null;
+		String nombreCargo = cargoProceso != null ? cargoProceso.getNombre() : null;
+		String urlImagen = baseUrl + "/api/imagenes/" + personal.getImagen().getIdImagen() + "/descargar";
+		String urlQr = personal.getQr().getCodigo();
+		String eventoTipo = "ENTRADA"; // valor por defecto
+
+		if (personal.getAccesoComputo()) {
+			Optional<Acceso> accesoOptional = accesoRepository.findFirstByQrIdOrderByFechaHoraDesc(qr.getId());
+
+			if (accesoOptional.isPresent()) {
+				Acceso acceso = accesoOptional.get();
+				// Usar el enum directamente para evitar errores tipográficos
+				if (acceso.getTipoEvento() == TipoEventoAcceso.ENTRADA) {
+					eventoTipo = "SALIDA";
+					accesoService.registrarSalida(qr.getId(), null);
+					log.info("Registro Salida: " + codigoQr);
+				} else { // El último evento fue SALIDA
+					eventoTipo = "ENTRADA";
+					accesoService.registrarEntrada(qr.getId(), null); // ✅ Ahora registra entrada
+					log.info("Registro Entrada: " + codigoQr);
+				}
+			} else {
+				// No hay accesos previos, se registra la primera entrada
+				eventoTipo = "ENTRADA";
+				accesoService.registrarEntrada(qr.getId(), null);
+				log.info("Registro Entrada (primera vez): " + codigoQr);
+			}
 		}
 
+		return PersonalAccesoDTO.builder()
+				.id(personal.getId())
+				.nombre(personal.getNombre())
+				.apellidoPaterno(personal.getApellidoPaterno())
+				.apellidoMaterno(personal.getApellidoMaterno())
+				.carnetIdentidad(personal.getCarnetIdentidad())
+				.accesoComputo(personal.getAccesoComputo())
+				.tipo(personal.getTipo())
+				.estadoActual(obtenerEstadoActual(personal.getId()))
+				.createdAt(personal.getCreatedAt())
+				.cargo(nombreCargo)
+				.unidad(nombreUnidad)
+				.imagen(urlImagen)
+				.evento(eventoTipo)
+				.build();
 	}
 
 	@Override

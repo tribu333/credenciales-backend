@@ -205,9 +205,9 @@ public class PersonalController {
 
     @GetMapping("/detalles/qrComputo/{qr}")
     @Operation(summary = "Obtener detalles de personales por estado")
-    public PersonalDetallesDTO obtenerPersonalesPorcodQr(
+    public PersonalAccesoDTO obtenerPersonalesPorcodQr(
             @PathVariable String qr) {
-        PersonalDetallesDTO res = personalService.obtenernPersonalQr(qr);
+        PersonalAccesoDTO res = personalService.obtenerPersonalQr(qr);
         return res;
     }
 
