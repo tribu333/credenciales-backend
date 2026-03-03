@@ -68,6 +68,17 @@ public class UnidadMapper {
         unidad.setAbreviatura(requestDTO.getAbreviatura());
         unidad.setEstado(requestDTO.getEstado());
     }
+
+    public UnidadProcesosList toResponseUnidDTO(Unidad unidad){
+        if (unidad == null) return null;
+        return UnidadResponseDTO.builder()
+            .id(unidad.getId())
+            .nombre(unidad.getNombre())
+            .abreviatura(unidad.getAbreviatura())
+            .estado(unidad.getEstado())
+            .cargos()
+            .build();
+    }
     
     public List<UnidadDTO> toDTOList(List<Unidad> unidades) {
         return unidades.stream()
@@ -78,6 +89,12 @@ public class UnidadMapper {
     public List<UnidadResponseDTO> toResponseDTOList(List<Unidad> unidades) {
         return unidades.stream()
                 .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+    }
+    
+    public List<UnidadProcesosList> toUnidadListProces(List<Unidad> unidades){
+        return unidades.stream()
+                .map(this::toResponseUnidDTO)
                 .collect(Collectors.toList());
     }
 }

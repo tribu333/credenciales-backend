@@ -3,7 +3,6 @@ package com.credenciales.tribunal.controller;
 import com.credenciales.tribunal.dto.asignacionesqr.AsignacionRequestDTO;
 import com.credenciales.tribunal.dto.asignacionesqr.AsignacionResponseDTO;
 import com.credenciales.tribunal.dto.asignacionesqr.AsignacionResponseDetalDTO;
-import com.credenciales.tribunal.model.entity.AsignacionQr;
 import com.credenciales.tribunal.service.AsignacionQrService;
 
 import io.swagger.v3.oas.annotations.Hidden;
@@ -12,7 +11,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

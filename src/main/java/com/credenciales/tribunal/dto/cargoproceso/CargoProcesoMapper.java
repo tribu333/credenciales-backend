@@ -117,6 +117,11 @@ public class CargoProcesoMapper {
                 .activo(historial.getActivo())
                 .build();
     }
+    /* public CargoProcesoResumeDTO toResumeCargoProcesoResumeDTO(CargoProceso cargoProceso){
+        if(cargoProceso == null) return null;
+        return CargoProcesoResumeDTO.builder()
+            .id(cargo)
+    } */
     
     public List<CargoProcesoDTO> toDTOList(List<CargoProceso> cargosProceso) {
         return cargosProceso.stream()
