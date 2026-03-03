@@ -2,6 +2,7 @@ package com.credenciales.tribunal.controller;
 
 import com.credenciales.tribunal.dto.asignacionesqr.AsignacionRequestDTO;
 import com.credenciales.tribunal.dto.asignacionesqr.AsignacionResponseDTO;
+import com.credenciales.tribunal.dto.asignacionesqr.AsignacionResponseDetalDTO;
 import com.credenciales.tribunal.model.entity.AsignacionQr;
 import com.credenciales.tribunal.service.AsignacionQrService;
 
@@ -233,11 +234,11 @@ public class AsignacionQrController {
     @GetMapping("/qr/{codQr}")
     @Operation(summary = "Verificar si externo tiene asignación activa por codQr", 
                description = "Verifica si un externo tiene alguna asignación activa por codQr")
-    public ResponseEntity<AsignacionResponseDTO> encontrarPorQr(
+    public ResponseEntity<AsignacionResponseDetalDTO> encontrarPorQr(
         @Parameter(description = "codQr a buscar", required = true)
         @PathVariable String codQr) {
         
-        AsignacionResponseDTO asignacion = asignacionQrService.findByExternoCodQr(codQr);
+        AsignacionResponseDetalDTO asignacion = asignacionQrService.findByExternoCodQr(codQr);
         
         return ResponseEntity.ok(asignacion);
     }
