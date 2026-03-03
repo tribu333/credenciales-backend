@@ -145,7 +145,16 @@ public class AsignacionQrServiceImpl implements AsignacionQrService {
                 .map(this::mapToResponseDTO)
                 .collect(Collectors.toList());
     }
-
+    @Override
+    @Transactional(readOnly = true)
+    public AsignacionResponseDTO findByExternoCodQr(String codQr) {
+        log.info("Buscando asignaciones QR por codQr: {}", codQr);
+        
+        AsignacionQr asignacion = asignacionQrRepository.findByQrAndActivoTrue(codQr)
+                .orElseThrow(() -> new EntityNotFoundException("Asignación QR no encontrada con ID: " + codQr));
+        
+        return mapToResponseDTO(asignacion);
+    }
     @Override
     @Transactional(readOnly = true)
     public List<AsignacionResponseDTO> findByExternoIdAndActivoTrue(Long externoId) {

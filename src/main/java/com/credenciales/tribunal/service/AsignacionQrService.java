@@ -31,4 +31,5 @@ public interface AsignacionQrService {
     AsignacionResponseDTO liberarAsignacion(Long id);
     
     boolean existsByExternoIdAndActivoTrue(Long externoId);
+    AsignacionResponseDTO findByExternoCodQr(String codQr);
 }
