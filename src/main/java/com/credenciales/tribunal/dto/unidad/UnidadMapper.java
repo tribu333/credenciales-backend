@@ -76,7 +76,7 @@ public class UnidadMapper {
             .nombre(unidad.getNombre())
             .abreviatura(unidad.getAbreviatura())
             .estado(unidad.getEstado())
-            .cargos()
+            .cargos(unidad.getCargos())
             .build();
     }
     
