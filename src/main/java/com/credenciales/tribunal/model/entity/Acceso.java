@@ -25,4 +25,8 @@ public class Acceso {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "qr_id")
     private Qr qr;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "asignacionQr_id")
+    private AsignacionQr asignacionQr;
 }

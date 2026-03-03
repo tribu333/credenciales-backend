@@ -71,8 +71,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/personal/ci/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/personal/buscar").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/personal/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/personal/*/admin").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.POST, "/api/personal/**").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/api/personal/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/personal/**").hasRole("ADMINISTRADOR")
 
                         // ============ RUTAS DE QR ============
                         // Endpoints públicos de QR (generación y consulta)
@@ -149,6 +150,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/asignaciones-qr/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/asignaciones-qr/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/asignaciones-qr/**").hasRole("ADMINISTRADOR")
+
+                        //accesos
+                        .requestMatchers(HttpMethod.GET, "/api/accesos/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.POST, "/api/accesos/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/accesos/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/accesos/**").hasRole("ADMINISTRADOR")
 
                         .requestMatchers("/api/auth/registro").hasRole("ADMINISTRADOR")
                         // Ruta de autenticación pública
