@@ -188,9 +188,9 @@ public class PersonalServiceImpl implements PersonalService {
 		Qr qr = generarQrParaPersonal(registroDTO.getCarnetIdentidad());
 
 		Personal personal = Personal.builder()
-				.nombre(registroDTO.getNombre())
-				.apellidoPaterno(registroDTO.getApellidoPaterno())
-				.apellidoMaterno(registroDTO.getApellidoMaterno())
+				.nombre(capitalizarPalabras(registroDTO.getNombre()))
+				.apellidoPaterno(capitalizarPalabras(registroDTO.getApellidoPaterno()))
+				.apellidoMaterno(capitalizarPalabras(registroDTO.getApellidoMaterno()))
 				.carnetIdentidad(registroDTO.getCarnetIdentidad())
 				.correo(registroDTO.getCorreo())
 				.celular(registroDTO.getCelular())
@@ -227,6 +227,27 @@ public class PersonalServiceImpl implements PersonalService {
 		log.info("Personal creado exitosamente: {} - {}", personal.getId(), personal.getCarnetIdentidad());
 
 		return mapToCompletoDTO(personal);
+	}
+
+	public static String capitalizarPalabras(String frase) {
+		if (frase == null || frase.isEmpty()) {
+			return frase;
+		}
+		String[] palabras = frase.split("\\s+");
+		StringBuilder resultado = new StringBuilder();
+		for (String palabra : palabras) {
+			if (!palabra.isEmpty()) {
+				resultado.append(capitalizar(palabra)).append(" ");
+			}
+		}
+		return resultado.toString().trim();
+	}
+
+	private static String capitalizar(String palabra) {
+		if (palabra == null || palabra.isEmpty()) {
+			return palabra;
+		}
+		return palabra.substring(0, 1).toUpperCase() + palabra.substring(1).toLowerCase();
 	}
 
 	private PersonalCompletoDTO actualizarPersonalExistente(
