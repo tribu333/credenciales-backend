@@ -53,6 +53,7 @@ public class ProcesoElectoralServiceImpl implements ProcesoElectoralService {
         // Validar que no haya procesos activos que se sobrepongan si este proceso estará activo
         if (requestDTO.getEstado()) {
             validarSuperposicionProcesos(requestDTO.getFechaInicio(), requestDTO.getFechaFin(), null);
+            desactivarOtrosActivos(null);
         }
         
         ProcesoElectoral proceso = procesoMapper.toEntity(requestDTO, imagen);
@@ -401,5 +402,14 @@ public class ProcesoElectoralServiceImpl implements ProcesoElectoralService {
     private boolean fechasSeSuperponen(LocalDate inicio1, LocalDate fin1, 
                                        LocalDate inicio2, LocalDate fin2) {
         return !fin1.isBefore(inicio2) && !fin2.isBefore(inicio1);
+    }
+    private void desactivarOtrosActivos(Long procesoIdExcluir) {
+        List<ProcesoElectoral> activos = procesoRepository.findByEstadoTrue();
+        for (ProcesoElectoral activo : activos) {
+            if (!activo.getId().equals(procesoIdExcluir)) {
+                activo.setEstado(false);
+                procesoRepository.save(activo);  // O usa saveAll si son muchos
+            }
+        }
     }
 }
