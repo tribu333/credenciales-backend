@@ -153,6 +153,7 @@ JOIN h.cargoProceso cp
 JOIN cp.unidad u
 JOIN cp.proceso pr
 WHERE p.id = :personalId
+AND pr.estado = true
 ORDER BY h.fechaInicio DESC
 """)
 List<HistorialPersonalDTO> findHistorialByPersonalId(@Param("personalId") Long personalId);
