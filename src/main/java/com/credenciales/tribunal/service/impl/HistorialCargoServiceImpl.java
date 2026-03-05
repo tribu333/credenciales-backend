@@ -3,6 +3,7 @@ package com.credenciales.tribunal.service.impl;
 import com.credenciales.tribunal.dto.historialcargo.HistorialCargoCreateRequestDTO;
 import com.credenciales.tribunal.dto.historialcargo.HistorialCargoSearchRequestDTO;
 import com.credenciales.tribunal.dto.historialcargo.HistorialCargoUpdateRequestDTO;
+import com.credenciales.tribunal.dto.personal.PersonalDTO;
 import com.credenciales.tribunal.dto.historialcargo.HistorialCargoResponseDTO;
 import com.credenciales.tribunal.exception.ResourceNotFoundException;
 import com.credenciales.tribunal.exception.BusinessException;
@@ -15,6 +16,8 @@ import com.credenciales.tribunal.repository.CargoRepository;
 import com.credenciales.tribunal.repository.HistorialCargoRepository;
 import com.credenciales.tribunal.repository.PersonalRepository;
 import com.credenciales.tribunal.service.HistorialCargoService;
+import com.credenciales.tribunal.service.PersonalService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -36,6 +39,7 @@ public class HistorialCargoServiceImpl implements HistorialCargoService {
     private final PersonalRepository personalRepository;
     private final CargoRepository cargoRepository;
     private final HistorialCargoMapper historialMapper;
+    private final EstadoPersonalServiceImpl personalServiceImpl;
     
     @Override
     public HistorialCargoResponseDTO createHistorial(HistorialCargoCreateRequestDTO requestDTO) {
@@ -74,7 +78,7 @@ public class HistorialCargoServiceImpl implements HistorialCargoService {
         HistorialCargo historial = historialMapper.toEntity(requestDTO, personal, cargo);
         HistorialCargo savedHistorial = historialRepository.save(historial);
         log.info("Historial de cargo creado exitosamente con ID: {}", savedHistorial.getId());
-        
+        PersonalDTO person=personalServiceImpl.estadoRegistrado(requestDTO.getPersonalId());
         return historialMapper.toResponseDTO(savedHistorial);
     }
     
