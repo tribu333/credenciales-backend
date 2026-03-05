@@ -141,7 +141,7 @@ public interface HistorialCargoProcesoRepository extends JpaRepository<Historial
 SELECT new com.credenciales.tribunal.dto.historialcargoproceso.HistorialPersonalDTO(
     p.id,
     CONCAT(p.nombre,' ',p.apellidoPaterno,' ',p.apellidoMaterno),
-    cp.nombre,
+    cp.descripcion,
     u.nombre,
     h.fechaInicio,
     h.fechaFin,
