@@ -3,6 +3,7 @@ package com.credenciales.tribunal.service;
 import com.credenciales.tribunal.dto.historialcargoproceso.ActualizarFechasHistorialRequest;
 import com.credenciales.tribunal.dto.historialcargoproceso.ActualizarFechasHistorialResponse;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoCreateRequestDTO;
+import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoPatchRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoSearchRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoUpdateRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialPersonalDTO;
@@ -102,4 +103,5 @@ List<HistorialPersonalDTO> obtenerHistorialPersonal(Long personalId);
 HistorialCargoProcesoResponseDTO updateHistorialByPersonalId(
         Long personalId, 
         HistorialCargoProcesoUpdateRequestDTO requestDTO);
+        HistorialCargoProcesoResponseDTO updateHistorialId(Long id, HistorialCargoProcesoUpdateRequestDTO requestDTO);
 }

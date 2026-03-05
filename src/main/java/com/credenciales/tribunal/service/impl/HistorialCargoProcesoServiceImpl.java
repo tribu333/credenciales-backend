@@ -161,7 +161,101 @@ public class HistorialCargoProcesoServiceImpl implements HistorialCargoProcesoSe
         
         return historialMapper.toResponseDTO(updatedHistorial);
     }
+    @Override
+public HistorialCargoProcesoResponseDTO updateHistorialId(Long id, HistorialCargoProcesoUpdateRequestDTO requestDTO) {
+    log.info("Actualizando historial de cargo proceso con ID: {}", id);
     
+    HistorialCargoProceso historial = historialRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                    "Historial de cargo proceso no encontrado con ID: " + id));
+    
+    // --- Manejo de reasignación de cargo ---
+    Long nuevoCargoProcesoId = requestDTO.getCargoProcesoId();
+    CargoProceso cargoProcesoActual = historial.getCargoProceso();
+    CargoProceso nuevoCargoProceso = null;
+    
+    if (nuevoCargoProcesoId != null && !nuevoCargoProcesoId.equals(cargoProcesoActual.getId())) {
+        // Se solicita cambiar de cargo
+        nuevoCargoProceso = cargoProcesoRepository.findById(nuevoCargoProcesoId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Cargo proceso no encontrado con ID: " + nuevoCargoProcesoId));
+        
+        // Validar que el proceso del nuevo cargo esté activo
+        ProcesoElectoral nuevoProceso = nuevoCargoProceso.getProceso();
+        if (!nuevoProceso.getEstado()) {
+            throw new BusinessException("No se puede asignar personal a un cargo de un proceso inactivo");
+        }
+        
+        // Validar vigencia del proceso (opcional, depende de reglas)
+        LocalDateTime ahora = LocalDateTime.now();
+        if (ahora.isBefore(nuevoProceso.getFechaInicio().atStartOfDay()) || 
+            ahora.isAfter(nuevoProceso.getFechaFin().atStartOfDay())) {
+            throw new BusinessException("No se puede asignar personal a un cargo fuera del período del proceso electoral");
+        }
+        
+        // Validar que el personal no tenga otro historial activo en el mismo proceso (excluyendo este historial)
+        List<HistorialCargoProceso> activosDelPersonal = historialRepository
+                .findByPersonalIdAndActivoTrue(historial.getPersonal().getId());
+        
+        boolean tieneOtroActivoEnMismoProceso = activosDelPersonal.stream()
+                .filter(h -> !h.getId().equals(id))  // excluir el actual
+                .anyMatch(h -> h.getCargoProceso().getProceso().getId()
+                        .equals(nuevoProceso.getId()));
+        
+        if (tieneOtroActivoEnMismoProceso) {
+            throw new BusinessException(
+                    "El personal ya tiene un historial activo en otro cargo del mismo proceso");
+        }
+        
+        // Validar que no tenga un historial activo en el mismo nuevo cargo (excluyendo este)
+        boolean yaTieneActivoEnNuevoCargo = historialRepository
+                .existsByPersonalIdAndCargoProcesoIdAndActivoTrue(
+                        historial.getPersonal().getId(), nuevoCargoProcesoId);
+        
+        if (yaTieneActivoEnNuevoCargo) {
+            throw new DuplicateResourceException(
+                    String.format("El personal ya tiene un historial activo en el cargo '%s'", 
+                            nuevoCargoProceso.getNombre()));
+        }
+    }
+    
+    // --- Validación de fechas (usando el proceso que corresponda) ---
+    ProcesoElectoral procesoParaValidarFechas = (nuevoCargoProceso != null) 
+            ? nuevoCargoProceso.getProceso() 
+            : historial.getCargoProceso().getProceso();
+    
+    LocalDateTime nuevaFechaInicio = requestDTO.getFechaInicio() != null ? 
+            requestDTO.getFechaInicio() : historial.getFechaInicio();
+    LocalDateTime nuevaFechaFin = requestDTO.getFechaFin() != null ? 
+            requestDTO.getFechaFin() : historial.getFechaFin();
+    
+    validarFechas(nuevaFechaInicio, nuevaFechaFin, procesoParaValidarFechas);
+    
+    // Validar consistencia de fechas
+    if (nuevaFechaFin != null && nuevaFechaFin.isBefore(nuevaFechaInicio)) {
+        throw new BusinessException("La fecha de fin no puede ser anterior a la fecha de inicio");
+    }
+    
+    // Si se está desactivando y no tiene fecha fin, establecer fecha fin actual
+    if (requestDTO.getActivo() != null && !requestDTO.getActivo() && 
+        historial.getActivo() && historial.getFechaFin() == null) {
+        requestDTO.setFechaFin(LocalDateTime.now());
+    }
+    
+    // --- Actualizar la entidad ---
+    // Necesitamos pasar el nuevo cargoProceso al mapper si cambió
+    if (nuevoCargoProceso != null) {
+        // Podrías tener un método en el mapper que acepte también el cargoProceso
+        // o asignarlo manualmente antes de llamar al mapper
+        historial.setCargoProceso(nuevoCargoProceso);
+    }
+    
+    historialMapper.updateEntity(requestDTO, historial);
+    HistorialCargoProceso updatedHistorial = historialRepository.save(historial);
+    log.info("Historial de cargo proceso actualizado exitosamente con ID: {}", updatedHistorial.getId());
+    
+    return historialMapper.toResponseDTO(updatedHistorial);
+}
     @Override
     public void deleteHistorial(Long id) {
         log.info("Eliminando historial de cargo proceso con ID: {}", id);
