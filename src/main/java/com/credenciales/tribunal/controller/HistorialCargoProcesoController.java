@@ -5,6 +5,7 @@ import com.credenciales.tribunal.dto.historialcargoproceso.ActualizarFechasHisto
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoCreateRequestDTO;
 //import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoSearchRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoUpdateRequestDTO;
+import com.credenciales.tribunal.dto.historialcargoproceso.HistorialPersonalDTO;
 import com.credenciales.tribunal.model.entity.HistorialCargoProceso;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoResponseDTO;
 import com.credenciales.tribunal.service.HistorialCargoProcesoService;
@@ -178,6 +179,23 @@ public class HistorialCargoProcesoController {
         List<HistorialCargoProceso> historiales = historialService
                 .actualizarFechasYRetornarHistoriales(procesoId, cargoId, fechaInicio, fechaFin);
         
+        return ResponseEntity.ok(historiales);
+    }
+
+    @GetMapping("/historiales/{personalId}")
+    @Operation(
+        summary = "Listar asignaciones por cargo-proceso",
+        description = "Obtiene todas las asignaciones asociadas a un cargo específico dentro de un proceso electoral"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Lista obtenida exitosamente"),
+        @ApiResponse(responseCode = "404", description = "Cargo-Proceso no encontrado")
+    })
+    public ResponseEntity<List<HistorialPersonalDTO>> obtenerHistorialPersonal(
+            @Parameter(description = "ID de la relación Cargo-Proceso", required = true, example = "5")
+            @PathVariable Long personalId) {
+        List<HistorialPersonalDTO> historiales = 
+                historialService.obtenerHistorialPersonal(personalId);
         return ResponseEntity.ok(historiales);
     }
 }

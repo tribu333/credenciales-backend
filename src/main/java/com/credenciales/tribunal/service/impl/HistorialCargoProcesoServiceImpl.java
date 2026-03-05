@@ -5,6 +5,7 @@ import com.credenciales.tribunal.dto.historialcargoproceso.ActualizarFechasHisto
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoCreateRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoSearchRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoUpdateRequestDTO;
+import com.credenciales.tribunal.dto.historialcargoproceso.HistorialPersonalDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoResponseDTO;
 import com.credenciales.tribunal.exception.ResourceNotFoundException;
 import com.credenciales.tribunal.exception.BusinessException;
@@ -638,5 +639,9 @@ public class HistorialCargoProcesoServiceImpl implements HistorialCargoProcesoSe
             throw new BusinessException(
                     "Las fechas del historial deben estar dentro del período del proceso electoral");
         }
+    }
+    @Override
+    public List<HistorialPersonalDTO> obtenerHistorialPersonal(Long personalId) {
+        return historialRepository.findHistorialByPersonalId(personalId);
     }
 }

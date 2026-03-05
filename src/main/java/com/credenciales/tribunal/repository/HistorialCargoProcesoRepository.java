@@ -1,5 +1,7 @@
 package com.credenciales.tribunal.repository;
 
+import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoDTO;
+import com.credenciales.tribunal.dto.historialcargoproceso.HistorialPersonalDTO;
 import com.credenciales.tribunal.model.entity.HistorialCargoProceso;
 import com.credenciales.tribunal.model.entity.Personal;
 
@@ -134,4 +136,24 @@ public interface HistorialCargoProcesoRepository extends JpaRepository<Historial
 
     boolean existsByCargoProceso_Proceso_IdAndCargoProceso_Id(
         Long procesoId, Long cargoProcesoId);
+
+    @Query("""
+SELECT new com.credenciales.tribunal.dto.historialcargoproceso.HistorialPersonalDTO(
+    p.id,
+    CONCAT(p.nombre,' ',p.apellidoPaterno,' ',p.apellidoMaterno),
+    cp.nombre,
+    u.nombre,
+    h.fechaInicio,
+    h.fechaFin,
+    pr.nombre
+)
+FROM HistorialCargoProceso h
+JOIN h.personal p
+JOIN h.cargoProceso cp
+JOIN cp.unidad u
+JOIN cp.proceso pr
+WHERE p.id = :personalId
+ORDER BY h.fechaInicio DESC
+""")
+List<HistorialPersonalDTO> findHistorialByPersonalId(@Param("personalId") Long personalId);
 }

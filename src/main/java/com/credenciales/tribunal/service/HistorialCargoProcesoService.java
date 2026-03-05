@@ -5,6 +5,7 @@ import com.credenciales.tribunal.dto.historialcargoproceso.ActualizarFechasHisto
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoCreateRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoSearchRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoUpdateRequestDTO;
+import com.credenciales.tribunal.dto.historialcargoproceso.HistorialPersonalDTO;
 import com.credenciales.tribunal.model.entity.HistorialCargoProceso;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoResponseDTO;
 import org.springframework.data.domain.Page;
@@ -96,4 +97,6 @@ ActualizarFechasHistorialResponse actualizarFechasHistoriales(ActualizarFechasHi
 List<HistorialCargoProceso> actualizarFechasYRetornarHistoriales(
             Long procesoId, Long cargoProcesoId, 
             LocalDateTime fechaInicio, LocalDateTime fechaFin);
+
+List<HistorialPersonalDTO> obtenerHistorialPersonal(Long personalId);
 }
