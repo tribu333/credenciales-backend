@@ -99,4 +99,7 @@ List<HistorialCargoProceso> actualizarFechasYRetornarHistoriales(
             LocalDateTime fechaInicio, LocalDateTime fechaFin);
 
 List<HistorialPersonalDTO> obtenerHistorialPersonal(Long personalId);
+HistorialCargoProcesoResponseDTO updateHistorialByPersonalId(
+        Long personalId, 
+        HistorialCargoProcesoUpdateRequestDTO requestDTO);
 }

@@ -644,4 +644,28 @@ public class HistorialCargoProcesoServiceImpl implements HistorialCargoProcesoSe
     public List<HistorialPersonalDTO> obtenerHistorialPersonal(Long personalId) {
         return historialRepository.findHistorialByPersonalId(personalId);
     }
+    @Override
+public HistorialCargoProcesoResponseDTO updateHistorialByPersonalId(
+        Long personalId, 
+        HistorialCargoProcesoUpdateRequestDTO requestDTO) {
+    
+    // Buscar el historial activo del personal
+    List<HistorialCargoProceso> activos = historialRepository.findByPersonalIdAndActivoTrue(personalId);
+    
+    if (activos.isEmpty()) {
+        throw new ResourceNotFoundException("El personal con ID " + personalId + " no tiene un historial activo.");
+    }
+    
+    if (activos.size() > 1) {
+        // Esto no debería ocurrir si las validaciones de creación funcionan,
+        // pero lo manejamos por consistencia.
+        throw new BusinessException("El personal tiene múltiples historiales activos, estado inconsistente.");
+    }
+    
+    HistorialCargoProceso historial = activos.get(0);
+    
+    // Aplicar la misma lógica de validación y actualización que en updateHistorial
+    // (puedes reutilizar un método privado o llamar a updateHistorial con el ID)
+    return updateHistorial(historial.getId(), requestDTO);
+}
 }

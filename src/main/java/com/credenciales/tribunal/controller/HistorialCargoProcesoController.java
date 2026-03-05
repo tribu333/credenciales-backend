@@ -198,4 +198,13 @@ public class HistorialCargoProcesoController {
                 historialService.obtenerHistorialPersonal(personalId);
         return ResponseEntity.ok(historiales);
     }
+
+    @PutMapping("/personal/{personalId}/historial-activo")
+@Operation(summary = "Actualizar el historial activo de un personal", description = "Actualiza el historial activo de un personal específico (el único historial con activo=true para ese personal)")
+public ResponseEntity<HistorialCargoProcesoResponseDTO> updateHistorialActivoByPersonalId(
+        @PathVariable Long personalId,
+        @Valid @RequestBody HistorialCargoProcesoUpdateRequestDTO requestDTO) {
+    HistorialCargoProcesoResponseDTO response = historialService.updateHistorialByPersonalId(personalId, requestDTO);
+    return ResponseEntity.ok(response);
+}
 }
