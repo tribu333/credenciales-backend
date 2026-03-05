@@ -61,4 +61,6 @@ public interface PersonalService {
     ApiResponseDTO cambiarEstadoAccesoComputoMasivo(CambioEstadoMasivoRequestDTO request);
 
     List<PersonalCertificadoDTO> obtenerCertificadosPersonal(List<Long> ids);
+
+    List<PersonalDetallesDTO> obtenerDetallesPersonalSinDiscrimiar();
 }
