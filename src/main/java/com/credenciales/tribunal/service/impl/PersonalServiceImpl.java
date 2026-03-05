@@ -738,6 +738,16 @@ public class PersonalServiceImpl implements PersonalService {
 				.map(this::mapearAPersonalDetallesDTO)
 				.collect(Collectors.toList());
 	}
+	@Override
+	@Transactional(readOnly = true)
+	public List<PersonalDetallesDTO> obtenerDetallesPersonalSinDiscrimiar() {
+		// UNA SOLA consulta a la base de datos
+		List<Personal> listaPersonal = personalRepository.findAllConTodo();
+
+		return listaPersonal.stream()
+				.map(this::mapearAPersonalDetallesDTO)
+				.collect(Collectors.toList());
+	}
 
 	private PersonalDetallesDTO mapearAPersonalDetallesDTO(Personal personal) {
 		// Obtener historial activo desde la colección ya cargada

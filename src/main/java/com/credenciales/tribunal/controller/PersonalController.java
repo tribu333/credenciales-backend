@@ -258,4 +258,12 @@ public class PersonalController {
         List<PersonalCertificadoDTO> datos = personalService.obtenerCertificadosPersonal(ids);
         return ResponseEntity.ok(datos);
     }
+
+    @Tag(name = "Nuevos Endpoints")
+    @Operation(summary = "Obtener todo el personal mas detalles", description = "Retorna información detallada de todos los personales, incluyendo su cargo y unidad actual")
+    @GetMapping("/detalles/sindiscrimiar")
+    public ResponseEntity<List<PersonalDetallesDTO>> obtenerDetallesPersonalTodo() {
+        return ResponseEntity.ok(personalService.obtenerDetallesPersonalSinDiscrimiar());
+    }
+    //obtenerDetallesPersonalSinDiscrimiar
 }

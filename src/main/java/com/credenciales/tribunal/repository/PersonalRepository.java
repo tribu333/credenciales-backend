@@ -90,4 +90,16 @@ public interface PersonalRepository extends JpaRepository<Personal, Long> {
             ORDER BY p.apellido_paterno, p.apellido_materno, p.nombre
             """, nativeQuery = true)
     List<Object[]> findCertificadosDataNative(@Param("ids") List<Long> ids);
+
+        @Query("SELECT DISTINCT p FROM Personal p " +
+            "LEFT JOIN FETCH p.imagen " +
+            "LEFT JOIN FETCH p.qr " +
+            "LEFT JOIN FETCH p.historialCargosProceso hcp " +
+            "LEFT JOIN FETCH hcp.cargoProceso cp " +
+            "LEFT JOIN FETCH cp.unidad u " +
+            "LEFT JOIN FETCH p.estadosActuales ea " +
+            "LEFT JOIN FETCH ea.estado e " +
+            "ORDER BY p.createdAt DESC")
+    List<Personal> findAllConTodo();
+    //findAllConTodo
 }
