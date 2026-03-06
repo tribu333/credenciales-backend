@@ -99,6 +99,7 @@ public interface PersonalRepository extends JpaRepository<Personal, Long> {
             "LEFT JOIN FETCH cp.unidad u " +
             "LEFT JOIN FETCH p.estadosActuales ea " +
             "LEFT JOIN FETCH ea.estado e " +
+            "WHERE (hcp.activo = false OR hcp IS NULL) " +
             "ORDER BY p.createdAt DESC")
     List<Personal> findAllConTodo();
     //findAllConTodo
