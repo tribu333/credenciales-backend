@@ -104,4 +104,6 @@ HistorialCargoProcesoResponseDTO updateHistorialByPersonalId(
         Long personalId, 
         HistorialCargoProcesoUpdateRequestDTO requestDTO);
         HistorialCargoProcesoResponseDTO updateHistorialId(Long id, HistorialCargoProcesoUpdateRequestDTO requestDTO);
+
+        HistorialCargoProcesoResponseDTO reasignarCargoHistorial(Long id, HistorialCargoProcesoPatchRequestDTO requestDTO);
 }

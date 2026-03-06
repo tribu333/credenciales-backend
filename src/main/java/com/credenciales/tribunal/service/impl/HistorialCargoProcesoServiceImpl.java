@@ -11,6 +11,7 @@ import com.credenciales.tribunal.exception.ResourceNotFoundException;
 import com.credenciales.tribunal.exception.BusinessException;
 import com.credenciales.tribunal.exception.DuplicateResourceException;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoMapper;
+import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoPatchRequestDTO;
 import com.credenciales.tribunal.model.entity.CargoProceso;
 import com.credenciales.tribunal.model.entity.HistorialCargoProceso;
 import com.credenciales.tribunal.model.entity.Personal;
@@ -762,4 +763,103 @@ public HistorialCargoProcesoResponseDTO updateHistorialByPersonalId(
     // (puedes reutilizar un método privado o llamar a updateHistorial con el ID)
     return updateHistorial(historial.getId(), requestDTO);
 }
+@Override
+    public HistorialCargoProcesoResponseDTO reasignarCargoHistorial(Long id, HistorialCargoProcesoPatchRequestDTO requestDTO) {
+        log.info("Reasignando cargo en historial ID: {} al nuevo cargo ID: {}", id, requestDTO.getIdCargo());
+        
+        // 1. Buscar el historial existente
+        HistorialCargoProceso historial = historialRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Historial de cargo proceso no encontrado con ID: " + id));
+        
+        // 2. Validar que el nuevo cargo sea diferente al actual
+        if (requestDTO.getIdCargo().equals(historial.getCargoProceso().getId())) {
+            throw new BusinessException("El cargo seleccionado es el mismo que el actual");
+        }
+        
+        // 3. Buscar y validar el nuevo cargo proceso
+        CargoProceso nuevoCargoProceso = cargoProcesoRepository.findById(requestDTO.getIdCargo())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Cargo proceso no encontrado con ID: " + requestDTO.getIdCargo()));
+        
+        // 4. Validar que el proceso del nuevo cargo esté activo
+        ProcesoElectoral nuevoProceso = nuevoCargoProceso.getProceso();
+        if (!nuevoProceso.getEstado()) {
+            throw new BusinessException("No se puede reasignar a un cargo de un proceso inactivo");
+        }
+        
+        // 5. Validar vigencia del nuevo proceso
+        LocalDateTime ahora = LocalDateTime.now();
+        if (ahora.isBefore(nuevoProceso.getFechaInicio().atStartOfDay()) || 
+            ahora.isAfter(nuevoProceso.getFechaFin().atStartOfDay())) {
+            throw new BusinessException("El proceso electoral del nuevo cargo no está vigente");
+        }
+        
+        // 6. Validar que el personal no tenga otro historial activo en el nuevo proceso
+        List<HistorialCargoProceso> activosDelPersonal = historialRepository
+                .findByPersonalIdAndActivoTrue(historial.getPersonal().getId());
+        
+        boolean tieneOtroActivoEnMismoProceso = activosDelPersonal.stream()
+                .filter(h -> !h.getId().equals(id))  // excluir este historial
+                .anyMatch(h -> h.getCargoProceso().getProceso().getId()
+                        .equals(nuevoProceso.getId()));
+        
+        if (tieneOtroActivoEnMismoProceso) {
+            throw new BusinessException(
+                    "El personal ya tiene un historial activo en otro cargo del mismo proceso");
+        }
+        
+        // 7. Validar que no tenga un historial activo en el nuevo cargo específico
+        boolean yaTieneActivoEnNuevoCargo = historialRepository
+                .existsByPersonalIdAndCargoProcesoIdAndActivoTrue(
+                        historial.getPersonal().getId(), requestDTO.getIdCargo());
+        
+        if (yaTieneActivoEnNuevoCargo) {
+            throw new DuplicateResourceException(
+                    String.format("El personal ya tiene un historial activo en el cargo '%s'", 
+                            nuevoCargoProceso.getNombre()));
+        }
+        
+        // 8. Validar fechas (si vienen en el request)
+        LocalDateTime fechaInicioValidar = requestDTO.getFechaInicio() != null ? 
+                requestDTO.getFechaInicio() : historial.getFechaInicio();
+        LocalDateTime fechaFinValidar = requestDTO.getFechaFin() != null ? 
+                requestDTO.getFechaFin() : historial.getFechaFin();
+        
+        validarFechas(fechaInicioValidar, fechaFinValidar, nuevoProceso);
+        
+        // 9. Si el historial está activo y no tiene fecha fin, pero se está desactivando
+        if (requestDTO.getActivo() != null && !requestDTO.getActivo() && 
+            historial.getActivo() && historial.getFechaFin() == null) {
+            requestDTO.setFechaFin(LocalDateTime.now());
+        }
+        
+        // 10. Actualizar el cargo proceso
+        historial.setCargoProceso(nuevoCargoProceso);
+        
+        // 11. Actualizar fechas si vienen en el request
+        if (requestDTO.getFechaInicio() != null) {
+            historial.setFechaInicio(requestDTO.getFechaInicio());
+        }
+        if (requestDTO.getFechaFin() != null) {
+            historial.setFechaFin(requestDTO.getFechaFin());
+        }
+        
+        // 12. Actualizar activo si viene en el request
+        if (requestDTO.getActivo() != null) {
+            historial.setActivo(requestDTO.getActivo());
+            // Si se desactiva y no tiene fecha fin, asignar ahora
+            if (!requestDTO.getActivo() && historial.getFechaFin() == null) {
+                historial.setFechaFin(LocalDateTime.now());
+            }
+        }
+        
+        // 13. Guardar cambios
+        HistorialCargoProceso updatedHistorial = historialRepository.save(historial);
+        log.info("Cargo reasignado exitosamente en historial ID: {} al nuevo cargo: {}", 
+                id, nuevoCargoProceso.getNombre());
+        
+        return historialMapper.toResponseDTO(updatedHistorial);
+    } 
+    
 }
