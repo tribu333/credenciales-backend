@@ -3,6 +3,7 @@ package com.credenciales.tribunal.controller;
 import com.credenciales.tribunal.dto.historialcargoproceso.ActualizarFechasHistorialRequest;
 import com.credenciales.tribunal.dto.historialcargoproceso.ActualizarFechasHistorialResponse;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoCreateRequestDTO;
+import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoPatchRequestDTO;
 //import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoSearchRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoUpdateRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialPersonalDTO;
@@ -207,4 +208,12 @@ public ResponseEntity<HistorialCargoProcesoResponseDTO> updateHistorialActivoByP
     HistorialCargoProcesoResponseDTO response = historialService.updateHistorialByPersonalId(personalId, requestDTO);
     return ResponseEntity.ok(response);
 }
+    @PatchMapping("/reasignar/{idHistorial}/historial")
+    @Operation(summary = "Reasignar cargo a un historial", description = "puedes cambiar el cargo a un historial de persona")
+    public ResponseEntity<HistorialCargoProcesoResponseDTO> updateHistorialActivoByPersonalId(
+            @PathVariable Long idHistorial,
+            @Valid @RequestBody HistorialCargoProcesoPatchRequestDTO requestDTO) {
+        HistorialCargoProcesoResponseDTO response = historialService.reasignarCargoHistorial(idHistorial, requestDTO);
+        return ResponseEntity.ok(response);
+    }
 }
