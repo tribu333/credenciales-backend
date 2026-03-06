@@ -6,6 +6,7 @@ import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProceso
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoSearchRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoUpdateRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialPersonalDTO;
+import com.credenciales.tribunal.dto.personal.PersonalDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoResponseDTO;
 import com.credenciales.tribunal.exception.ResourceNotFoundException;
 import com.credenciales.tribunal.exception.BusinessException;
@@ -44,6 +45,7 @@ public class HistorialCargoProcesoServiceImpl implements HistorialCargoProcesoSe
     private final PersonalRepository personalRepository;
     private final ProcesoElectoralRepository procesoRepository;
     private final HistorialCargoProcesoMapper historialMapper;
+    private final EstadoPersonalServiceImpl personalServiceImpl;
     
     @Override
     public HistorialCargoProcesoResponseDTO createHistorial(HistorialCargoProcesoCreateRequestDTO requestDTO) {
@@ -100,7 +102,8 @@ public class HistorialCargoProcesoServiceImpl implements HistorialCargoProcesoSe
         
         HistorialCargoProceso historial = historialMapper.toEntity(requestDTO, cargoProceso, personal);
         HistorialCargoProceso savedHistorial = historialRepository.save(historial);
-        log.info("Historial de cargo proceso creado exitosamente con ID: {}", savedHistorial.getId());
+        PersonalDTO person=personalServiceImpl.estadoRegistrado(requestDTO.getPersonalId());
+        log.info("Historial de cargo proceso creado exitosamente con ID: {} and {}", savedHistorial.getId(),person.getId());
         
         return historialMapper.toResponseDTO(savedHistorial);
     }
