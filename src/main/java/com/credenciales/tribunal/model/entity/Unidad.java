@@ -33,10 +33,6 @@ public class Unidad {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    // Relaciones
-    @OneToMany(mappedBy = "unidad")
-    private List<Cargo> cargos;
-
     @OneToMany(mappedBy = "unidad")
     private List<CargoProceso> cargosProceso;
 

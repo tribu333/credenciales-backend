@@ -55,7 +55,7 @@ public class PersonalServiceImpl implements PersonalService {
 	private final EmailService emailService;
 	//private final HistorialCargoRepository historialCargoRepository; //current not usefull
 	private final HistorialCargoProcesoRepository historialCargoProcesoRepository;
-	private final CargoRepository cargoRepository;
+	//private final CargoRepository cargoRepository;
 	private final CargoProcesoRepository cargoProcesoRepository;
 	private final EstadoPersonalService estadoPersonalService;
 	private final AccesoRepository  accesoRepository;

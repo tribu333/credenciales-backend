@@ -30,7 +30,7 @@ public class UnidadMapper {
                 .abreviatura(unidad.getAbreviatura())
                 .estado(unidad.getEstado())
                 .createdAt(unidad.getCreatedAt())
-                .totalCargos(unidad.getCargos() != null ? unidad.getCargos().size() : 0)
+                //.totalCargos(unidad.getCargos() != null ? unidad.getCargos().size() : 0)
                 .totalCargosProceso(unidad.getCargosProceso() != null ? unidad.getCargosProceso().size() : 0)
                 .build();
     }
