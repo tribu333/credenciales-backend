@@ -4,8 +4,11 @@ import com.credenciales.tribunal.dto.login.LoginResponseDTO;
 import com.credenciales.tribunal.dto.login.UsuarioLoginDTO;
 import com.credenciales.tribunal.dto.usuario.UsuarioRegistroDTO;
 import com.credenciales.tribunal.dto.usuario.UsuarioResponseDTO;
+import com.credenciales.tribunal.exception.ResourceNotFoundException;
 import com.credenciales.tribunal.model.RolUsuario;
 import com.credenciales.tribunal.model.Usuario;
+import com.credenciales.tribunal.model.entity.Unidad;
+import com.credenciales.tribunal.repository.UnidadRepository;
 import com.credenciales.tribunal.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +31,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final UnidadRepository unidadRepository;
     
     @Transactional
     public UsuarioResponseDTO registrarUsuario(UsuarioRegistroDTO registroDTO) {
@@ -51,6 +55,16 @@ public class AuthService {
                 log.warn("Rol inválido: {}, usando CONSULTA por defecto", registroDTO.getRol());
             }
         }
+        Unidad unidad=null;
+        if(registroDTO.getUnidadId()!= null){
+            if(!unidadRepository.existsById(registroDTO.getUnidadId())){
+                throw new ResourceNotFoundException("La unidad con el id: {}" +registroDTO.getUnidadId());
+            }else{
+                unidad=unidadRepository.findById(registroDTO.getUnidadId()).get();
+            }
+        }
+        
+        //Unidad unidad= 
         
         // Crear usuario
         Usuario usuario = Usuario.builder()
@@ -60,6 +74,7 @@ public class AuthService {
                 .nombreCompleto(registroDTO.getNombreCompleto())
                 .rol(rol)
                 .activo(true)
+                .unidad(unidad)
                 .build();
         
         Usuario usuarioGuardado = usuarioRepository.save(usuario);
@@ -100,6 +115,7 @@ public class AuthService {
                 .username(usuario.getUsername())
                 .nombreCompleto(usuario.getNombreCompleto())
                 .rol(usuario.getRol().name())
+                .idUnidad(usuario.getUnidad() != null ? usuario.getUnidad().getId() : null)
                 .expiresIn(3600)
                 .build();
     }

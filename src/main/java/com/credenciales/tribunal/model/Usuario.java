@@ -8,6 +8,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.credenciales.tribunal.model.entity.Unidad;
+
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
@@ -45,6 +47,9 @@ public class Usuario implements UserDetails {
     @Builder.Default
     private boolean activo = true;
 
+    @ManyToOne(optional=true)
+    @JoinColumn(name = "unidad_id", nullable = true)
+    private Unidad unidad;
     @CreationTimestamp
     @Column(name = "fecha_creacion", updatable = false)
     private LocalDateTime fechaCreacion;

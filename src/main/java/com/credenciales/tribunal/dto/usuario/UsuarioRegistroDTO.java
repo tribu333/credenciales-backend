@@ -31,4 +31,5 @@ public class UsuarioRegistroDTO {
     private String nombreCompleto;
     
     private String rol;
+    private Long unidadId;
 }

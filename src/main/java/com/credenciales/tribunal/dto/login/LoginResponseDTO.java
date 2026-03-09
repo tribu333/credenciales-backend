@@ -17,6 +17,7 @@ public class LoginResponseDTO {
     private String username;
     private String nombreCompleto;
     private String rol;
+    private Long idUnidad;
     
     @Builder.Default
     private long expiresIn = 3600; // 1 hora en segundos

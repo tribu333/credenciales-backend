@@ -3,6 +3,9 @@ package com.credenciales.tribunal.model.entity;
 
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+
+import com.credenciales.tribunal.model.Usuario;
+
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,4 +39,7 @@ public class Unidad {
 
     @OneToMany(mappedBy = "unidad")
     private List<CargoProceso> cargosProceso;
+
+    @OneToMany(mappedBy = "unidad")
+    private List<Usuario> usuarios;
 }
