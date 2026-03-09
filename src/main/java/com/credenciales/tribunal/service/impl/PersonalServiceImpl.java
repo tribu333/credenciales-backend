@@ -53,7 +53,7 @@ public class PersonalServiceImpl implements PersonalService {
 	private final QrRepository qrRepository;
 	private final ImagenService imagenService;
 	private final EmailService emailService;
-	private final HistorialCargoRepository historialCargoRepository;
+	//private final HistorialCargoRepository historialCargoRepository; //current not usefull
 	private final HistorialCargoProcesoRepository historialCargoProcesoRepository;
 	private final CargoRepository cargoRepository;
 	private final CargoProcesoRepository cargoProcesoRepository;
@@ -215,7 +215,7 @@ public class PersonalServiceImpl implements PersonalService {
 			if (registroDTO.getCargoID() == null) {
 				throw new BusinessException("Para personal de PLANTA debe especificar un cargo (cargoID)");
 			}
-			registrarCargoPlanta(personal, registroDTO.getCargoID());
+			//registrarCargoPlanta(personal, registroDTO.getCargoID()); //refactor later
 		} else {
 			// Para EVENTUAL, también usamos cargoID (según tu DTO)
 			if (registroDTO.getCargoID() == null) {
@@ -338,7 +338,7 @@ public class PersonalServiceImpl implements PersonalService {
 		estadoActualRepository.save(estadoActual);
 	}
 
-	private void registrarCargoPlanta(Personal personal, Long cargoId) {
+	/* private void registrarCargoPlanta(Personal personal, Long cargoId) {
 		Cargo cargo = cargoRepository.findById(cargoId)
 				.orElseThrow(() -> new ResourceNotFoundException("Cargo no encontrado con ID: " + cargoId));
 
@@ -351,7 +351,7 @@ public class PersonalServiceImpl implements PersonalService {
 
 		historialCargoRepository.save(historial);
 		log.info("Cargo PLANTA registrado: {} para personal {}", cargo.getNombre(), personal.getId());
-	}
+	} */
 
 	private void registrarCargoEventual(Personal personal, Long cargoProcesoId) {
 		CargoProceso cargoProceso = cargoProcesoRepository.findById(cargoProcesoId)

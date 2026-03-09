@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 import com.credenciales.tribunal.dto.image.ImagenResponseDTO;
 import com.credenciales.tribunal.dto.qr.QrResponseDTO;
-import com.credenciales.tribunal.dto.historialcargo.HistorialCargoDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -26,6 +26,6 @@ public class Cargo {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "cargo")
-    private List<HistorialCargo> historiales;
+    /* @OneToMany(mappedBy = "cargo")
+    private List<HistorialCargo> historiales; */
 }

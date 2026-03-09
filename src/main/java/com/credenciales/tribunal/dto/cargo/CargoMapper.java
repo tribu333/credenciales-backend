@@ -22,7 +22,7 @@ public class CargoMapper {
                 .build();
     }
     
-    public CargoResponseDTO toResponseDTO(Cargo cargo) {
+    /* public CargoResponseDTO toResponseDTO(Cargo cargo) {
         if (cargo == null) return null;
         
         return CargoResponseDTO.builder()
@@ -34,7 +34,7 @@ public class CargoMapper {
                 .createdAt(cargo.getCreatedAt())
                 .totalHistoriales(cargo.getHistoriales() != null ? cargo.getHistoriales().size() : 0)
                 .build();
-    }
+    } */
     
     public Cargo toEntity(CargoRequestDTO requestDTO, Unidad unidad) {
         if (requestDTO == null) return null;
@@ -60,9 +60,9 @@ public class CargoMapper {
                 .collect(Collectors.toList());
     }
     
-    public List<CargoResponseDTO> toResponseDTOList(List<Cargo> cargos) {
+    /* public List<CargoResponseDTO> toResponseDTOList(List<Cargo> cargos) {
         return cargos.stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
-    }
+    } */
 }
