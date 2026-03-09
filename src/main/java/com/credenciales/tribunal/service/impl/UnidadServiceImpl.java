@@ -155,14 +155,6 @@ public class UnidadServiceImpl implements UnidadService {
     
     @Override
     @Transactional(readOnly = true)
-    public Optional<UnidadResponseDTO> getUnidadWithCargos(Long id) {
-        log.debug("Buscando unidad con cargos por ID: {}", id);
-        return unidadRepository.findByIdWithCargos(id)
-                .map(unidadMapper::toResponseDTO);
-    }
-    
-    @Override
-    @Transactional(readOnly = true)
     public Optional<UnidadResponseDTO> getUnidadWithCargosProceso(Long id) {
         log.debug("Buscando unidad con cargos en proceso por ID: {}", id);
         return unidadRepository.findByIdWithCargosProceso(id)
