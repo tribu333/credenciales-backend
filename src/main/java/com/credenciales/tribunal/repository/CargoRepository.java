@@ -28,13 +28,13 @@ public interface CargoRepository extends JpaRepository<Cargo, Long> {
 
     boolean existsByNombreAndUnidadId(String nombre, Long unidadId);
      // Buscar cargo con su historial
-    @Query("SELECT c FROM Cargo c LEFT JOIN FETCH c.historiales WHERE c.id = :id")
+/*     @Query("SELECT c FROM Cargo c LEFT JOIN FETCH c.historiales WHERE c.id = :id")
     Optional<Cargo> findByIdWithHistorial(@Param("id") Long id);
 
     // Buscar cargos con sus historiales por unidad
     @Query("SELECT c FROM Cargo c LEFT JOIN FETCH c.historiales WHERE c.unidad.id = :unidadId")
     List<Cargo> findByUnidadIdWithHistorial(@Param("unidadId") Long unidadId);
-
+ */
     List<Cargo> findByUnidad(Unidad unidad);
     
     List<Cargo> findByUnidadId(Long unidadId);
