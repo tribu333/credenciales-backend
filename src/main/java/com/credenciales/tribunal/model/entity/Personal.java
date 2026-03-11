@@ -41,9 +41,8 @@ public class Personal {
     @Column(name = "carnet_identidad", nullable = false, length = 50)
     private String carnetIdentidad;
 
-    @NotBlank(message = "El correo es obligatorio")
     @Email(message = "El formato del correo no es válido")
-    @Column(nullable = false, length = 150)
+    @Column(length = 150)
     private String correo;
 
     @Pattern(regexp = "^(\\+?\\d{1,3}[-.]?)?\\(?\\d{1,4}\\)?[-.]?\\d{1,4}[-.]?\\d{1,9}$|^$", 
