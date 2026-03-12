@@ -24,8 +24,10 @@ public interface ImagenService {
     // Operaciones específicas
     Imagen findEntityById(Long id);
     Imagen findEntityByNombreArchivo(String nombreArchivo);
-    //long contarImagenesPorComplaint(Long idComplaint);
-    //void eliminarTodasImagenesComplaint(Long idComplaint);
-    // Subir múltiples imágenes para un complaint
+    
     List<ImagenResponseDTO> subirImagenesMasivas(MultipartFile[] files);
+
+    Optional<ImagenResponseDTO> findByNombreOriginal(String nombreOriginal);
+    List<ImagenResponseDTO> findAllByNombreOriginalContaining(String texto);
+    Optional<ImagenResponseDTO> findByNombreBase(String nombreBase);
 }

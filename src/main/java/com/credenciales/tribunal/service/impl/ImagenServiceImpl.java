@@ -278,6 +278,82 @@ public class ImagenServiceImpl implements ImagenService {
         
         return imagenesSubidas;
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<ImagenResponseDTO> findByNombreOriginal(String nombreOriginal) {
+        //log.info("Buscando imagen por nombre original: {}", nombreOriginal);
+        
+        List<Imagen> imagenes = imagenRepository.findByNombreOriginal(nombreOriginal);
+        
+        if (imagenes.isEmpty()) {
+            //log.warn("No se encontraron imágenes con nombre original: {}", nombreOriginal);
+            return Optional.empty();
+        }
+        
+        // Si hay múltiples, tomar la primera
+        if (imagenes.size() > 1) {
+            //log.warn("Se encontraron {} imágenes con el mismo nombre original '{}'. Se devolverá la primera.",
+                    //imagenes.size(), nombreOriginal);
+        }
+        
+        Imagen primeraImagen = imagenes.get(0);
+        //log.debug("Devolviendo imagen con ID: {}", primeraImagen.getIdImagen());
+        
+        return Optional.of(convertToResponseDTO(primeraImagen));
+    }
+
+    @Override
+    public List<ImagenResponseDTO> findAllByNombreOriginalContaining(String texto) {
+        //log.info("Buscando imágenes que contengan: {} en el nombre original", texto);
+        return imagenRepository.findByNombreOriginalContainingIgnoreCase(texto)
+                .stream()
+                .map(this::convertToResponseDTO)  // Usando convertToResponseDTO en lugar de imageMapper
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ImagenResponseDTO> findAllByNombreOriginal(String nombreOriginal) {
+        //log.info("Buscando todas las imágenes con nombre original: {}", nombreOriginal);
+        return imagenRepository.findByNombreOriginal(nombreOriginal)
+                .stream()
+                .map(this::convertToResponseDTO)
+                .collect(Collectors.toList());
+    }
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<ImagenResponseDTO> findByNombreBase(String nombreBase) {
+        //log.info("Buscando imagen por nombre base (sin extensión): {}", nombreBase);
+        
+        // Limpiar el nombre de búsqueda
+        String nombreLimpio = nombreBase.trim();
+        
+        // Buscar imágenes que empiecen con ese nombre
+        List<Imagen> imagenes = imagenRepository.findByNombreOriginalStartingWith(nombreLimpio);
+        
+        if (imagenes.isEmpty()) {
+            //log.warn("No se encontraron imágenes con nombre base: {}", nombreBase);
+            return Optional.empty();
+        }
+        
+        /* // Si hay múltiples resultados, tomar el primero
+        if (imagenes.size() > 1) {
+            log.info("Se encontraron {} imágenes con nombre base '{}'. Se devolverá la primera.",
+                    imagenes.size(), nombreBase);
+            
+            // Opcional: Log de todas las imágenes encontradas para debugging
+            if (log.isDebugEnabled()) {
+                imagenes.forEach(img -> 
+                    log.debug(" - Encontrada: {} (ID: {})", img.getNombreOriginal(), img.getIdImagen()));
+            }
+        } */
+        
+        Imagen primeraImagen = imagenes.get(0);
+        //log.debug("Devolviendo imagen: {} (ID: {})", 
+                  //primeraImagen.getNombreOriginal(), primeraImagen.getIdImagen());
+        
+        return Optional.of(convertToResponseDTO(primeraImagen));
+    }
     // ========== MÉTODOS DE CONVERSIÓN ==========
     
     private ImagenResponseDTO convertToResponseDTO(Imagen imagen) {

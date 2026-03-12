@@ -196,4 +196,34 @@ public class ImagenController {
             return ResponseEntity.badRequest().body(error);
         }
     }
+
+    @Operation(
+        summary = "obtener informacion por nombre original",
+        description = "se obtiene el nombre e id de la imagen por su nombre original."
+    )
+    @GetMapping("/buscar/nombre-original/{nombreOriginal}")
+    public ResponseEntity<ImagenResponseDTO> buscarPorNombreOriginal(@PathVariable String nombreOriginal) {
+        return imagenService.findByNombreOriginal(nombreOriginal)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    //esto no lo estoy poniendo por que no es tan crucial
+    /* @GetMapping("/buscar/contiene/{texto}")
+    public ResponseEntity<List<ImagenResponseDTO>> buscarPorContenido(@PathVariable String texto) {
+        List<ImagenResponseDTO> imagenes = imagenService.findAllByNombreOriginalContaining(texto);
+        return ResponseEntity.ok(imagenes);
+    } */
+   @Operation(
+        summary = "obtener informacion por nombre original sin extencion",
+        description = "se obtiene el nombre e id de la imagen por su nombre original sin tener que poner la extencion."
+    )
+   @GetMapping("/buscar/nombre-base/{nombreBase}")
+    public ResponseEntity<ImagenResponseDTO> buscarPorNombreBase(@PathVariable String nombreBase) {
+        //log.info("Buscando imagen por nombre base: {}", nombreBase);
+        
+        return imagenService.findByNombreBase(nombreBase)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 }
