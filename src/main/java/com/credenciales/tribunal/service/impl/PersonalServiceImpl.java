@@ -4,6 +4,8 @@ import com.credenciales.tribunal.dto.email.VerificacionCodigoRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionEmailRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionResponseDTO;
 import com.credenciales.tribunal.dto.estadoActual.CambioEstadoMasivoRequestDTO;
+import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoPatchRequestDTO;
+import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoResponseDTO;
 import com.credenciales.tribunal.dto.personal.*;
 import com.credenciales.tribunal.dto.qr.QrGenerarDTO;
 import com.credenciales.tribunal.dto.qr.QrResponseDTO;
@@ -55,6 +57,7 @@ public class PersonalServiceImpl implements PersonalService {
 	private final EmailService emailService;
 	private final HistorialCargoRepository historialCargoRepository;
 	private final HistorialCargoProcesoRepository historialCargoProcesoRepository;
+	private final HistorialCargoProcesoService historialCargoProcesoService;
 	private final CargoRepository cargoRepository;
 	private final CargoProcesoRepository cargoProcesoRepository;
 	private final EstadoPersonalService estadoPersonalService;
@@ -140,7 +143,7 @@ public class PersonalServiceImpl implements PersonalService {
 		if (registroDTO.getCargoID() == 4 || registroDTO.getCargoID() == 41) {
 
 			if (!"220326".equals(registroDTO.getCodigoVerificacion())) {
-				throw new BusinessException("Código de verificación inválido 222");
+				throw new BusinessException("Código estatico de verificación inválido");
 			}
 
 		} else {
@@ -158,24 +161,65 @@ public class PersonalServiceImpl implements PersonalService {
 		List<Personal> personalList = personalRepository.findAllByCarnetIdentidad(registroDTO.getCarnetIdentidad());
 
 		if (!personalList.isEmpty()) {
-			// Si hay múltiples registros, loguear warning
-			// if (personalList.size() > 1) {
-			// logger.warn("Múltiples registros ({}) encontrados para el carnet: {}.
-			// Procesando el primero con estado válido.",
-			// personalList.size(), registroDTO.getCarnetIdentidad());
-			// }
+			 //Si hay múltiples registros, loguear warning
+			 if (personalList.size() > 0) {
+			 log.warn("Múltiples registros ({}) encontrados para el carnet: {}",
+			 //Procesando el primero con estado válido.",
+			 personalList.size(), registroDTO.getCarnetIdentidad());
+			 }
 
-			// Buscar el primer personal con estado PERSONAL_REGISTRADO o CREDENCIAL_IMPRESO
 			for (Personal personal : personalList) {
 				String estadoActual = obtenerEstadoActual(personal.getId());
 
+				if (estadoActual.equals(EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO.getNombre()) ||
+						estadoActual.equals(EstadoPersonal.INACTIVO_POR_RENUNCIA.getNombre())) {
+					return crearNuevoContrato(personal, registroDTO);
+				}
+
 				if (estadoActual.equals(EstadoPersonal.PERSONAL_REGISTRADO.getNombre()) ||
-						estadoActual.equals(EstadoPersonal.CREDENCIAL_IMPRESO.getNombre())) {
+						estadoActual.equals(EstadoPersonal.CREDENCIAL_IMPRESO.getNombre()) ||
+						estadoActual.equals(EstadoPersonal.CREDENCIAL_DEVUELTO.getNombre())) {
 					return actualizarPersonalExistente(personal, registroDTO);
 				}
 			}
 		}
+		log.info("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
 		return crearNuevoPersonal(registroDTO);
+	}
+
+	private PersonalCompletoDTO crearNuevoContrato(Personal personalExistente, PersonalCreateDTO registroDTO) {
+		String estadoActual = obtenerEstadoActual(personalExistente.getId());
+
+		personalExistente.setNombre(registroDTO.getNombre());
+		personalExistente.setApellidoPaterno(registroDTO.getApellidoPaterno());
+		personalExistente.setApellidoMaterno(registroDTO.getApellidoMaterno());
+		personalExistente.setCorreo(registroDTO.getCorreo());
+		personalExistente.setCelular(registroDTO.getCelular());
+		personalExistente
+				.setAccesoComputo(registroDTO.getAccesoComputo() != null ? registroDTO.getAccesoComputo() : false);
+		personalExistente.setNroCircunscripcion(registroDTO.getNroCircunscripcion());
+
+		//Crear Nuevo Contrato
+		historialCargoProcesoService.asignarPersonalACargoProceso(personalExistente.getId(), registroDTO.getCargoID(),LocalDateTime.now());
+
+		// Generar nuevo QR si es necesario
+		if (personalExistente.getQr() == null ||
+				personalExistente.getQr().getEstado() == EstadoQr.INACTIVO) {
+			Qr nuevoQr = generarQrParaPersonal(registroDTO.getCarnetIdentidad());
+			nuevoQr.setPersonal(personalExistente);
+			nuevoQr.setEstado(EstadoQr.ASIGNADO);
+			qrRepository.save(nuevoQr);
+			personalExistente.setQr(nuevoQr);
+		}
+
+		personalExistente = personalRepository.save(personalExistente);
+
+		//reactivar con estado REGISTRADO
+		reactivarPersonal(personalExistente);
+
+		log.info("Personal con nuevo contrato creado exitosamente: {}", personalExistente.getId());
+
+		return mapToCompletoDTO(personalExistente);
 	}
 
 	private PersonalCompletoDTO crearNuevoPersonal(PersonalCreateDTO registroDTO) {
@@ -273,6 +317,26 @@ public class PersonalServiceImpl implements PersonalService {
 				.setAccesoComputo(registroDTO.getAccesoComputo() != null ? registroDTO.getAccesoComputo() : false);
 		personalExistente.setNroCircunscripcion(registroDTO.getNroCircunscripcion());
 
+		//Actualizar cargo
+		List<HistorialCargoProcesoResponseDTO> cargosActivos = historialCargoProcesoService
+				.getHistorialesActivosByPersonal(personalExistente.getId());
+
+		if (cargosActivos != null && !cargosActivos.isEmpty()) {
+			HistorialCargoProcesoPatchRequestDTO actualizarCargo = HistorialCargoProcesoPatchRequestDTO.builder()
+					.idCargo(cargosActivos.get(0).getCargoProcesoId())
+					.activo(true)
+					.build();
+
+			historialCargoProcesoService.reasignarCargoHistorial(
+					personalExistente.getId(),
+					actualizarCargo
+			);
+		} else {
+			log.warn("No se encontraron cargos activos para el personal ID: {}",
+					personalExistente.getId());
+		}
+
+
 		// Actualizar imagen si se proporciona un nuevo ID
 		if (registroDTO.getImagenId() != null) {
 			Imagen nuevaImagen = imagenService.findEntityById(registroDTO.getImagenId());
@@ -297,6 +361,7 @@ public class PersonalServiceImpl implements PersonalService {
 				EstadoPersonal.CREDENCIAL_DEVUELTO.getNombre().equals(estadoActual)) {
 			reactivarPersonal(personalExistente);
 		}
+
 
 		log.info("Personal actualizado exitosamente: {}", personalExistente.getId());
 
@@ -656,6 +721,31 @@ public class PersonalServiceImpl implements PersonalService {
 		if (actualizacionDTO.getImagenId() != null) {
 			Imagen nuevaImagen = imagenService.findEntityById(actualizacionDTO.getImagenId());
 			personal.setImagen(nuevaImagen);
+		}
+
+		//Actualizar cargo
+		List<HistorialCargoProcesoResponseDTO> cargosActivos = historialCargoProcesoService
+				.getHistorialesActivosByPersonal(personal.getId());
+
+		if (cargosActivos != null && !cargosActivos.isEmpty()) {
+			HistorialCargoProcesoPatchRequestDTO actualizarCargo = HistorialCargoProcesoPatchRequestDTO.builder()
+					.idCargo(actualizacionDTO.getCargoID())
+					.activo(true)
+					.build();
+
+			historialCargoProcesoService.reasignarCargoHistorial(
+					cargosActivos.get(0).getCargoProcesoId(),
+					actualizarCargo
+			);
+		} else {
+			log.warn("No se encontraron cargos activos para el personal ID: {}",
+					personal.getId());
+		}
+
+		if (EstadoPersonal.CREDENCIAL_IMPRESO.getNombre().equals(estadoActual) ||
+				EstadoPersonal.PERSONAL_REGISTRADO.getNombre().equals(estadoActual) ||
+				EstadoPersonal.CREDENCIAL_DEVUELTO.getNombre().equals(estadoActual)) {
+			reactivarPersonal(personal);
 		}
 
 		personal = personalRepository.save(personal);
