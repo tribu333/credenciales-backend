@@ -34,6 +34,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+
 @RestController
 @RequestMapping("/api/historiales-cargo-proceso")
 @RequiredArgsConstructor
@@ -216,4 +217,11 @@ public ResponseEntity<HistorialCargoProcesoResponseDTO> updateHistorialActivoByP
         HistorialCargoProcesoResponseDTO response = historialService.reasignarCargoHistorial(idHistorial, requestDTO);
         return ResponseEntity.ok(response);
     }
+    @GetMapping("/historiales/activounico/{personalId}")
+    @Operation(summary = "obteneer", description = "grafic")
+    public ResponseEntity<HistorialCargoProcesoResponseDTO> getMethodNam(@PathVariable Long personalId) {
+       HistorialCargoProcesoResponseDTO response = historialService.getHistorialActivoUnico(personalId);
+       return ResponseEntity.ok(response);
+    }
+    
 }

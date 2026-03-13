@@ -864,5 +864,13 @@ public HistorialCargoProcesoResponseDTO updateHistorialByPersonalId(
         
         return historialMapper.toResponseDTO(updatedHistorial);
     } 
-    
+    @Override
+    public HistorialCargoProcesoResponseDTO getHistorialActivoUnico(Long personalId) {
+        Optional<HistorialCargoProceso> his=historialRepository.findFirstByPersonalIdAndActivoTrue(personalId);
+        HistorialCargoProceso res=null;
+        if(his.isPresent()){
+            res=his.get();
+        }
+        return historialMapper.toResponseDTO(res);
+    }
 }

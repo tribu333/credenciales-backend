@@ -106,4 +106,5 @@ HistorialCargoProcesoResponseDTO updateHistorialByPersonalId(
         HistorialCargoProcesoResponseDTO updateHistorialId(Long id, HistorialCargoProcesoUpdateRequestDTO requestDTO);
 
         HistorialCargoProcesoResponseDTO reasignarCargoHistorial(Long id, HistorialCargoProcesoPatchRequestDTO requestDTO);
+        HistorialCargoProcesoResponseDTO getHistorialActivoUnico(Long personalId);
 }
