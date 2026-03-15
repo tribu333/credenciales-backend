@@ -24,7 +24,7 @@ public class VerificacionEmailRequestDTO {
     
     @NotBlank(message = "El carnet de identidad es requerido")
     @Size(min = 5, max = 20, message = "El carnet debe tener entre 5 y 20 caracteres")
-    @Pattern(regexp = "^[0-9]+[A-Za-z]?$", message = "Formato de carnet inválido")
+    @Pattern(regexp = "^[a-zA-Z0-9-]{4,15}$", message = "Formato de carnet inválido")
     @Schema(description = "Carnet de identidad", example = "1234567", required = true)
     private String carnetIdentidad;
 }

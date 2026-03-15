@@ -36,7 +36,7 @@ public class Personal {
     private String apellidoMaterno;
 
     @NotBlank(message = "El carnet de identidad es obligatorio")
-    @Pattern(regexp = "^[a-zA-Z0-9]{4,15}$", 
+    @Pattern(regexp = "^[a-zA-Z0-9-]{4,15}$",
             message = "El carnet de identidad debe tener entre 4 y 15 caracteres alfanuméricos sin espacios")
     @Column(name = "carnet_identidad", nullable = false, length = 50)
     private String carnetIdentidad;
