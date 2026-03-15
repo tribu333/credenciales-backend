@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 @Component
@@ -101,6 +102,23 @@ public class HistorialCargoProcesoMapper {
                 .estado(estado)
                 .build();
     }
+
+    public HistorialCargoProcesoResumenDTO toProcesoResumenDTO(HistorialCargoProceso historial){
+        if (historial == null) return null;
+        //Personal pers=historial.getPersonal();
+        return HistorialCargoProcesoResumenDTO.builder()
+                .id(historial.getId())
+                .cargoProcesoNombre(historial.getCargoProceso() !=null ? historial.getCargoProceso().getNombre():null)
+                .personalId(historial.getPersonal() !=null ? historial.getPersonal().getId(): null)
+                .personalNombre(historial.getPersonal() !=null ? historial.getPersonal().getNombre(): null)
+                .personalApellidoPaterno(historial.getPersonal() !=null ? historial.getPersonal().getApellidoPaterno(): null)
+                .personalApellidoMaterno(historial.getPersonal() !=null ? historial.getPersonal().getApellidoMaterno(): null)
+                .personalCarnet(historial.getPersonal() !=null ? historial.getPersonal().getCarnetIdentidad(): null)
+                .fechaInicio(historial.getFechaInicio()!=null ? historial.getFechaInicio(): null)
+                .fechaFin(historial.getFechaInicio()!=null ? historial.getFechaInicio(): null)
+                .activo(historial.getActivo())
+                .build();
+    }
     
     public HistorialCargoProceso toEntity(HistorialCargoProcesoCreateRequestDTO requestDTO, 
                                          CargoProceso cargoProceso, 
@@ -175,5 +193,11 @@ public class HistorialCargoProcesoMapper {
         return historiales.stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
+    }
+
+    public List<HistorialCargoProcesoResumenDTO> toRespResumenDTOs(List<HistorialCargoProceso> historiales){
+        return historiales.stream()
+        .map(this::toProcesoResumenDTO)
+        .collect(Collectors.toList());
     }
 }

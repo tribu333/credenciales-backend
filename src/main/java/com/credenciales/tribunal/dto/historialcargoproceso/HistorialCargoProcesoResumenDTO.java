@@ -15,9 +15,9 @@ public class HistorialCargoProcesoResumenDTO {
     private String cargoProcesoNombre;
     private Long personalId;
     private String personalNombre;
-    private String personalApellido;
+    private String personalApellidoPaterno;
     private String personalApellidoMaterno;
-    private String personalDocumento;
+    private String personalCarnet;
     private LocalDateTime fechaInicio;
     private LocalDateTime fechaFin;
     private Boolean activo;
