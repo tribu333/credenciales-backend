@@ -132,7 +132,7 @@ public class PersonalServiceImpl implements PersonalService {
 	@Override
 	public PersonalCompletoDTO registrarPersonalCompleto(PersonalCreateDTO registroDTO) {
 
-		if (registroDTO.getCargoID() == 4 || registroDTO.getCargoID() == 41) {
+		if (registroDTO.getCargoID() == 4 || registroDTO.getCargoID() == 41 || registroDTO.getCargoID() == 43) {
 
 			if (!"220326".equals(registroDTO.getCodigoVerificacion())) {
 				throw new BusinessException("Código estatico de verificación inválido");
