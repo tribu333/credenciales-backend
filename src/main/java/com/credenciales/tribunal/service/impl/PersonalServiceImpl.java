@@ -16,22 +16,13 @@ import com.credenciales.tribunal.model.enums.*;
 import com.credenciales.tribunal.repository.*;
 import com.credenciales.tribunal.service.*;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import jakarta.persistence.Tuple;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.beans.factory.annotation.Value;
+
 import java.util.function.Function;
 
 import java.time.LocalDateTime;
@@ -63,6 +54,7 @@ public class PersonalServiceImpl implements PersonalService {
 	private final EstadoPersonalService estadoPersonalService;
 	private final AccesoRepository  accesoRepository;
 	private final AccesoService accesoService;
+	private final ImagenRepository imagenRepository;
 
 	private static final int EXPIRACION_MINUTOS = 15;
 	private static final int BATCH_SIZE = 500;
@@ -749,6 +741,39 @@ public class PersonalServiceImpl implements PersonalService {
 		}
 
 		personal = personalRepository.save(personal);
+
+		return mapToCompletoDTO(personal);
+	}
+
+	@Override
+	public PersonalCompletoDTO actualizarImagenPersonalExistenteAdmin(Long id, Long imagenId) {
+		Personal personal = personalRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Personal no encontrado con ID: " + id));
+
+		Long antiguaImagen = personal.getImagen().getIdImagen();
+
+		Imagen imagen = imagenRepository.findById(imagenId)
+				.orElseThrow(() -> new RuntimeException("Imagen no encontrada"));
+
+		String estadoActual = obtenerEstadoActual(personal.getId());
+
+		if (EstadoPersonal.CREDENCIAL_ENTREGADO.getNombre().equals(estadoActual) ||
+				EstadoPersonal.PERSONAL_ACTIVO.getNombre().equals(estadoActual) ||
+				EstadoPersonal.PERSONAL_CON_ACCESO_A_COMPUTO.getNombre().equals(estadoActual)) {
+			throw new BusinessException(
+					"El personal tiene la credencial entregada y activa. " +
+							"Debe devolver la credencial antes de editar datos del personal.");
+		}
+
+		if (EstadoPersonal.CREDENCIAL_IMPRESO.getNombre().equals(estadoActual) ||
+				EstadoPersonal.PERSONAL_REGISTRADO.getNombre().equals(estadoActual) ||
+				EstadoPersonal.CREDENCIAL_DEVUELTO.getNombre().equals(estadoActual)) {
+			reactivarPersonal(personal);
+		}
+
+		personal.setImagen(imagen);
+		personal = personalRepository.save(personal);
+		imagenService.deleteById(antiguaImagen);
 
 		return mapToCompletoDTO(personal);
 	}

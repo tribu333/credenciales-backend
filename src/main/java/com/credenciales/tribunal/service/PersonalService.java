@@ -10,6 +10,7 @@ import com.credenciales.tribunal.model.enums.EstadoPersonal;
 import jakarta.validation.Valid;
 import org.jspecify.annotations.Nullable;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -42,6 +43,8 @@ public interface PersonalService {
     List<PersonalCompletoDTO> buscarPorNombre(String nombre);
 
     PersonalCompletoDTO actualizarPersonalExistenteAdmin(Long id, PersonalActualizacionDTO actualizacionDTO);
+
+    PersonalCompletoDTO actualizarImagenPersonalExistenteAdmin(Long id, Long imagenId);
 
     ApiResponseDTO deletePersonal(Long id);
 

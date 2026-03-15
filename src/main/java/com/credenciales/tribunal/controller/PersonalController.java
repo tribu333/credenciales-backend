@@ -4,6 +4,7 @@ import com.credenciales.tribunal.dto.email.VerificacionCodigoRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionEmailRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionResponseDTO;
 import com.credenciales.tribunal.dto.estadoActual.CambioEstadoMasivoRequestDTO;
+import com.credenciales.tribunal.dto.image.ImagenBasicaDTO;
 import com.credenciales.tribunal.dto.personal.*;
 import com.credenciales.tribunal.exception.ResourceNotFoundException;
 import com.credenciales.tribunal.model.enums.EstadoPersonal;
@@ -16,6 +17,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -265,5 +267,35 @@ public class PersonalController {
     public ResponseEntity<List<PersonalDetallesDTO>> obtenerDetallesPersonalTodo() {
         return ResponseEntity.ok(personalService.obtenerDetallesPersonalSinDiscrimiar());
     }
-    //obtenerDetallesPersonalSinDiscrimiar
+
+    @Operation(summary = "Actualizar imagen de personal (versión con path variable)")
+    @PutMapping("/admin/{id}/imagen/{imagenId}")
+    public ResponseEntity<PersonalCompletoDTO> actualizarImagenPersonalPath(
+            @PathVariable @NotNull Long id,
+            @PathVariable @NotNull Long imagenId) {
+
+        PersonalCompletoDTO personalActualizado = personalService.actualizarImagenPersonalExistenteAdmin(
+                id,
+                imagenId
+        );
+
+        return ResponseEntity.ok(personalActualizado);
+    }
+
+    @Operation(
+            summary = "Actualizar imagen de personal (ADMIN)",
+            description = "Actualiza la imagen de un personal existente. Elimina automáticamente la imagen anterior."
+    )
+    @PutMapping("/admin/{id}/imagen")
+    public ResponseEntity<PersonalCompletoDTO> actualizarImagenPersonal(
+            @PathVariable @NotNull(message = "El ID del personal es requerido") Long id,
+            @Valid @RequestBody ImagenBasicaDTO request) {
+
+        PersonalCompletoDTO personalActualizado = personalService.actualizarImagenPersonalExistenteAdmin(
+                id,
+                request.getIdImagen()
+        );
+
+        return ResponseEntity.ok(personalActualizado);
+    }
 }
