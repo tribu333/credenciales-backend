@@ -773,7 +773,7 @@ public class PersonalServiceImpl implements PersonalService {
 
 		personal.setImagen(imagen);
 		personal = personalRepository.save(personal);
-		imagenService.deleteById(antiguaImagen);
+		//imagenService.deleteById(antiguaImagen);
 
 		return mapToCompletoDTO(personal);
 	}
