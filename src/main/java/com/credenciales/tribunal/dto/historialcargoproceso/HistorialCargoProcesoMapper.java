@@ -194,9 +194,11 @@ public class HistorialCargoProcesoMapper {
                 .collect(Collectors.toList());
     }
 
-    public List<HistorialCargoProcesoResumenDTO> toRespResumenDTOs(List<HistorialCargoProceso> historiales){
-        return historiales.stream()
-        .map(this::toProcesoResumenDTO)
-        .collect(Collectors.toList());
+    public HistorialCargoProcesoResumenListDTO toRespResumenDTOs(List<HistorialCargoProceso> historiales, Integer total){
+        List<HistorialCargoProcesoResumenDTO> historialesDTO = historiales.stream()
+                .map(this::toProcesoResumenDTO)
+                .collect(Collectors.toList());
+        
+        return new HistorialCargoProcesoResumenListDTO(total,historialesDTO);
     }
 }
