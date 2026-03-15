@@ -9,6 +9,7 @@ import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProceso
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialPersonalDTO;
 import com.credenciales.tribunal.model.entity.HistorialCargoProceso;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoResponseDTO;
+import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoResumenDTO;
 import com.credenciales.tribunal.service.HistorialCargoProcesoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -224,4 +225,13 @@ public ResponseEntity<HistorialCargoProcesoResponseDTO> updateHistorialActivoByP
        return ResponseEntity.ok(response);
     }
     
+    @GetMapping("/historiales/listCargos/{cargoId}")
+    @Operation(
+        summary = "Listar asignaciones por cargo-proceso",
+        description = "Obtiene todas las asignaciones asociadas a un cargo específico dentro de un proceso electoral"
+    )
+    public ResponseEntity<List<HistorialCargoProcesoResumenDTO>> getHisgetHistorialesActivosByCargoProceso(@PathVariable Long cargoId){
+        List<HistorialCargoProcesoResumenDTO> response = historialService.getHistorialesActivosByCargoProceso(cargoId);
+        return ResponseEntity.ok(response);
+    }
 }

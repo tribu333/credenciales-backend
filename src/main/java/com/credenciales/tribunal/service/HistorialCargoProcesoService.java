@@ -9,6 +9,8 @@ import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProceso
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialPersonalDTO;
 import com.credenciales.tribunal.model.entity.HistorialCargoProceso;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoResponseDTO;
+import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoResumenDTO;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import java.time.LocalDateTime;
@@ -40,7 +42,7 @@ public interface HistorialCargoProcesoService {
     List<HistorialCargoProcesoResponseDTO> getHistorialesByUnidad(Long unidadId);
     
     // Métodos de búsqueda de activos
-    List<HistorialCargoProcesoResponseDTO> getHistorialesActivosByCargoProceso(Long cargoProcesoId);
+    List<HistorialCargoProcesoResumenDTO> getHistorialesActivosByCargoProceso(Long cargoProcesoId);
     
     List<HistorialCargoProcesoResponseDTO> getHistorialesActivosByPersonal(Long personalId);
     
