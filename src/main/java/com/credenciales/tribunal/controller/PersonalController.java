@@ -281,21 +281,4 @@ public class PersonalController {
 
         return ResponseEntity.ok(personalActualizado);
     }
-
-    @Operation(
-            summary = "Actualizar imagen de personal (ADMIN)",
-            description = "Actualiza la imagen de un personal existente. Elimina automáticamente la imagen anterior."
-    )
-    @PutMapping("/admin/{id}/imagen")
-    public ResponseEntity<PersonalCompletoDTO> actualizarImagenPersonal(
-            @PathVariable @NotNull(message = "El ID del personal es requerido") Long id,
-            @Valid @RequestBody ImagenBasicaDTO request) {
-
-        PersonalCompletoDTO personalActualizado = personalService.actualizarImagenPersonalExistenteAdmin(
-                id,
-                request.getIdImagen()
-        );
-
-        return ResponseEntity.ok(personalActualizado);
-    }
 }
