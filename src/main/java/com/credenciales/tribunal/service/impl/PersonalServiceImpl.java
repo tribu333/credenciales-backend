@@ -734,7 +734,7 @@ public class PersonalServiceImpl implements PersonalService {
 					.build();
 
 			historialCargoProcesoService.reasignarCargoHistorial(
-					cargosActivos.get(0).getCargoProcesoId(),
+					cargosActivos.get(0).getId(),
 					actualizarCargo
 			);
 		} else {
