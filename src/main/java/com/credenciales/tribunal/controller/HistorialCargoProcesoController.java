@@ -9,6 +9,7 @@ import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProceso
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialPersonalDTO;
 import com.credenciales.tribunal.model.entity.HistorialCargoProceso;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoResponseDTO;
+import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoResumenListDTO;
 import com.credenciales.tribunal.service.HistorialCargoProcesoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
 
 @RestController
 @RequestMapping("/api/historiales-cargo-proceso")
@@ -214,6 +216,22 @@ public ResponseEntity<HistorialCargoProcesoResponseDTO> updateHistorialActivoByP
             @PathVariable Long idHistorial,
             @Valid @RequestBody HistorialCargoProcesoPatchRequestDTO requestDTO) {
         HistorialCargoProcesoResponseDTO response = historialService.reasignarCargoHistorial(idHistorial, requestDTO);
+        return ResponseEntity.ok(response);
+    }
+    @GetMapping("/historiales/activounico/{personalId}")
+    @Operation(summary = "obteneer", description = "grafic")
+    public ResponseEntity<HistorialCargoProcesoResponseDTO> getMethodNam(@PathVariable Long personalId) {
+       HistorialCargoProcesoResponseDTO response = historialService.getHistorialActivoUnico(personalId);
+       return ResponseEntity.ok(response);
+    }
+    
+    @GetMapping("/historiales/listCargos/{cargoId}")
+    @Operation(
+        summary = "Listar asignaciones por cargo-proceso",
+        description = "Obtiene todas las asignaciones asociadas a un cargo específico dentro de un proceso electoral"
+    )
+    public ResponseEntity<HistorialCargoProcesoResumenListDTO> getHisgetHistorialesActivosByCargoProceso(@PathVariable Long cargoId){
+        HistorialCargoProcesoResumenListDTO response = historialService.getHistorialesActivosByCargoProceso(cargoId);
         return ResponseEntity.ok(response);
     }
 }

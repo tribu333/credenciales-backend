@@ -8,6 +8,7 @@ import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProceso
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialPersonalDTO;
 import com.credenciales.tribunal.dto.personal.PersonalDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoResponseDTO;
+import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoResumenListDTO;
 import com.credenciales.tribunal.exception.ResourceNotFoundException;
 import com.credenciales.tribunal.exception.BusinessException;
 import com.credenciales.tribunal.exception.DuplicateResourceException;
@@ -322,7 +323,7 @@ public HistorialCargoProcesoResponseDTO updateHistorialId(Long id, HistorialCarg
     
     @Override
     @Transactional(readOnly = true)
-    public List<HistorialCargoProcesoResponseDTO> getHistorialesActivosByCargoProceso(Long cargoProcesoId) {
+    public HistorialCargoProcesoResumenListDTO getHistorialesActivosByCargoProceso(Long cargoProcesoId) {
         log.debug("Buscando historiales activos por cargo proceso ID: {}", cargoProcesoId);
         
         if (!cargoProcesoRepository.existsById(cargoProcesoId)) {
@@ -330,7 +331,7 @@ public HistorialCargoProcesoResponseDTO updateHistorialId(Long id, HistorialCarg
         }
         
         List<HistorialCargoProceso> historiales = historialRepository.findByCargoProcesoIdAndActivoTrue(cargoProcesoId);
-        return historialMapper.toResponseDTOList(historiales);
+        return historialMapper.toRespResumenDTOs(historiales,historiales.size());
     }
     
     @Override
@@ -864,5 +865,13 @@ public HistorialCargoProcesoResponseDTO updateHistorialByPersonalId(
         
         return historialMapper.toResponseDTO(updatedHistorial);
     } 
-    
+    @Override
+    public HistorialCargoProcesoResponseDTO getHistorialActivoUnico(Long personalId) {
+        Optional<HistorialCargoProceso> his=historialRepository.findFirstByPersonalIdAndActivoTrue(personalId);
+        HistorialCargoProceso res=null;
+        if(his.isPresent()){
+            res=his.get();
+        }
+        return historialMapper.toResponseDTO(res);
+    }
 }

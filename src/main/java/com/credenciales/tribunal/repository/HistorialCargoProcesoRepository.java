@@ -157,4 +157,7 @@ AND pr.estado = true
 ORDER BY h.fechaInicio DESC
 """)
 List<HistorialPersonalDTO> findHistorialByPersonalId(@Param("personalId") Long personalId);
+
+    
+Optional<HistorialCargoProceso> findFirstByPersonalIdAndActivoTrue(Long personalId);
 }
