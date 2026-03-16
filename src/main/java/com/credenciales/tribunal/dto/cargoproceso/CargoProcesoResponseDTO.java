@@ -11,10 +11,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CargoProcesoResponseDTO {
     private Long id;
-    private String procesoNombre;
+    private Long procesoId;
     private String nombre;
     private String descripcion;
     private Long unidadId;
-    private String unidadNombre;
-    private String unidadAbreviatura;
 }

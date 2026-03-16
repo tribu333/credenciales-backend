@@ -1,10 +1,5 @@
 package com.credenciales.tribunal.dto.cargoproceso;
 
-/* import com.credenciales.tribunal.dto.cargoproceso.CargoProcesoDTO;
-import com.credenciales.tribunal.dto.cargoproceso.CargoProcesoCreateRequestDTO;
-import com.credenciales.tribunal.dto.cargoproceso.CargoProcesoUpdateRequestDTO;
-import com.credenciales.tribunal.dto.cargoproceso.CargoProcesoResponseDTO;
-import com.credenciales.tribunal.dto.cargoproceso.HistorialResumenDTO; */
 import com.credenciales.tribunal.model.entity.CargoProceso;
 import com.credenciales.tribunal.model.entity.ProcesoElectoral;
 import com.credenciales.tribunal.model.entity.Unidad;
@@ -31,19 +26,18 @@ public class CargoProcesoMapper {
                 .createdAt(cargoProceso.getCreatedAt())
                 .totalHistoriales(cargoProceso.getHistoriales() != null ? cargoProceso.getHistoriales().size() : 0)
                 .build();
-    }
-    
-    public CargoProcesoResponseDTO toResponseDTO(CargoProceso cargoProceso) {
-        if (cargoProceso == null) return null;
-        
-        return CargoProcesoResponseDTO.builder()
+            }
+            
+            public CargoProcesoResponseDTO toResponseDTO(CargoProceso cargoProceso) {
+                if (cargoProceso == null) return null;
+                
+                return CargoProcesoResponseDTO.builder()
                 .id(cargoProceso.getId())
-                .procesoNombre(cargoProceso.getProceso() != null ? cargoProceso.getProceso().getNombre() : null)
+                .procesoId(cargoProceso.getProceso() != null ? cargoProceso.getProceso().getId() : null)
                 .nombre(cargoProceso.getNombre())
                 .unidadId(cargoProceso.getUnidad() != null ? cargoProceso.getUnidad().getId() : null)
-                .unidadNombre(cargoProceso.getUnidad() != null ? cargoProceso.getUnidad().getNombre() : null)
-                .unidadAbreviatura(cargoProceso.getUnidad() != null ? cargoProceso.getUnidad().getAbreviatura() : null)
                 .descripcion(cargoProceso.getDescripcion())
+                //.activo(cargoProceso.getActivo())
                 .build();
     }
     

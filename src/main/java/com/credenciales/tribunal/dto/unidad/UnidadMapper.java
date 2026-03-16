@@ -1,6 +1,5 @@
 package com.credenciales.tribunal.dto.unidad;
 
-import com.credenciales.tribunal.dto.cargoproceso.CargoProcesoResponseDTO;
 import com.credenciales.tribunal.model.entity.Unidad;
 import org.springframework.stereotype.Component;
 import java.util.List;
@@ -29,8 +28,6 @@ public class UnidadMapper {
                 .nombre(unidad.getNombre())
                 .abreviatura(unidad.getAbreviatura())
                 .estado(unidad.getEstado())
-                .createdAt(unidad.getCreatedAt())
-                .totalCargos(unidad.getCargos() != null ? unidad.getCargos().size() : 0)
                 .totalCargosProceso(unidad.getCargosProceso() != null ? unidad.getCargosProceso().size() : 0)
                 .build();
     }

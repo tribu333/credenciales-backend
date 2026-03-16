@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -15,7 +14,5 @@ public class UnidadResponseDTO {
     private String nombre;
     private String abreviatura;
     private Boolean estado;
-    private LocalDateTime createdAt;
-    private Integer totalCargos;
     private Integer totalCargosProceso;
 }
