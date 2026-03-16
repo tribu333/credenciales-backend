@@ -30,10 +30,6 @@ public interface UnidadRepository extends JpaRepository<Unidad, Long> {
     // Verificar si existe por abreviatura
     boolean existsByAbreviatura(String abreviatura);
     
-    // Buscar unidades con sus cargos
-    @Query("SELECT u FROM Unidad u LEFT JOIN FETCH u.cargos WHERE u.id = :id")
-    Optional<Unidad> findByIdWithCargos(@Param("id") Long id);
-    
     // Buscar unidades con sus cargos en proceso
     @Query("SELECT u FROM Unidad u LEFT JOIN FETCH u.cargosProceso WHERE u.id = :id")
     Optional<Unidad> findByIdWithCargosProceso(@Param("id") Long id);

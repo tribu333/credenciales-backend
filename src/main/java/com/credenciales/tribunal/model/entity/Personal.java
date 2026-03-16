@@ -83,9 +83,6 @@ public class Personal {
     private Qr qr;
 
     @OneToMany(mappedBy = "personal", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    private List<HistorialCargo> historialCargos;
-
-    @OneToMany(mappedBy = "personal", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<HistorialCargoProceso> historialCargosProceso;
 
     @OneToMany(mappedBy = "personal", cascade = CascadeType.ALL, orphanRemoval = true)

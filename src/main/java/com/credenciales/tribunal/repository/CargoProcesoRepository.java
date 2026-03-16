@@ -1,6 +1,5 @@
 package com.credenciales.tribunal.repository;
 
-import com.credenciales.tribunal.model.entity.Cargo;
 import com.credenciales.tribunal.model.entity.CargoProceso;
 import com.credenciales.tribunal.model.entity.ProcesoElectoral;
 import com.credenciales.tribunal.model.entity.Unidad;

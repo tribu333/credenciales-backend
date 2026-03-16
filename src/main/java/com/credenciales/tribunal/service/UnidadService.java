@@ -34,8 +34,5 @@ public interface UnidadService {
     
     UnidadResponseDTO cambiarEstadoUnidad(Long id, Boolean estado);
     
-    // Métodos con relaciones
-    Optional<UnidadResponseDTO> getUnidadWithCargos(Long id);
-    
     Optional<UnidadResponseDTO> getUnidadWithCargosProceso(Long id);
 }
