@@ -6,11 +6,9 @@ import com.credenciales.tribunal.dto.cargoproceso.CargoProcesoUpdateRequestDTO;
 import com.credenciales.tribunal.dto.cargoproceso.CargoProcesoResponseDTO;
 import com.credenciales.tribunal.dto.cargoproceso.HistorialResumenDTO; */
 import com.credenciales.tribunal.model.entity.CargoProceso;
-import com.credenciales.tribunal.model.entity.HistorialCargoProceso;
 import com.credenciales.tribunal.model.entity.ProcesoElectoral;
 import com.credenciales.tribunal.model.entity.Unidad;
 import org.springframework.stereotype.Component;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,33 +36,14 @@ public class CargoProcesoMapper {
     public CargoProcesoResponseDTO toResponseDTO(CargoProceso cargoProceso) {
         if (cargoProceso == null) return null;
         
-        List<HistorialResumenDTO> ultimosHistoriales = null;
-        if (cargoProceso.getHistoriales() != null && !cargoProceso.getHistoriales().isEmpty()) {
-            ultimosHistoriales = cargoProceso.getHistoriales().stream()
-                    .sorted(Comparator.comparing(HistorialCargoProceso::getFechaInicio).reversed())
-                    .limit(5)
-                    .map(this::toHistorialResumenDTO)
-                    .collect(Collectors.toList());
-        }
-        
         return CargoProcesoResponseDTO.builder()
                 .id(cargoProceso.getId())
-                .procesoId(cargoProceso.getProceso() != null ? cargoProceso.getProceso().getId() : null)
                 .procesoNombre(cargoProceso.getProceso() != null ? cargoProceso.getProceso().getNombre() : null)
-                .procesoFechaInicio(cargoProceso.getProceso() != null ? 
-                        cargoProceso.getProceso().getFechaInicio().atStartOfDay() : null)
-                .procesoFechaFin(cargoProceso.getProceso() != null ? 
-                        cargoProceso.getProceso().getFechaFin().atStartOfDay() : null)
-                .procesoActivo(cargoProceso.getProceso() != null ? cargoProceso.getProceso().getEstado() : null)
                 .nombre(cargoProceso.getNombre())
                 .unidadId(cargoProceso.getUnidad() != null ? cargoProceso.getUnidad().getId() : null)
                 .unidadNombre(cargoProceso.getUnidad() != null ? cargoProceso.getUnidad().getNombre() : null)
                 .unidadAbreviatura(cargoProceso.getUnidad() != null ? cargoProceso.getUnidad().getAbreviatura() : null)
                 .descripcion(cargoProceso.getDescripcion())
-                //.activo(cargoProceso.getActivo())
-                .createdAt(cargoProceso.getCreatedAt())
-                .totalHistoriales(cargoProceso.getHistoriales() != null ? cargoProceso.getHistoriales().size() : 0)
-                .ultimosHistoriales(ultimosHistoriales)
                 .build();
     }
     
@@ -104,19 +83,6 @@ public class CargoProcesoMapper {
         }
     }
     
-    private HistorialResumenDTO toHistorialResumenDTO(HistorialCargoProceso historial) {
-        if (historial == null) return null;
-        
-        return HistorialResumenDTO.builder()
-                .id(historial.getId())
-                .personalNombre(historial.getPersonal() != null ? historial.getPersonal().getNombre() : null)
-                .personalApellido(historial.getPersonal() != null ? historial.getPersonal().getApellidoPaterno() : null)
-                .personalApellido(historial.getPersonal() != null ? historial.getPersonal().getApellidoMaterno() : null)
-                .fechaInicio(historial.getFechaInicio())
-                .fechaFin(historial.getFechaFin())
-                .activo(historial.getActivo())
-                .build();
-    }
     
     public List<CargoProcesoDTO> toDTOList(List<CargoProceso> cargosProceso) {
         return cargosProceso.stream()
