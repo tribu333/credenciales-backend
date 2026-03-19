@@ -776,10 +776,10 @@ public HistorialCargoProcesoResponseDTO updateHistorialByPersonalId(
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Historial de cargo proceso no encontrado con ID: " + id));
         
-        // 2. Validar que el nuevo cargo sea diferente al actual
-        if (requestDTO.getIdCargo().equals(historial.getCargoProceso().getId())) {
+        // 2. Validar que el nuevo cargo sea diferente al actual (no me deja actualizar y deberia)
+        /* if (requestDTO.getIdCargo().equals(historial.getCargoProceso().getId())) {
             throw new BusinessException("El cargo seleccionado es el mismo que el actual");
-        }
+        } */
         
         // 3. Buscar y validar el nuevo cargo proceso
         CargoProceso nuevoCargoProceso = cargoProcesoRepository.findById(requestDTO.getIdCargo())
