@@ -6,6 +6,7 @@ import com.credenciales.tribunal.dto.email.VerificacionResponseDTO;
 import com.credenciales.tribunal.dto.estadoActual.CambioEstadoMasivoRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoPatchRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoResponseDTO;
+import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoUpdateRequestDTO;
 import com.credenciales.tribunal.dto.personal.*;
 import com.credenciales.tribunal.dto.qr.QrGenerarDTO;
 import com.credenciales.tribunal.dto.qr.QrResponseDTO;
@@ -134,7 +135,7 @@ public class PersonalServiceImpl implements PersonalService {
 		if (registroDTO.getCargoID() == 4 || registroDTO.getCargoID() == 41 || registroDTO.getCargoID() == 43) {
 
 			if (!"220326".equals(registroDTO.getCodigoVerificacion())) {
-				throw new BusinessException("Código estatico de verificación inválido");
+				throw new BusinessException("Código estático de verificación inválido");
 			}
 
 		} else {
@@ -174,7 +175,7 @@ public class PersonalServiceImpl implements PersonalService {
 				}
 			}
 		}
-		log.info("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
+		log.info("Crear Nuevo personal");
 		return crearNuevoPersonal(registroDTO);
 	}
 
@@ -190,8 +191,22 @@ public class PersonalServiceImpl implements PersonalService {
 				.setAccesoComputo(registroDTO.getAccesoComputo() != null ? registroDTO.getAccesoComputo() : false);
 		personalExistente.setNroCircunscripcion(registroDTO.getNroCircunscripcion());
 
-		//Crear Nuevo Contrato
-		historialCargoProcesoService.asignarPersonalACargoProceso(personalExistente.getId(), registroDTO.getCargoID(),LocalDateTime.now());
+		List<HistorialCargoProcesoResponseDTO> cargosActivos = historialCargoProcesoService
+				.getHistorialesActivosByPersonal(personalExistente.getId());
+
+		if (cargosActivos != null && !cargosActivos.isEmpty()) {
+			HistorialCargoProcesoUpdateRequestDTO contratoActualizado = HistorialCargoProcesoUpdateRequestDTO.builder()
+					.cargoProcesoId(cargosActivos.get(0).getId())
+					.activo(false)
+					.build();
+
+			historialCargoProcesoService.updateHistorialByPersonalId(personalExistente.getId(), contratoActualizado);
+			historialCargoProcesoService.asignarPersonalACargoProceso(personalExistente.getId(), registroDTO.getCargoID(),LocalDateTime.now());
+
+		} else {
+			log.warn("No se encontraron cargos activos para el personal ID: {}",personalExistente.getId());
+			throw new BusinessException("El personal no tiene contratos" + registroDTO.getImagenId());
+		}
 
 		// Generar nuevo QR si es necesario
 		if (personalExistente.getQr() == null ||
@@ -314,25 +329,23 @@ public class PersonalServiceImpl implements PersonalService {
 
 		if (cargosActivos != null && !cargosActivos.isEmpty()) {
 			HistorialCargoProcesoPatchRequestDTO actualizarCargo = HistorialCargoProcesoPatchRequestDTO.builder()
-					.idCargo(cargosActivos.get(0).getCargoProcesoId())
+					.idCargo(registroDTO.getCargoID())
 					.activo(true)
 					.build();
 
 			historialCargoProcesoService.reasignarCargoHistorial(
-					personalExistente.getId(),
+					cargosActivos.get(0).getId(),
 					actualizarCargo
 			);
 		} else {
-			log.warn("No se encontraron cargos activos para el personal ID: {}",
-					personalExistente.getId());
+			log.warn("No se encontraron cargos activos para el personal ID: {}",personalExistente.getId());
 		}
-
 
 		// Actualizar imagen si se proporciona un nuevo ID
-		if (registroDTO.getImagenId() != null) {
-			Imagen nuevaImagen = imagenService.findEntityById(registroDTO.getImagenId());
-			personalExistente.setImagen(nuevaImagen);
-		}
+//		if (registroDTO.getImagenId() != null) {
+//			Imagen nuevaImagen = imagenService.findEntityById(registroDTO.getImagenId());
+//			personalExistente.setImagen(nuevaImagen);
+//		}
 
 		// Generar nuevo QR si es necesario
 		if (personalExistente.getQr() == null ||
@@ -352,7 +365,6 @@ public class PersonalServiceImpl implements PersonalService {
 				EstadoPersonal.CREDENCIAL_DEVUELTO.getNombre().equals(estadoActual)) {
 			reactivarPersonal(personalExistente);
 		}
-
 
 		log.info("Personal actualizado exitosamente: {}", personalExistente.getId());
 
@@ -532,7 +544,7 @@ public class PersonalServiceImpl implements PersonalService {
 					log.info("Registro Salida: " + codigoQr);
 				} else { // El último evento fue SALIDA
 					eventoTipo = "ENTRADA";
-					accesoService.registrarEntrada(qr.getId(), null); // ✅ Ahora registra entrada
+					accesoService.registrarEntrada(qr.getId(), null); //Ahora registra entrada
 					log.info("Registro Entrada: " + codigoQr);
 				}
 			} else {
@@ -709,10 +721,10 @@ public class PersonalServiceImpl implements PersonalService {
 				actualizacionDTO.getAccesoComputo() != null ? actualizacionDTO.getAccesoComputo() : false);
 		personal.setNroCircunscripcion(actualizacionDTO.getNroCircunscripcion());
 
-		if (actualizacionDTO.getImagenId() != null) {
-			Imagen nuevaImagen = imagenService.findEntityById(actualizacionDTO.getImagenId());
-			personal.setImagen(nuevaImagen);
-		}
+//		if (actualizacionDTO.getImagenId() != null) {
+//			Imagen nuevaImagen = imagenService.findEntityById(actualizacionDTO.getImagenId());
+//			personal.setImagen(nuevaImagen);
+//		}
 
 		//Actualizar cargo
 		List<HistorialCargoProcesoResponseDTO> cargosActivos = historialCargoProcesoService
@@ -729,8 +741,7 @@ public class PersonalServiceImpl implements PersonalService {
 					actualizarCargo
 			);
 		} else {
-			log.warn("No se encontraron cargos activos para el personal ID: {}",
-					personal.getId());
+			log.warn("No se encontraron cargos activos para el personal ID: {}", personal.getId());
 		}
 
 		if (EstadoPersonal.CREDENCIAL_IMPRESO.getNombre().equals(estadoActual) ||
