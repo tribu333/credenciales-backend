@@ -271,8 +271,9 @@ public class PersonalServiceImpl implements PersonalService {
 			if (registroDTO.getCargoID() == null) {
 				throw new BusinessException("Para personal EVENTUAL debe especificar un cargo de proceso (cargoID)");
 			}
-			registrarCargoEventual(personal, registroDTO.getCargoID());
 		}
+		registrarCargoEventual(personal, registroDTO.getCargoID());
+		
 
 		log.info("Personal creado exitosamente: {} - {}", personal.getId(), personal.getCarnetIdentidad());
 
