@@ -28,4 +28,6 @@ public class ActualizarFechasHistorialRequest {
     @NotNull(message = "La fecha de fin es requerida")
     //@JsonFormat(pattern = "dd/MM/yyyy")
     private LocalDateTime fechaFin;
+
+    private Boolean activo;
 }

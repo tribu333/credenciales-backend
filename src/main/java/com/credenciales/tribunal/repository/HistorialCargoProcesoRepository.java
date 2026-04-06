@@ -128,11 +128,13 @@ public interface HistorialCargoProcesoRepository extends JpaRepository<Historial
 
     @Modifying
     @Query("UPDATE HistorialCargoProceso h SET h.fechaInicio = :fechaInicio, " +
-           "h.fechaFin = :fechaFin WHERE h.cargoProceso.id = :cargoProcesoId")
+           "h.fechaFin = :fechaFin, " + 
+           "h.activo = :activo " + " WHERE h.cargoProceso.id = :cargoProcesoId")
     int actualizarFechasPorCargoProceso(
         @Param("cargoProcesoId") Long cargoProcesoId,
         @Param("fechaInicio") LocalDateTime fechaInicio,
-        @Param("fechaFin") LocalDateTime fechaFin);
+        @Param("fechaFin") LocalDateTime fechaFin,
+        @Param("activo") Boolean activo);
 
     boolean existsByCargoProceso_Proceso_IdAndCargoProceso_Id(
         Long procesoId, Long cargoProcesoId);

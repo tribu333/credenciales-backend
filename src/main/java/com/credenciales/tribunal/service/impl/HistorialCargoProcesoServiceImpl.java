@@ -671,7 +671,8 @@ public HistorialCargoProcesoResponseDTO updateHistorialId(Long id, HistorialCarg
         int actualizados = historialRepository.actualizarFechasPorCargoProceso(
                 request.getCargoProcesoId(),
                 request.getFechaInicio(),
-                request.getFechaFin());
+                request.getFechaFin(),
+                request.getActivo());
         
         log.info("Se actualizaron {} historiales para el cargo: {}", actualizados, cargoProceso.getNombre());
         
