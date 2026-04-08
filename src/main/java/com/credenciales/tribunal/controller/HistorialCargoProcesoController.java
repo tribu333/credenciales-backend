@@ -170,6 +170,16 @@ public class HistorialCargoProcesoController {
         
         return ResponseEntity.ok(response);
     }
+/*     @PostMapping("/actualizar-activo")
+    @Operation(summary = "Actualiza las fechas de todos los historiales de un cargo en un proceso")
+    public ResponseEntity<ActualizarFechasHistorialResponse> actualizarFechas(
+            @Valid @RequestBody ActualizarFechasHistorialRequest request) {
+        
+        ActualizarFechasHistorialResponse response = historialService
+                .actualizarFechasHistoriales(request);
+        
+        return ResponseEntity.ok(response);
+    } */
     
     @PutMapping("/proceso/{procesoId}/cargo/{cargoId}/fechas")
     @Operation(summary = "Actualiza fechas mediante parámetros en la URL")
