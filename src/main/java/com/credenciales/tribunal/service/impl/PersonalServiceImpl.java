@@ -728,20 +728,22 @@ public class PersonalServiceImpl implements PersonalService {
 //			personal.setImagen(nuevaImagen);
 //		}
 
-		//Actualizar cargo
+		// Actualizar cargo
 		List<HistorialCargoProcesoResponseDTO> cargosActivos = historialCargoProcesoService
 				.getHistorialesActivosByPersonal(personal.getId());
 
 		if (cargosActivos != null && !cargosActivos.isEmpty()) {
-			HistorialCargoProcesoPatchRequestDTO actualizarCargo = HistorialCargoProcesoPatchRequestDTO.builder()
-					.idCargo(actualizacionDTO.getCargoID())
-					.activo(true)
-					.build();
+			if (!actualizacionDTO.getCargoID().equals(cargosActivos.get(0).getCargoProcesoId())) {
+					HistorialCargoProcesoPatchRequestDTO actualizarCargo = HistorialCargoProcesoPatchRequestDTO.builder()
+							.idCargo(actualizacionDTO.getCargoID())
+							.activo(true)
+							.build();
 
-			historialCargoProcesoService.reasignarCargoHistorial(
-					cargosActivos.get(0).getId(),
-					actualizarCargo
-			);
+				historialCargoProcesoService.reasignarCargoHistorial(
+						cargosActivos.get(0).getId(),
+						actualizarCargo
+				);
+			}
 		} else {
 			log.warn("No se encontraron cargos activos para el personal ID: {}", personal.getId());
 		}
