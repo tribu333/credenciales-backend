@@ -230,6 +230,14 @@ public class EstadoPersonalController {
                 return ResponseEntity.ok(estadoPersonalService.finalizarProcesoElectoralMasivo(request));
         }
 
+        @Operation(summary = "Finalizar contrato electoral para múltiples personales",
+                description = "Cambia el estado de múltiples personales a INACTIVO contrato finalizado")
+        @PutMapping("/contrato-terminado/masivo")
+        public ResponseEntity<ResultadoCambioMasivoDTO> contratoTerminadoMasivo(
+                @Valid @RequestBody CambioEstadoMasivoRequestDTO request) {
+                return ResponseEntity.ok(estadoPersonalService.contratoTerminadoMasivo(request));
+        }
+
         @Operation(summary = "Registrar renuncia para múltiples personales",
                 description = "Registra la renuncia de múltiples personales")
         @PutMapping("/renunciar/masivo")

@@ -1,5 +1,6 @@
 package com.credenciales.tribunal.service.impl;
 
+import com.credenciales.tribunal.dto.estadoActual.CambioEstadoMasivoRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.ActualizarFechasHistorialRequest;
 import com.credenciales.tribunal.dto.historialcargoproceso.ActualizarFechasHistorialResponse;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoCreateRequestDTO;
@@ -47,7 +48,8 @@ public class HistorialCargoProcesoServiceImpl implements HistorialCargoProcesoSe
     private final ProcesoElectoralRepository procesoRepository;
     private final HistorialCargoProcesoMapper historialMapper;
     private final EstadoPersonalServiceImpl personalServiceImpl;
-    
+    private final EstadoPersonalServiceImpl estadoPersonalService;;
+
     @Override
     public HistorialCargoProcesoResponseDTO createHistorial(HistorialCargoProcesoCreateRequestDTO requestDTO) {
         log.info("Creando nuevo historial de cargo proceso para personal ID: {} y cargo proceso ID: {}", 
@@ -675,7 +677,27 @@ public HistorialCargoProcesoResponseDTO updateHistorialId(Long id, HistorialCarg
                 request.getActivo());
         
         log.info("Se actualizaron {} historiales para el cargo: {}", actualizados, cargoProceso.getNombre());
-        
+
+        //Actualizar Personal
+        List<HistorialCargoProceso> historiales = historialRepository.findByCargoProcesoIdWithPersonal(request.getCargoProcesoId());
+
+        List<Long> personalIds = historiales.stream()
+            .map(h -> h.getPersonal().getId())
+            .distinct()
+            .collect(Collectors.toList());
+
+        if (!personalIds.isEmpty()) {
+            CambioEstadoMasivoRequestDTO cambioRequest = new CambioEstadoMasivoRequestDTO();
+            cambioRequest.setPersonalIds(personalIds);
+            cambioRequest.setObservacion("Actualización de fechas por cambio en cargo proceso: " + cargoProceso.getNombre());
+
+
+            estadoPersonalService.contratoTerminadoMasivo(cambioRequest);
+            log.info("Cambio de estado de contrato terminado para {} personas", personalIds.size());
+        } else {
+            log.warn("No se encontraron personas asociadas al cargo_proceso {}", request.getCargoProcesoId());
+        }
+
         // Construir respuesta
         return ActualizarFechasHistorialResponse.builder()
                 .procesoElectoralId(proceso.getId())

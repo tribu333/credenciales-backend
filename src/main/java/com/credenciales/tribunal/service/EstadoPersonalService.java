@@ -25,6 +25,7 @@ public interface EstadoPersonalService {
     ResultadoCambioMasivoDTO habilitarAccesoComputoMasivo(CambioEstadoMasivoRequestDTO request);
     ResultadoCambioMasivoDTO devolverCredencialMasivo(CambioEstadoMasivoRequestDTO request);
     ResultadoCambioMasivoDTO finalizarProcesoElectoralMasivo(CambioEstadoMasivoRequestDTO request);
+    ResultadoCambioMasivoDTO contratoTerminadoMasivo(CambioEstadoMasivoRequestDTO request);
     ResultadoCambioMasivoDTO renunciarMasivo(CambioEstadoMasivoRequestDTO request);
     ResultadoCambioMasivoDTO estadoRegistradoMasivo(CambioEstadoMasivoRequestDTO request);
 

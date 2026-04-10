@@ -164,6 +164,7 @@ public class PersonalServiceImpl implements PersonalService {
 				String estadoActual = obtenerEstadoActual(personal.getId());
 
 				if (estadoActual.equals(EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO.getNombre()) ||
+						estadoActual.equals(EstadoPersonal.INACTIVO_CONTRATO_TERMINADO) ||
 						estadoActual.equals(EstadoPersonal.INACTIVO_POR_RENUNCIA.getNombre())) {
 					return crearNuevoContrato(personal, registroDTO);
 				}

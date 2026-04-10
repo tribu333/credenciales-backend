@@ -523,6 +523,16 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
 
     @Override
     @Transactional
+    public ResultadoCambioMasivoDTO contratoTerminadoMasivo(CambioEstadoMasivoRequestDTO request) {
+        return procesarCambioEstadoMasivoConValidacion(
+                request,
+                EstadoPersonal.INACTIVO_CONTRATO_TERMINADO,
+                "No se puede finalizar el proceso desde el estado actual"
+        );
+    }
+
+    @Override
+    @Transactional
     public ResultadoCambioMasivoDTO renunciarMasivo(CambioEstadoMasivoRequestDTO request) {
         return procesarCambioEstadoMasivoConValidacion(
                 request,
@@ -854,8 +864,12 @@ public class EstadoPersonalServiceImpl implements EstadoPersonalService {
             case "PERSONAL CON ACCESO A COMPUTO":
                 return nuevoEstado == EstadoPersonal.CREDENCIAL_DEVUELTO;
             case "CREDENCIAL DEVUELTO":
-                return nuevoEstado == EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO ||
+                return nuevoEstado == EstadoPersonal.INACTIVO_CONTRATO_TERMINADO ||
                         nuevoEstado == EstadoPersonal.INACTIVO_POR_RENUNCIA;
+            case "INACTIVO CONTRATO TERMINADO":
+                return nuevoEstado == EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO;
+            case "INACTIVO POR RENUNCIA":
+                return nuevoEstado == EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO;
             default:
                 return false;
         }
