@@ -469,6 +469,7 @@ public class PersonalServiceImpl implements PersonalService {
 					!estado.equals(EstadoPersonal.CREDENCIAL_IMPRESO.getNombre()) &&
 					!estado.equals(EstadoPersonal.CREDENCIAL_DEVUELTO.getNombre()) &&
 					!estado.equals(EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO.getNombre()) &&
+					!estado.equals(EstadoPersonal.INACTIVO_CONTRATO_TERMINADO.getNombre()) &&
 					!estado.equals(EstadoPersonal.INACTIVO_POR_RENUNCIA.getNombre());
 		});
 	}
