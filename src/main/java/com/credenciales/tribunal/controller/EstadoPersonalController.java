@@ -105,6 +105,12 @@ public class EstadoPersonalController {
                 return ResponseEntity.ok(estadoPersonalService.finalizarProcesoElectoral(personalId));
         }
 
+        @PutMapping("/{personalId}/contrato-terminado")
+        public ResponseEntity<PersonalDTO> contratoTerminado(
+                @Parameter(description = "ID del personal", required = true, example = "1") @PathVariable Long personalId) {
+                return ResponseEntity.ok(estadoPersonalService.contratoTerminado(personalId));
+        }
+
         @Operation(summary = "Registrar renuncia", description = "Registra la renuncia del personal desde cualquier estado válido")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Renuncia registrada exitosamente"),

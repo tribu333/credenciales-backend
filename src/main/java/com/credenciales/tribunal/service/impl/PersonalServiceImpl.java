@@ -151,20 +151,17 @@ public class PersonalServiceImpl implements PersonalService {
 		}
 
 		List<Personal> personalList = personalRepository.findAllByCarnetIdentidad(registroDTO.getCarnetIdentidad());
-
+		log.warn("Múltiples registros ({}) encontrados para el carnet: {}",
+				personalList.size(), registroDTO.getCarnetIdentidad());
 		if (!personalList.isEmpty()) {
-			 //Si hay múltiples registros, loguear warning
-			 if (personalList.size() > 0) {
-			 log.warn("Múltiples registros ({}) encontrados para el carnet: {}",
-			 //Procesando el primero con estado válido.",
-			 personalList.size(), registroDTO.getCarnetIdentidad());
-			 }
+            log.warn("Múltiples registros ({}) encontrados para el carnet: {}",//Procesando el primero con estado válido.",
+                    personalList.size(), registroDTO.getCarnetIdentidad());
 
-			for (Personal personal : personalList) {
+            for (Personal personal : personalList) {
 				String estadoActual = obtenerEstadoActual(personal.getId());
 
-				if (estadoActual.equals(EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO.getNombre()) ||
-						estadoActual.equals(EstadoPersonal.INACTIVO_CONTRATO_TERMINADO) ||
+				if (estadoActual.equals(EstadoPersonal.INACTIVO_CONTRATO_TERMINADO.getNombre()) ||
+						estadoActual.equals(EstadoPersonal.PERSONAL_INACTIVO_PROCESO_TERMINADO.getNombre()) ||
 						estadoActual.equals(EstadoPersonal.INACTIVO_POR_RENUNCIA.getNombre())) {
 					return crearNuevoContrato(personal, registroDTO);
 				}
@@ -206,7 +203,9 @@ public class PersonalServiceImpl implements PersonalService {
 
 		} else {
 			log.warn("No se encontraron cargos activos para el personal ID: {}",personalExistente.getId());
-			throw new BusinessException("El personal no tiene contratos" + registroDTO.getImagenId());
+			historialCargoProcesoService.asignarPersonalACargoProceso(personalExistente.getId(), registroDTO.getCargoID(),LocalDateTime.now());
+			log.warn("Se creo nuevo contrato para personal con CI: {}",personalExistente.getId());
+			// throw new BusinessException("El personal no tiene contratos " + registroDTO.getCarnetIdentidad());
 		}
 
 		// Generar nuevo QR si es necesario

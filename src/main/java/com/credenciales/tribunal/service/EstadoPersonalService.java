@@ -16,6 +16,9 @@ public interface EstadoPersonalService {
     PersonalDTO habilitarAccesoComputo(Long personalId);
     PersonalDTO devolverCredencial(Long personalId);
     PersonalDTO finalizarProcesoElectoral(Long personalId);
+
+    PersonalDTO contratoTerminado(Long personalId);
+
     PersonalDTO renunciar(Long personalId);
     PersonalDTO estadoRegistrado(Long personalId);
 
