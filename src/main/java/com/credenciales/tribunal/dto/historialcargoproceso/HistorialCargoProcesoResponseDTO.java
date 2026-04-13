@@ -19,13 +19,6 @@ public class HistorialCargoProcesoResponseDTO {
     private String cargoProcesoDescripcion;
     private Boolean cargoProcesoActivo;
     
-    // Información del proceso
-    private Long procesoId;
-    private String procesoNombre;
-    private LocalDateTime procesoFechaInicio;
-    private LocalDateTime procesoFechaFin;
-    private Boolean procesoActivo;
-    
     // Información de la unidad
     private Long unidadId;
     private String unidadNombre;
@@ -42,7 +35,5 @@ public class HistorialCargoProcesoResponseDTO {
     private LocalDateTime fechaInicio;
     private LocalDateTime fechaFin;
     private Boolean activo;
-    private Long duracionHoras;
-    private Long duracionDias;
-    private String estado; // "ACTIVO", "FINALIZADO", "CANCELADO"
+
 }

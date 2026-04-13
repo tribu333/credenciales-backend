@@ -62,20 +62,6 @@ public class HistorialCargoProcesoMapper {
                 .cargoProcesoDescripcion(historial.getCargoProceso() != null ? historial.getCargoProceso().getDescripcion() : null)
                 //.cargoProcesoActivo(historial.getCargoProceso() != null ? historial.getCargoProceso().getActivo() : null)
                 
-                // Proceso
-                .procesoId(historial.getCargoProceso() != null && historial.getCargoProceso().getProceso() != null ? 
-                        historial.getCargoProceso().getProceso().getId() : null)
-                .procesoNombre(historial.getCargoProceso() != null && historial.getCargoProceso().getProceso() != null ? 
-                        historial.getCargoProceso().getProceso().getNombre() : null)
-                .procesoFechaInicio(historial.getCargoProceso() != null && historial.getCargoProceso().getProceso() != null && 
-                        historial.getCargoProceso().getProceso().getFechaInicio() != null ? 
-                        historial.getCargoProceso().getProceso().getFechaInicio().atStartOfDay() : null)
-                .procesoFechaFin(historial.getCargoProceso() != null && historial.getCargoProceso().getProceso() != null && 
-                        historial.getCargoProceso().getProceso().getFechaFin() != null ? 
-                        historial.getCargoProceso().getProceso().getFechaFin().atStartOfDay() : null)
-                .procesoActivo(historial.getCargoProceso() != null && historial.getCargoProceso().getProceso() != null ? 
-                        historial.getCargoProceso().getProceso().getEstado() : null)
-                
                 // Unidad
                 .unidadId(historial.getCargoProceso() != null && historial.getCargoProceso().getUnidad() != null ? 
                         historial.getCargoProceso().getUnidad().getId() : null)
@@ -96,9 +82,6 @@ public class HistorialCargoProcesoMapper {
                 .fechaInicio(historial.getFechaInicio())
                 .fechaFin(historial.getFechaFin())
                 .activo(historial.getActivo())
-                .duracionHoras(duracionHoras)
-                .duracionDias(duracionDias)
-                .estado(estado)
                 .build();
     }
 
