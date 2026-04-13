@@ -49,10 +49,6 @@ public class HistorialCargoProcesoMapper {
     public HistorialCargoProcesoResponseDTO toResponseDTO(HistorialCargoProceso historial) {
         if (historial == null) return null;
         
-        Long duracionHoras = calcularDuracionHoras(historial.getFechaInicio(), historial.getFechaFin());
-        Long duracionDias = calcularDuracionDiasLong(historial.getFechaInicio(), historial.getFechaFin());
-        String estado = determinarEstado(historial);
-        
         return HistorialCargoProcesoResponseDTO.builder()
                 .id(historial.getId())
                 
@@ -143,7 +139,7 @@ public class HistorialCargoProcesoMapper {
         return (int) ChronoUnit.DAYS.between(inicio, fechaFin);
     }
     
-    private Long calcularDuracionDiasLong(LocalDateTime inicio, LocalDateTime fin) {
+/*     private Long calcularDuracionDiasLong(LocalDateTime inicio, LocalDateTime fin) {
         if (inicio == null) return null;
         LocalDateTime fechaFin = fin != null ? fin : LocalDateTime.now();
         return ChronoUnit.DAYS.between(inicio, fechaFin);
@@ -164,7 +160,7 @@ public class HistorialCargoProcesoMapper {
         }
         return "ACTIVO";
     }
-    
+     */
     public List<HistorialCargoProcesoDTO> toDTOList(List<HistorialCargoProceso> historiales) {
         return historiales.stream()
                 .map(this::toDTO)
