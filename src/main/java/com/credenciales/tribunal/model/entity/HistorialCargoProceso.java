@@ -26,6 +26,9 @@ public class HistorialCargoProceso {
 
     @Column(name = "fecha_fin")
     private LocalDateTime fechaFin;
+    
+    @Column(name = "tipo_contrato")
+    private String tipoContrato;
 
     @Column(nullable = false, columnDefinition = "TINYINT DEFAULT 1")
     @Builder.Default
