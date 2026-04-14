@@ -169,4 +169,8 @@ List<HistorialPersonalDTO> findHistorialByPersonalId(@Param("personalId") Long p
 
     
 Optional<HistorialCargoProceso> findFirstByPersonalIdAndActivoTrue(Long personalId);
+@Query("SELECT h FROM HistorialCargoProceso h " +
+           "JOIN FETCH h.cargoProceso cp " +
+           "JOIN FETCH h.personal p")
+    List<HistorialCargoProceso> findAllWithRelations();
 }

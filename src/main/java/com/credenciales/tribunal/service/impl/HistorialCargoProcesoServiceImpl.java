@@ -123,7 +123,7 @@ public class HistorialCargoProcesoServiceImpl implements HistorialCargoProcesoSe
     @Transactional(readOnly = true)
     public List<HistorialCargoProcesoResponseDTO> getAllHistoriales() {
         log.debug("Obteniendo todos los historiales de cargo proceso");
-        List<HistorialCargoProceso> historiales = historialRepository.findAll();
+        List<HistorialCargoProceso> historiales = historialRepository.findAllWithRelations();
         return historialMapper.toResponseDTOList(historiales);
     }
     
