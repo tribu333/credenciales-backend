@@ -83,7 +83,7 @@ public class HistorialCargoProcesoController {
     
     @GetMapping
     @Operation(
-        summary = "Listar todas las asignaciones",
+        summary = "Listar todas las Historiales",
         description = "Obtiene una lista completa de todas las asignaciones de personal a cargos en procesos electorales"
     )
     @ApiResponse(responseCode = "200", description = "Lista obtenida exitosamente")
@@ -127,7 +127,7 @@ public class HistorialCargoProcesoController {
         return ResponseEntity.noContent().build();
     }
     
-    @GetMapping("/cargo-proceso/{cargoProcesoId}")
+    @GetMapping("/cargo-proceso/{unidadId}/{cargoProcesoId}")
     @Operation(
         summary = "Listar asignaciones por cargo-proceso",
         description = "Obtiene todas las asignaciones asociadas a un cargo específico dentro de un proceso electoral"
@@ -137,8 +137,10 @@ public class HistorialCargoProcesoController {
         @ApiResponse(responseCode = "404", description = "Cargo-Proceso no encontrado")
     })
     public ResponseEntity<List<HistorialCargoProcesoResponseDTO>> getHistorialesByCargoProceso(
-            @Parameter(description = "ID de la relación Cargo-Proceso", required = true, example = "5")
-            @PathVariable Long cargoProcesoId) {
+            @Parameter(description = "ID de la relación Cargo-Proceso", required = true, example = "15")
+            @PathVariable Long cargoProcesoId,
+            @Parameter(description = "ID de la relación Unidad", required = true, example = "3")
+            @PathVariable Long unidadId) {
         List<HistorialCargoProcesoResponseDTO> historiales = 
                 historialService.getHistorialesByCargoProceso(cargoProcesoId);
         return ResponseEntity.ok(historiales);

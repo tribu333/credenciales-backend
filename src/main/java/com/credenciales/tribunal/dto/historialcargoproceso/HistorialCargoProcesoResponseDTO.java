@@ -16,24 +16,20 @@ public class HistorialCargoProcesoResponseDTO {
     // Información del cargo proceso
     private Long cargoProcesoId;
     private String cargoProcesoNombre;
-    private String cargoProcesoDescripcion;
-    private Boolean cargoProcesoActivo;
     
     // Información de la unidad
     private Long unidadId;
     private String unidadNombre;
-    private String unidadAbreviatura;
     
     // Información del personal
     private Long personalId;
     private String personalNombre;
     private String personalApellido;
-    private String personalDocumento;
-    private String personalEmail;
+    private String personalApellidoM;
     
     // Información del historial
     private LocalDateTime fechaInicio;
     private LocalDateTime fechaFin;
     private Boolean activo;
-
+    private String tipoContrato;
 }

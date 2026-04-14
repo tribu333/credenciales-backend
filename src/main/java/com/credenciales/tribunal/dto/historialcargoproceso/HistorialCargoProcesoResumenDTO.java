@@ -21,4 +21,5 @@ public class HistorialCargoProcesoResumenDTO {
     private LocalDateTime fechaInicio;
     private LocalDateTime fechaFin;
     private Boolean activo;
+    private String tipoContrato;
 }

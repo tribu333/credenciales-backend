@@ -55,29 +55,25 @@ public class HistorialCargoProcesoMapper {
                 // Cargo proceso
                 .cargoProcesoId(historial.getCargoProceso() != null ? historial.getCargoProceso().getId() : null)
                 .cargoProcesoNombre(historial.getCargoProceso() != null ? historial.getCargoProceso().getNombre() : null)
-                .cargoProcesoDescripcion(historial.getCargoProceso() != null ? historial.getCargoProceso().getDescripcion() : null)
-                //.cargoProcesoActivo(historial.getCargoProceso() != null ? historial.getCargoProceso().getActivo() : null)
+                
                 
                 // Unidad
                 .unidadId(historial.getCargoProceso() != null && historial.getCargoProceso().getUnidad() != null ? 
                         historial.getCargoProceso().getUnidad().getId() : null)
                 .unidadNombre(historial.getCargoProceso() != null && historial.getCargoProceso().getUnidad() != null ? 
                         historial.getCargoProceso().getUnidad().getNombre() : null)
-                .unidadAbreviatura(historial.getCargoProceso() != null && historial.getCargoProceso().getUnidad() != null ? 
-                        historial.getCargoProceso().getUnidad().getAbreviatura() : null)
                 
                 // Personal
                 .personalId(historial.getPersonal() != null ? historial.getPersonal().getId() : null)
                 .personalNombre(historial.getPersonal() != null ? historial.getPersonal().getNombre() : null)
                 .personalApellido(historial.getPersonal() != null ? historial.getPersonal().getApellidoPaterno() : null)
-                .personalApellido(historial.getPersonal() != null ? historial.getPersonal().getApellidoMaterno() : null)
-                .personalDocumento(historial.getPersonal() != null ? historial.getPersonal().getCarnetIdentidad() : null)
-                .personalEmail(historial.getPersonal() != null ? historial.getPersonal().getCorreo() : null)
+                .personalApellidoM(historial.getPersonal() != null ? historial.getPersonal().getApellidoMaterno() : null)
                 
                 // Historial
                 .fechaInicio(historial.getFechaInicio())
                 .fechaFin(historial.getFechaFin())
                 .activo(historial.getActivo())
+                .tipoContrato(historial.getTipoContrato())
                 .build();
     }
 
@@ -95,6 +91,7 @@ public class HistorialCargoProcesoMapper {
                 .fechaInicio(historial.getFechaInicio()!=null ? historial.getFechaInicio(): null)
                 .fechaFin(historial.getFechaInicio()!=null ? historial.getFechaInicio(): null)
                 .activo(historial.getActivo())
+                .tipoContrato(historial.getTipoContrato())
                 .build();
     }
     
