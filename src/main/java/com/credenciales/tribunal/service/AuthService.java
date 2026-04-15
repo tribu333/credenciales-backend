@@ -4,6 +4,7 @@ import com.credenciales.tribunal.dto.login.LoginResponseDTO;
 import com.credenciales.tribunal.dto.login.UsuarioLoginDTO;
 import com.credenciales.tribunal.dto.usuario.UsuarioRegistroDTO;
 import com.credenciales.tribunal.dto.usuario.UsuarioResponseDTO;
+import com.credenciales.tribunal.dto.usuario.UsuarioUpdateDTO;
 import com.credenciales.tribunal.exception.ResourceNotFoundException;
 import com.credenciales.tribunal.model.RolUsuario;
 import com.credenciales.tribunal.model.Usuario;
@@ -16,6 +17,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -137,10 +139,88 @@ public class AuthService {
                 .username(usuario.getUsername())
                 .email(usuario.getEmail())
                 .nombreCompleto(usuario.getNombreCompleto())
+                .descripcion(usuario.getDescripcion())
                 .rol(usuario.getRol())
                 .activo(usuario.isActivo())
                 .fechaCreacion(usuario.getFechaCreacion())
                 .ultimoLogin(usuario.getUltimoLogin())
                 .build();
     }
+    // En AuthService.java
+@Transactional
+public UsuarioResponseDTO actualizarUsuario(Long id, UsuarioUpdateDTO updateDTO, UserDetails currentUser) {
+    log.info("Actualizando usuario con ID: {}", id);
+    
+    /* // Verificar permisos
+    Usuario usuarioActual = (Usuario) currentUser;
+    boolean isAdmin = usuarioActual.getRol() == RolUsuario.ADMINISTRADOR;
+    boolean isSameUser = usuarioActual.getId().equals(id);
+    
+    if (!isAdmin && !isSameUser) {
+        throw new SecurityException("No tienes permiso para actualizar este usuario");
+    }
+     */
+    // Buscar usuario existente
+    Usuario usuario = usuarioRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + id));
+    
+    // Actualizar campos (solo los que no son null)
+    if (updateDTO.getUsername() != null && !updateDTO.getUsername().equals(usuario.getUsername())) {
+        if (usuarioRepository.existsByUsername(updateDTO.getUsername())) {
+            throw new RuntimeException("El username ya está en uso");
+        }
+        usuario.setUsername(updateDTO.getUsername());
+    }
+    
+    if (updateDTO.getEmail() != null && !updateDTO.getEmail().equals(usuario.getEmail())) {
+        if (usuarioRepository.existsByEmail(updateDTO.getEmail())) {
+            throw new RuntimeException("El email ya está en uso");
+        }
+        usuario.setEmail(updateDTO.getEmail());
+    }
+    
+    if (updateDTO.getPassword() != null && !updateDTO.getPassword().trim().isEmpty()) {
+        usuario.setPassword(passwordEncoder.encode(updateDTO.getPassword()));
+    }
+    
+    if (updateDTO.getNombreCompleto() != null) {
+        usuario.setNombreCompleto(updateDTO.getNombreCompleto());
+    }
+    
+    if (updateDTO.getDescripcion() != null) {
+        usuario.setDescripcion(updateDTO.getDescripcion());
+    }
+    /* 
+    // Actualizar rol (solo administradores)
+    if (updateDTO.getRol() != null && isAdmin) {
+        try {
+            RolUsuario nuevoRol = RolUsuario.valueOf(updateDTO.getRol().toUpperCase());
+            usuario.setRol(nuevoRol);
+        } catch (IllegalArgumentException e) {
+            log.warn("Rol inválido: {}", updateDTO.getRol());
+        }
+    }
+    
+    // Actualizar estado activo (solo administradores)
+    if (updateDTO.getActivo() != null && isAdmin) {
+        usuario.setActivo(updateDTO.getActivo());
+    }
+    
+    // Actualizar unidad (solo administradores o si es el mismo usuario)
+    if (updateDTO.getUnidadId() != null && (isAdmin || isSameUser)) {
+        if (updateDTO.getUnidadId() == 0) {
+            usuario.setUnidad(null);
+        } else {
+            Unidad unidad = unidadRepository.findById(updateDTO.getUnidadId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Unidad no encontrada con ID: " + updateDTO.getUnidadId()));
+            usuario.setUnidad(unidad);
+        }
+    } */
+    
+    // Actualizar timestamp automáticamente (lo hace @UpdateTimestamp)
+    Usuario usuarioActualizado = usuarioRepository.save(usuario);
+    log.info("Usuario actualizado exitosamente: {}", usuarioActualizado.getUsername());
+    
+    return mapToResponseDTO(usuarioActualizado);
+}
 }

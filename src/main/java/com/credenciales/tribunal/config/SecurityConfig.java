@@ -158,6 +158,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/accesos/**").hasRole("ADMINISTRADOR")
 
                         .requestMatchers("/api/auth/registro").hasRole("ADMINISTRADOR")
+                        .requestMatchers("/api/auth/usuarios/**").permitAll()
                         // Ruta de autenticación pública
                         .requestMatchers("/api/auth/login").permitAll()
 

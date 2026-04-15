@@ -19,6 +19,7 @@ public class UsuarioResponseDTO {
     private String username;
     private String email;
     private String nombreCompleto;
+    private String descripcion;
     private RolUsuario rol;
     private boolean activo;
     
