@@ -116,6 +116,7 @@ public class AuthService {
                 .usuarioId(usuario.getId())
                 .username(usuario.getUsername())
                 .nombreCompleto(usuario.getNombreCompleto())
+                .descripcion(usuario.getDescripcion())
                 .rol(usuario.getRol().name())
                 .idUnidad(usuario.getUnidad() != null ? usuario.getUnidad().getId() : null)
                 .expiresIn(3600)
