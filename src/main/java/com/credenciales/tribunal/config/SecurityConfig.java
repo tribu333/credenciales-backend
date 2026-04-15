@@ -71,7 +71,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/personal/ci/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/personal/buscar").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/personal/**").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/personal/*/admin").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/personal/*/admin").hasRole("ADMINISTRADOR, CONSULTA")
                         .requestMatchers(HttpMethod.POST, "/api/personal/**").permitAll()
                         .requestMatchers(HttpMethod.DELETE, "/api/personal/**").hasRole("ADMINISTRADOR")
 
