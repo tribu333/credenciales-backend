@@ -7,6 +7,9 @@ import com.credenciales.tribunal.dto.usuario.UsuarioResponseDTO;
 import com.credenciales.tribunal.dto.usuario.UsuarioUpdateDTO;
 import com.credenciales.tribunal.model.Usuario;
 import com.credenciales.tribunal.service.AuthService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,11 +23,13 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Tag(name = "Autenticación", description = "Endpoints para registro, login y gestión de usuarios")
 public class AuthController {
     
     private final AuthService authService;
     
     @PostMapping("/registro")
+    @Operation(summary = "Registrar nuevo usuario")
     public ResponseEntity<UsuarioResponseDTO> registrarUsuario(
             @Valid @RequestBody UsuarioRegistroDTO registroDTO) {
         
@@ -33,6 +38,7 @@ public class AuthController {
     }
     
     @PostMapping("/login")
+    @Operation(summary = "Iniciar sesión", description = "Autentica usuario y retorna token JWT")
     public ResponseEntity<LoginResponseDTO> login(
             @Valid @RequestBody UsuarioLoginDTO loginDTO) {
         
@@ -41,6 +47,7 @@ public class AuthController {
     }
     
     @GetMapping("/perfil")
+    @Operation(summary = "Obtener perfil del usuario autenticado")
     public ResponseEntity<UsuarioResponseDTO> obtenerPerfil() {
         UsuarioResponseDTO response = authService.getUsuarioActual();
         return ResponseEntity.ok(response);
@@ -48,6 +55,7 @@ public class AuthController {
     
     // Endpoint para crear usuario administrador inicial
     @PostMapping("/admin-inicial")
+    @Operation(summary = "Crear administrador inicial (solo para primera ejecución)")
     public ResponseEntity<UsuarioResponseDTO> crearAdminInicial() {
         UsuarioRegistroDTO adminDTO = UsuarioRegistroDTO.builder()
                 .username("admin")
