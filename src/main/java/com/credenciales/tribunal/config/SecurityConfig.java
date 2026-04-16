@@ -107,8 +107,6 @@ public class SecurityConfig {
                         // =========================================
 
                         .requestMatchers(HttpMethod.GET, "/api/unidades/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/cargos/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/historiales-cargo/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/procesos-electorales/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/cargos-proceso/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/historiales-cargo-proceso/**").permitAll()
@@ -122,14 +120,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/unidades/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/unidades/**").hasRole("ADMINISTRADOR")
 
-                        .requestMatchers(HttpMethod.POST, "/api/cargos/**").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/cargos/**").hasRole("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/cargos/**").hasRole("ADMINISTRADOR")
-
-                        .requestMatchers(HttpMethod.POST, "/api/historiales-cargo/**").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/historiales-cargo/**").hasRole("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/historiales-cargo/**").hasRole("ADMINISTRADOR")
-
                         .requestMatchers(HttpMethod.POST, "/api/imagenes/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/procesos-electorales/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/procesos-electorales/**").hasRole("ADMINISTRADOR")
@@ -140,8 +130,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/cargos-proceso/**").hasRole("ADMINISTRADOR")
 
                         .requestMatchers(HttpMethod.POST, "/api/historiales-cargo-proceso/**").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/historiales-cargo-proceso/**").hasRole("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/historiales-cargo-proceso/**").hasRole("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/historiales-cargo-proceso/**").hasRole("ADMINISTRADOR, CONSULTA")
+                        .requestMatchers(HttpMethod.DELETE, "/api/historiales-cargo-proceso/**").hasRole("ADMINISTRADOR, CONSULTA")
                         
                         .requestMatchers(HttpMethod.POST, "/api/externos/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/externos/**").hasRole("ADMINISTRADOR")
