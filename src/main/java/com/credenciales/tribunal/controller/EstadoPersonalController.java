@@ -170,12 +170,12 @@ public class EstadoPersonalController {
                 return ResponseEntity.ok(estadoPersonalService.puedeHabilitarseAccesoComputo(personalId));
         }
 
-        @Operation(summary = "Imprimir credencial para múltiples personales", description = "Cambia el estado de múltiples personales a CREDENCIAL IMPRESO")
+        /* @Operation(summary = "Imprimir credencial para múltiples personales", description = "Cambia el estado de múltiples personales a CREDENCIAL IMPRESO")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "200", description = "Procesado exitosamente", content = @Content(schema = @Schema(implementation = ResultadoCambioMasivoDTO.class))),
                         @ApiResponse(responseCode = "400", description = "Algunos personales no están en estado válido"),
                         @ApiResponse(responseCode = "404", description = "Algunos personales no fueron encontrados")
-        })
+        }) */
 //        @PutMapping("/imprimir-credencial/masivo")
 //        public ResponseEntity<ResultadoCambioMasivoDTO> imprimirCredencialMasivo(
 //                        @Valid @RequestBody CambioEstadoMasivoRequestDTO request) {
@@ -183,7 +183,10 @@ public class EstadoPersonalController {
 //                ResultadoCambioMasivoDTO resultado = estadoPersonalService.imprimirCredencialMasivo(request);
 //                return ResponseEntity.ok(resultado);
 //        }
-
+        @Operation(
+        summary = "Cambiar a estado registrado",
+        description = "Permite regresar al estado REGISTRADO para reprocesos o reimpresión de credencial"
+        )
         @PutMapping("/{personalId}/estado-registrado")
         public ResponseEntity<PersonalDTO> estadoRegistrado(@PathVariable Long personalId) {
                 PersonalDTO personalDTO = estadoPersonalService.estadoRegistrado(personalId);

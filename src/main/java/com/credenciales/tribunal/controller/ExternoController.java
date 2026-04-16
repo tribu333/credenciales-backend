@@ -175,7 +175,7 @@ public class ExternoController {
 
     @GetMapping("/identificadorPrensa/{identificadorPrensa}")
     @Operation(
-        summary = "Listar externos por identificadorPrensa exacto",
+        summary = "Listar externos por organización de prensa",
         description = "Retorna todos los externos que pertenecen a una organización específica (ej: TVU, Los Tiempos)"
     )
     @ApiResponse(responseCode = "200", description = "Lista de externos de la organización")
@@ -189,7 +189,7 @@ public class ExternoController {
     @Hidden
     @GetMapping("/identificadorPrensa/buscar")
     @Operation(
-        summary = "Buscar externos por identificadorPrensa parcial",
+        summary = "Buscar externos por organización (búsqueda parcial)",
         description = "Retorna externos cuyo identificadorPrensa contenga el texto proporcionado (búsqueda parcial)"
     )
     @ApiResponse(responseCode = "200", description = "Lista de externos que coinciden con la búsqueda")
@@ -243,7 +243,7 @@ public class ExternoController {
     @Hidden
     @GetMapping("/existe/identificadorPrensa")
     @Operation(
-        summary = "Verificar si existe algún externo con un identificadorPrensa",
+        summary = "Verificar si existe algún externo de una organización",
         description = "Retorna true si existe al menos un externo con el identificadorPrensa proporcionado"
     )
     @ApiResponse(responseCode = "200", description = "Resultado de la verificación")
@@ -282,7 +282,7 @@ public class ExternoController {
     @Hidden
     @GetMapping("/count/identificadorPrensa/{identificadorPrensa}")
     @Operation(
-        summary = "Contar externos por identificadorPrensa",
+        summary = "Contar externos por organización",
         description = "Retorna el número de externos que pertenecen a una organización específica"
     )
     @ApiResponse(responseCode = "200", description = "Cantidad de externos de la organización")

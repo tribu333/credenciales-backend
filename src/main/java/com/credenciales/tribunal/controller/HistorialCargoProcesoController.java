@@ -163,7 +163,7 @@ public class HistorialCargoProcesoController {
         return ResponseEntity.ok(historiales);
     }
     @PostMapping("/actualizar-fechas")
-    @Operation(summary = "Actualiza las fechas de todos los historiales de un cargo en un proceso")
+    @Operation(summary = "Actualizar fechas de historiales por cargo y proceso (masivo)")
     public ResponseEntity<ActualizarFechasHistorialResponse> actualizarFechas(
             @Valid @RequestBody ActualizarFechasHistorialRequest request) {
         
@@ -199,7 +199,7 @@ public class HistorialCargoProcesoController {
 
     @GetMapping("/historiales/{personalId}")
     @Operation(
-        summary = "Listar asignaciones por cargo-proceso",
+        summary = "Listar historial de asignaciones por personal",
         description = "Obtiene todas las asignaciones asociadas a un cargo específico dentro de un proceso electoral"
     )
     @ApiResponses(value = {
@@ -215,13 +215,13 @@ public class HistorialCargoProcesoController {
     }
 
     @PutMapping("/personal/{personalId}/historial-activo")
-@Operation(summary = "Actualizar el historial activo de un personal", description = "Actualiza el historial activo de un personal específico (el único historial con activo=true para ese personal)")
-public ResponseEntity<HistorialCargoProcesoResponseDTO> updateHistorialActivoByPersonalId(
-        @PathVariable Long personalId,
-        @Valid @RequestBody HistorialCargoProcesoUpdateRequestDTO requestDTO) {
-    HistorialCargoProcesoResponseDTO response = historialService.updateHistorialByPersonalId(personalId, requestDTO);
-    return ResponseEntity.ok(response);
-}
+    @Operation(summary = "Actualizar el historial activo de un personal", description = "Actualiza el historial activo de un personal específico (el único historial con activo=true para ese personal)")
+    public ResponseEntity<HistorialCargoProcesoResponseDTO> updateHistorialActivoByPersonalId(
+            @PathVariable Long personalId,
+            @Valid @RequestBody HistorialCargoProcesoUpdateRequestDTO requestDTO) {
+        HistorialCargoProcesoResponseDTO response = historialService.updateHistorialByPersonalId(personalId, requestDTO);
+        return ResponseEntity.ok(response);
+    }
     @PatchMapping("/reasignar/{idHistorial}/historial")
     @Operation(summary = "Reasignar cargo a un historial", description = "puedes cambiar el cargo a un historial de persona")
     public ResponseEntity<HistorialCargoProcesoResponseDTO> updateHistorialActivoByPersonalId(
@@ -231,7 +231,7 @@ public ResponseEntity<HistorialCargoProcesoResponseDTO> updateHistorialActivoByP
         return ResponseEntity.ok(response);
     }
     @GetMapping("/historiales/activounico/{personalId}")
-    @Operation(summary = "obteneer", description = "grafic")
+    @Operation(summary = "Obtener historial activo único de un personal", description = "Retorna el único historial activo (activo=true) de un personal")
     public ResponseEntity<HistorialCargoProcesoResponseDTO> getMethodNam(@PathVariable Long personalId) {
        HistorialCargoProcesoResponseDTO response = historialService.getHistorialActivoUnico(personalId);
        return ResponseEntity.ok(response);
@@ -239,7 +239,7 @@ public ResponseEntity<HistorialCargoProcesoResponseDTO> updateHistorialActivoByP
     
     @GetMapping("/historiales/listCargos/{cargoId}")
     @Operation(
-        summary = "Listar asignaciones por cargo-proceso",
+        summary = "Listar asignaciones activas por cargo",
         description = "Obtiene todas las asignaciones asociadas a un cargo específico dentro de un proceso electoral"
     )
     public ResponseEntity<HistorialCargoProcesoResumenListDTO> getHisgetHistorialesActivosByCargoProceso(@PathVariable Long cargoId){

@@ -9,6 +9,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.core.io.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,8 @@ import org.springframework.http.MediaType;
 @RestController
 @RequestMapping("/api/imagenes")
 @RequiredArgsConstructor
+@Tag(name = "Imagenes", 
+     description = "API para gestionar las imagenes del personal")
 public class ImagenController {
     
     private final ImagenServiceImpl imagenService;
@@ -35,6 +39,10 @@ public class ImagenController {
     @Autowired
     private FileStorageService fileStorageService;
     
+    @Operation(
+        summary = "Subir imagen",
+        description = "Permite subir una imagen al sistema. Retorna la información de la imagen almacenada."
+    )
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadImagen(
             @RequestParam("file") MultipartFile file
@@ -114,10 +122,11 @@ public class ImagenController {
             return ResponseEntity.notFound().build();
         }
     }
-    @PostMapping(value="/subir-multiples", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    /* @PostMapping(value="/subir-multiples", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> subirImagenesMultiples(
             @RequestPart("files") MultipartFile[] files
-            /* @RequestParam("idComplaint") Long idComplaint */) {
+            //@RequestParam("idComplaint") Long idComplaint
+        ) {
         try {
             if (files == null || files.length == 0) {
                 Map<String, String> error = new HashMap<>();
@@ -141,7 +150,7 @@ public class ImagenController {
             error.put("error", e.getMessage());
             return ResponseEntity.badRequest().body(error);
         }
-    }
+    } */
 /**
      * Descarga una imagen por ID (alternativo)
      * GET /api/imagenes/{id}/descargar
@@ -183,7 +192,7 @@ public class ImagenController {
      * Elimina una imagen por ID
      * DELETE /api/imagenes/{id}
      */
-    @DeleteMapping("/{id}")
+    /* @DeleteMapping("/{id}")
     public ResponseEntity<?> eliminarImagen(@PathVariable Long id) {
         try {
             imagenService.deleteById(id);
@@ -195,5 +204,5 @@ public class ImagenController {
             error.put("error", e.getMessage());
             return ResponseEntity.badRequest().body(error);
         }
-    }
+    } */
 }

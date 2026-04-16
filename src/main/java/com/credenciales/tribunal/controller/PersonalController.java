@@ -151,7 +151,6 @@ public class PersonalController {
         return ResponseEntity.ok(personalService.deletePersonal(id));
     }
 
-    @Tag(name = "Nuevos Endpoints")
     @Operation(summary = "Obtener detalles de personal por id", description = "Retorna información detallada de un personal, incluyendo su cargo y unidad actual")
     @GetMapping("/{id}/detalles")
     public ResponseEntity<PersonalDetallesDTO> obtenerDetallesPersonal(
@@ -159,8 +158,7 @@ public class PersonalController {
         return ResponseEntity.ok(personalService.obtenerDetallesPersonal(id));
     }
 
-    @Tag(name = "Nuevos Endpoints")
-    @Operation(summary = "Obtener todo el personal mas detalles", description = "Retorna información detallada de todos los personales, incluyendo su cargo y unidad actual")
+    @Operation(summary = "Obtener personal con detalles (filtrado estándar)", description = "Retorna información detallada de todos los personales, incluyendo su cargo y unidad actual")
     @GetMapping("/detalles")
     public ResponseEntity<List<PersonalDetallesDTO>> obtenerDetallesPersonal() {
         return ResponseEntity.ok(personalService.obtenerDetallesPersonal());
@@ -206,11 +204,11 @@ public class PersonalController {
     }
 
     @GetMapping("/detalles/qrComputo/{qr}")
-    @Operation(summary = "Obtener detalles de personales por estado")
-    public PersonalAccesoDTO obtenerPersonalesPorcodQr(
+    @Operation(summary = "Obtener personal por código QR de cómputo")
+    public ResponseEntity<PersonalAccesoDTO> obtenerPersonalesPorcodQr(
             @PathVariable String qr) {
         PersonalAccesoDTO res = personalService.obtenerPersonalQr(qr);
-        return res;
+        return ResponseEntity.ok(res);
     }
 
     @GetMapping("/por/circunscripcion/{cir}")
@@ -261,8 +259,7 @@ public class PersonalController {
         return ResponseEntity.ok(datos);
     }
 
-    @Tag(name = "Nuevos Endpoints")
-    @Operation(summary = "Obtener todo el personal mas detalles", description = "Retorna información detallada de todos los personales, incluyendo su cargo y unidad actual")
+    @Operation(summary = "Obtener personal con detalles (sin filtrado)", description = "Retorna información detallada de todos los personales, incluyendo su cargo y unidad actual")
     @GetMapping("/detalles/sindiscrimiar")
     public ResponseEntity<List<PersonalDetallesDTO>> obtenerDetallesPersonalTodo() {
         return ResponseEntity.ok(personalService.obtenerDetallesPersonalSinDiscrimiar());

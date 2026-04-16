@@ -56,7 +56,7 @@ public class CargoProcesoController {
     @Tag(name = "Nuevos Endpoints")
     @PostMapping("/sin-id")  
     @Operation(
-        summary = "Asociar un cargo a un proceso electoral",
+        summary = "Asociar un cargo al proceso electoral actual",
         description = "Registra un nuevo cargo disponible en un proceso electoral actual"
     )
     @ApiResponses(value = {
@@ -82,6 +82,11 @@ public class CargoProcesoController {
     }
 
     @PostMapping("/batch-simple")
+    @Operation(
+        summary = "Crear múltiples cargos en un proceso",
+        description = "Permite registrar varios cargos en un proceso electoral en una sola operación"
+    )
+    @ApiResponse(responseCode = "201", description = "Cargos creados correctamente")
     public ResponseEntity<List<CargoProcesoResponseDTO>> createCargosSimple(
             @Valid @RequestBody List<CargoProcesoCreateRequestDTO> cargos) {
         
