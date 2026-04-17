@@ -46,5 +46,5 @@ public class ProcesoElectoral {
     private Imagen imagen;
 
     @OneToMany(mappedBy = "proceso", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CargoProceso> cargosProceso;
+    private List<Cargo> cargosProceso;
 }

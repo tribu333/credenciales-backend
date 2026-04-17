@@ -26,7 +26,7 @@ public interface HistorialCargoProcesoRepository extends JpaRepository<Historial
     
     List<HistorialCargoProceso> findByActivoTrue();
     
-    @Query("SELECT hcp FROM HistorialCargoProceso hcp WHERE hcp.cargoProceso.id = :cargoProcesoId AND hcp.activo = true")
+    @Query("SELECT hcp FROM HistorialCargoProceso hcp WHERE hcp.cargo.id = :cargoProcesoId AND hcp.activo = true")
     List<HistorialCargoProceso> findActivosByCargoProcesoId(@Param("cargoProcesoId") Long cargoProcesoId);
     // Buscar historiales activos por cargo proceso
     List<HistorialCargoProceso> findByCargoProcesoIdAndActivoTrue(Long cargoProcesoId);
@@ -47,7 +47,7 @@ public interface HistorialCargoProcesoRepository extends JpaRepository<Historial
     // Buscar historiales activos con todas las relaciones
     @Query("SELECT h FROM HistorialCargoProceso h " +
            "JOIN FETCH h.personal p " +
-           "JOIN FETCH h.cargoProceso cp " +
+           "JOIN FETCH h.cargo cp " +
            "JOIN FETCH cp.proceso " +
            "JOIN FETCH cp.unidad " +
            "WHERE h.activo = true")
@@ -56,7 +56,7 @@ public interface HistorialCargoProcesoRepository extends JpaRepository<Historial
     // Buscar historial por ID con todas las relaciones
     @Query("SELECT h FROM HistorialCargoProceso h " +
            "LEFT JOIN FETCH h.personal p " +
-           "LEFT JOIN FETCH h.cargoProceso cp " +
+           "LEFT JOIN FETCH h.cargo cp " +
            "LEFT JOIN FETCH cp.proceso pr " +
            "LEFT JOIN FETCH cp.unidad u " +
            "WHERE h.id = :id")
@@ -65,12 +65,12 @@ public interface HistorialCargoProcesoRepository extends JpaRepository<Historial
     // Buscar historiales por cargo proceso con relaciones
     @Query("SELECT h FROM HistorialCargoProceso h " +
            "LEFT JOIN FETCH h.personal p " +
-           "WHERE h.cargoProceso.id = :cargoProcesoId")
+           "WHERE h.cargo.id = :cargoProcesoId")
     List<HistorialCargoProceso> findByCargoProcesoIdWithPersonal(@Param("cargoProcesoId") Long cargoProcesoId);
     
     // Buscar historiales por personal con relaciones
     @Query("SELECT h FROM HistorialCargoProceso h " +
-           "LEFT JOIN FETCH h.cargoProceso cp " +
+           "LEFT JOIN FETCH h.cargo cp " +
            "LEFT JOIN FETCH cp.proceso " +
            "LEFT JOIN FETCH cp.unidad " +
            "WHERE h.personal.id = :personalId")
@@ -78,17 +78,17 @@ public interface HistorialCargoProcesoRepository extends JpaRepository<Historial
     
     // Buscar historiales por proceso
     @Query("SELECT h FROM HistorialCargoProceso h " +
-           "WHERE h.cargoProceso.proceso.id = :procesoId")
+           "WHERE h.cargo.proceso.id = :procesoId")
     List<HistorialCargoProceso> findByProcesoId(@Param("procesoId") Long procesoId);
     
     // Buscar historiales activos por proceso
     @Query("SELECT h FROM HistorialCargoProceso h " +
-           "WHERE h.cargoProceso.proceso.id = :procesoId AND h.activo = true")
+           "WHERE h.cargo.proceso.id = :procesoId AND h.activo = true")
     List<HistorialCargoProceso> findActivosByProcesoId(@Param("procesoId") Long procesoId);
     
     // Buscar historiales por unidad
     @Query("SELECT h FROM HistorialCargoProceso h " +
-           "WHERE h.cargoProceso.unidad.id = :unidadId")
+           "WHERE h.cargo.unidad.id = :unidadId")
     List<HistorialCargoProceso> findByUnidadId(@Param("unidadId") Long unidadId);
     
     // Contar historiales activos por cargo proceso
@@ -99,7 +99,7 @@ public interface HistorialCargoProcesoRepository extends JpaRepository<Historial
     
     // Contar historiales activos por proceso
     @Query("SELECT COUNT(h) FROM HistorialCargoProceso h " +
-           "WHERE h.cargoProceso.proceso.id = :procesoId AND h.activo = true")
+           "WHERE h.cargo.proceso.id = :procesoId AND h.activo = true")
     Long countActivosByProcesoId(@Param("procesoId") Long procesoId);
     
     // Verificar si existe un historial activo
@@ -118,7 +118,7 @@ public interface HistorialCargoProcesoRepository extends JpaRepository<Historial
     List<HistorialCargoProceso> findByFechaFinIsNullAndActivoTrue();
 
     @Query("SELECT h FROM HistorialCargoProceso h " +
-       "LEFT JOIN FETCH h.cargoProceso cp " +
+       "LEFT JOIN FETCH h.cargo cp " +
        "LEFT JOIN FETCH cp.unidad u " +
        "WHERE h.personal.id IN :personalIds AND h.activo = true")
     List<HistorialCargoProceso> findByPersonalIdInAndActivoTrue(@Param("personalIds") List<Long> personalIds);
@@ -129,7 +129,7 @@ public interface HistorialCargoProcesoRepository extends JpaRepository<Historial
     @Modifying
     @Query("UPDATE HistorialCargoProceso h SET h.fechaInicio = :fechaInicio, " +
            "h.fechaFin = :fechaFin, " + 
-           "h.activo = :activo " + " WHERE h.cargoProceso.id = :cargoProcesoId")
+           "h.activo = :activo " + " WHERE h.cargo.id = :cargoProcesoId")
     int actualizarFechasPorCargoProceso(
         @Param("cargoProcesoId") Long cargoProcesoId,
         @Param("fechaInicio") LocalDateTime fechaInicio,
@@ -138,7 +138,7 @@ public interface HistorialCargoProcesoRepository extends JpaRepository<Historial
 
     @Modifying
     @Query("UPDATE HistorialCargoProceso h SET h.activo = :activo " + 
-    " WHERE h.cargoProceso.id = :cargoProcesoId")
+    " WHERE h.cargo.id = :cargoProcesoId")
     int actualizarFechasPorCargoProcesoActivo(
         @Param("cargoProcesoId") Long cargoProcesoId,
         @Param("activo") Boolean activo);
@@ -158,7 +158,7 @@ SELECT new com.credenciales.tribunal.dto.historialcargoproceso.HistorialPersonal
 )
 FROM HistorialCargoProceso h
 JOIN h.personal p
-JOIN h.cargoProceso cp
+JOIN h.cargo cp
 JOIN cp.unidad u
 JOIN cp.proceso pr
 WHERE p.id = :personalId
@@ -170,7 +170,7 @@ List<HistorialPersonalDTO> findHistorialByPersonalId(@Param("personalId") Long p
     
 Optional<HistorialCargoProceso> findFirstByPersonalIdAndActivoTrue(Long personalId);
 @Query("SELECT h FROM HistorialCargoProceso h " +
-           "JOIN FETCH h.cargoProceso cp " +
+           "JOIN FETCH h.cargo cp " +
            "JOIN FETCH h.personal p")
     List<HistorialCargoProceso> findAllWithRelations();
 }

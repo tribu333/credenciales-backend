@@ -34,7 +34,7 @@ public class Unidad {
     private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "unidad")
-    private List<CargoProceso> cargosProceso;
+    private List<Cargo> cargosProceso;
 
     @OneToMany(mappedBy = "unidad")
     private List<Usuario> usuarios;

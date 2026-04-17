@@ -134,10 +134,10 @@ public class HistorialCargoProcesoController {
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Lista obtenida exitosamente"),
-        @ApiResponse(responseCode = "404", description = "Cargo-Proceso no encontrado")
+        @ApiResponse(responseCode = "404", description = "Cargo no encontrado")
     })
     public ResponseEntity<List<HistorialCargoProcesoResponseDTO>> getHistorialesByCargoProceso(
-            @Parameter(description = "ID de la relación Cargo-Proceso", required = true, example = "15")
+            @Parameter(description = "ID de la relación Cargo", required = true, example = "15")
             @PathVariable Long cargoProcesoId,
             @Parameter(description = "ID de la relación Unidad", required = true, example = "3")
             @PathVariable Long unidadId) {
@@ -204,10 +204,10 @@ public class HistorialCargoProcesoController {
     )
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Lista obtenida exitosamente"),
-        @ApiResponse(responseCode = "404", description = "Cargo-Proceso no encontrado")
+        @ApiResponse(responseCode = "404", description = "Cargo no encontrado")
     })
     public ResponseEntity<List<HistorialPersonalDTO>> obtenerHistorialPersonal(
-            @Parameter(description = "ID de la relación Cargo-Proceso", required = true, example = "5")
+            @Parameter(description = "ID de la relación Cargo", required = true, example = "5")
             @PathVariable Long personalId) {
         List<HistorialPersonalDTO> historiales = 
                 historialService.obtenerHistorialPersonal(personalId);

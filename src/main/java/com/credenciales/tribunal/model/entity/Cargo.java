@@ -7,9 +7,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "cargo_proceso")
+@Table(name = "cargo")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
-public class CargoProceso {
+public class Cargo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,6 +34,6 @@ public class CargoProceso {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "cargoProceso", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "cargo", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<HistorialCargoProceso> historiales;
 }

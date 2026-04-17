@@ -29,8 +29,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/api/cargos-proceso")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
-@Tag(name = "Cargos por Proceso Electoral", 
-     description = "API para gestionar los cargos disponibles en cada proceso electoral")
+@Tag(name = "Cargos del personal", 
+     description = "API para gestionar los cargos disponibles")
 public class CargoProcesoController {
     
     private final CargoProcesoService cargoProcesoService;
@@ -41,7 +41,7 @@ public class CargoProcesoController {
         description = "Registra un nuevo cargo disponible en un proceso electoral específico"
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Cargo-Proceso creado exitosamente",
+        @ApiResponse(responseCode = "201", description = "Cargo creado exitosamente",
                     content = @Content(schema = @Schema(implementation = CargoProcesoResponseDTO.class))),
         @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos"),
         @ApiResponse(responseCode = "404", description = "Cargo o Proceso electoral no encontrado"),
@@ -53,14 +53,14 @@ public class CargoProcesoController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @Tag(name = "Nuevos Endpoints")
+
     @PostMapping("/sin-id")  
     @Operation(
         summary = "Asociar un cargo al proceso electoral actual",
         description = "Registra un nuevo cargo disponible en un proceso electoral actual"
     )
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "201", description = "Cargo-Proceso creado exitosamente",
+        @ApiResponse(responseCode = "201", description = "Cargo creado exitosamente",
                     content = @Content(schema = @Schema(implementation = CargoProcesoResponseDTO.class))),
         @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos"),
         @ApiResponse(responseCode = "404", description = "Cargo o Proceso electoral no encontrado"),
@@ -95,7 +95,7 @@ public class CargoProcesoController {
     }
     @GetMapping("/{id}")
     @Operation(
-        summary = "Obtener asociación Cargo-Proceso por ID",
+        summary = "Obtener asociación Cargo por ID",
         description = "Retorna los detalles de una asociación específica entre un cargo y un proceso electoral"
     )
     @ApiResponses(value = {
@@ -103,15 +103,15 @@ public class CargoProcesoController {
         @ApiResponse(responseCode = "404", description = "Asociación no encontrada")
     })
     public ResponseEntity<CargoProcesoResponseDTO> getCargoProcesoById(
-            @Parameter(description = "ID de la asociación Cargo-Proceso a buscar", required = true, example = "1")
+            @Parameter(description = "ID de la asociación Cargo a buscar", required = true, example = "1")
             @PathVariable Long id) {
         return cargoProcesoService.getCargoProcesoById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-    @Tag(name = "Nuevos Endpoints")
+
     @Operation(
-        summary = "Obtener asociación Cargo-Proceso por unidadID",
+        summary = "Obtener asociación Cargo por unidadID",
         description = "Retorna los procesos de la unidad"
     )
     @GetMapping("/unidad/{unidadId}")
@@ -122,7 +122,7 @@ public class CargoProcesoController {
     }
     @GetMapping
     @Operation(
-        summary = "Listar todas las asociaciones Cargo-Proceso",
+        summary = "Listar todas las asociaciones Cargo",
         description = "Obtiene una lista completa de todos los cargos asociados a procesos electorales"
     )
     @ApiResponse(responseCode = "200", description = "Lista obtenida exitosamente")
@@ -133,7 +133,7 @@ public class CargoProcesoController {
     
     @PutMapping("/{id}")
     @Operation(
-        summary = "Actualizar una asociación Cargo-Proceso",
+        summary = "Actualizar una asociación Cargo",
         description = "Modifica los datos de una asociación existente entre cargo y proceso electoral"
     )
     @ApiResponses(value = {
@@ -152,7 +152,7 @@ public class CargoProcesoController {
     
     @DeleteMapping("/{id}")
     @Operation(
-        summary = "Eliminar una asociación Cargo-Proceso",
+        summary = "Eliminar una asociación Cargo",
         description = "Elimina lógicamente la asociación entre un cargo y un proceso electoral"
     )
     @ApiResponses(value = {

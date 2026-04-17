@@ -423,19 +423,19 @@ public class PersonalServiceImpl implements PersonalService {
 	} */
 
 	private void registrarCargoEventual(Personal personal, Long cargoProcesoId) {
-		CargoProceso cargoProceso = cargoProcesoRepository.findById(cargoProcesoId)
+		Cargo cargo = cargoProcesoRepository.findById(cargoProcesoId)
 				.orElseThrow(() -> new ResourceNotFoundException(
 						"Cargo de proceso no encontrado con ID: " + cargoProcesoId));
 
 		HistorialCargoProceso historial = HistorialCargoProceso.builder()
 				.personal(personal)
-				.cargoProceso(cargoProceso)
+				.cargo(cargo)
 				.fechaInicio(LocalDateTime.now())
 				.activo(true)
 				.build();
 
 		historialCargoProcesoRepository.save(historial);
-		log.info("Cargo EVENTUAL registrado: {} para personal {}", cargoProceso.getNombre(), personal.getId());
+		log.info("Cargo EVENTUAL registrado: {} para personal {}", cargo.getNombre(), personal.getId());
 	}
 
 	private void reactivarPersonal(Personal personal) {
@@ -525,11 +525,11 @@ public class PersonalServiceImpl implements PersonalService {
 
 		List<HistorialCargoProceso> listaCargo = historialCargoProcesoRepository
 				.findByPersonalIdAndActivoTrue(personal.getId());
-		CargoProceso cargoProceso = listaCargo.isEmpty() ? null : listaCargo.get(0).getCargoProceso();
-		Unidad unidad = cargoProceso != null ? cargoProceso.getUnidad() : null;
+		Cargo cargo = listaCargo.isEmpty() ? null : listaCargo.get(0).getCargo();
+		Unidad unidad = cargo != null ? cargo.getUnidad() : null;
 
 		String nombreUnidad = unidad != null ? unidad.getNombre() : null;
-		String nombreCargo = cargoProceso != null ? cargoProceso.getNombre() : null;
+		String nombreCargo = cargo != null ? cargo.getNombre() : null;
 		String urlImagen = baseUrl + "/api/imagenes/" + personal.getImagen().getIdImagen() + "/descargar";
 		String urlQr = personal.getQr().getCodigo();
 		String eventoTipo = "ENTRADA"; // valor por defecto
@@ -827,11 +827,11 @@ public class PersonalServiceImpl implements PersonalService {
 		// solo tipo eventual
 		List<HistorialCargoProceso> listaCargo = historialCargoProcesoRepository
 				.findByPersonalIdAndActivoTrue(personal.getId());
-		CargoProceso cargoProceso = listaCargo.isEmpty() ? null : listaCargo.get(0).getCargoProceso();
-		Unidad unidad = cargoProceso != null ? cargoProceso.getUnidad() : null;
+		Cargo cargo = listaCargo.isEmpty() ? null : listaCargo.get(0).getCargo();
+		Unidad unidad = cargo != null ? cargo.getUnidad() : null;
 
 		String nombreUnidad = unidad != null ? unidad.getNombre() : null;
-		String nombreCargo = cargoProceso != null ? cargoProceso.getNombre() : null;
+		String nombreCargo = cargo != null ? cargo.getNombre() : null;
 		String urlImagen = baseUrl + "/api/imagenes/" + personal.getImagen().getIdImagen() + "/descargar";
 		String urlQr = baseUrl + "/api/qr/" + personal.getQr().getId() + "/ver";
 
@@ -889,11 +889,11 @@ public class PersonalServiceImpl implements PersonalService {
 					.findFirst()
 					.orElse(null);
 
-			if (historialActivo != null && historialActivo.getCargoProceso() != null) {
-				nombreCargo = historialActivo.getCargoProceso().getNombre();
+			if (historialActivo != null && historialActivo.getCargo() != null) {
+				nombreCargo = historialActivo.getCargo().getNombre();
 
-				if (historialActivo.getCargoProceso().getUnidad() != null) {
-					nombreUnidad = historialActivo.getCargoProceso().getUnidad().getNombre();
+				if (historialActivo.getCargo().getUnidad() != null) {
+					nombreUnidad = historialActivo.getCargo().getUnidad().getNombre();
 				}
 			}
 		}
@@ -1039,11 +1039,11 @@ public class PersonalServiceImpl implements PersonalService {
 			Map<Long, HistorialCargoProceso> historialMap) {
 
 		HistorialCargoProceso historial = historialMap.get(personal.getId());
-		CargoProceso cargoProceso = historial != null ? historial.getCargoProceso() : null;
-		Unidad unidad = cargoProceso != null ? cargoProceso.getUnidad() : null;
+		Cargo cargo = historial != null ? historial.getCargo() : null;
+		Unidad unidad = cargo != null ? cargo.getUnidad() : null;
 
 		String nombreUnidad = unidad != null ? unidad.getNombre() : null;
-		String nombreCargo = cargoProceso != null ? cargoProceso.getNombre() : null;
+		String nombreCargo = cargo != null ? cargo.getNombre() : null;
 
 		String urlImagen = personal.getImagen() != null
 				? baseUrl + "/api/imagenes/" + personal.getImagen().getIdImagen() + "/descargar"

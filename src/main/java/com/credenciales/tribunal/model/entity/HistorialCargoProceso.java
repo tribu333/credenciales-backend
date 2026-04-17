@@ -15,7 +15,7 @@ public class HistorialCargoProceso {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cargo_proceso_id", nullable = false)
-    private CargoProceso cargoProceso;
+    private Cargo cargo;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "personal_id", nullable = false)

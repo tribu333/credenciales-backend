@@ -51,7 +51,7 @@ public interface PersonalRepository extends JpaRepository<Personal, Long> {
             "LEFT JOIN FETCH p.imagen " +
             "LEFT JOIN FETCH p.qr " +
             "LEFT JOIN FETCH p.historialCargosProceso hcp " +
-            "LEFT JOIN FETCH hcp.cargoProceso cp " +
+            "LEFT JOIN FETCH hcp.cargo cp " +
             "LEFT JOIN FETCH cp.unidad u " +
             "LEFT JOIN FETCH p.estadosActuales ea " +
             "LEFT JOIN FETCH ea.estado e " +
@@ -82,7 +82,7 @@ public interface PersonalRepository extends JpaRepository<Personal, Long> {
                 DATE_FORMAT(hcp.fecha_fin, '%Y-%m-%d') as fecha_fin
             FROM personal p
             LEFT JOIN historial_cargo_proceso hcp ON p.id = hcp.personal_id AND hcp.activo = true
-            LEFT JOIN cargo_proceso cp ON hcp.cargo_proceso_id = cp.id
+            LEFT JOIN cargo cp ON hcp.cargo_proceso_id = cp.id
             LEFT JOIN proceso_electoral pe ON cp.proceso_id = pe.id
             LEFT JOIN estado_actual ea ON p.id = ea.personal_id AND ea.valor_estado_actual = true
             LEFT JOIN estado e ON ea.estado_id = e.id
@@ -96,7 +96,7 @@ public interface PersonalRepository extends JpaRepository<Personal, Long> {
             "LEFT JOIN FETCH p.imagen " +
             "LEFT JOIN FETCH p.qr " +
             "LEFT JOIN FETCH p.historialCargosProceso hcp " +
-            "LEFT JOIN FETCH hcp.cargoProceso cp " +
+            "LEFT JOIN FETCH hcp.cargo cp " +
             "LEFT JOIN FETCH cp.unidad u " +
             "LEFT JOIN FETCH p.estadosActuales ea " +
             "LEFT JOIN FETCH ea.estado e " +

@@ -1,6 +1,6 @@
 package com.credenciales.tribunal.dto.cargoproceso;
 
-import com.credenciales.tribunal.model.entity.CargoProceso;
+import com.credenciales.tribunal.model.entity.Cargo;
 import com.credenciales.tribunal.model.entity.ProcesoElectoral;
 import com.credenciales.tribunal.model.entity.Unidad;
 import org.springframework.stereotype.Component;
@@ -10,43 +10,43 @@ import java.util.stream.Collectors;
 @Component
 public class CargoProcesoMapper {
     
-    public CargoProcesoDTO toDTO(CargoProceso cargoProceso) {
-        if (cargoProceso == null) return null;
+    public CargoProcesoDTO toDTO(Cargo cargo) {
+        if (cargo == null) return null;
         
         return CargoProcesoDTO.builder()
-                .id(cargoProceso.getId())
-                .procesoId(cargoProceso.getProceso() != null ? cargoProceso.getProceso().getId() : null)
-                .procesoNombre(cargoProceso.getProceso() != null ? cargoProceso.getProceso().getNombre() : null)
-                .nombre(cargoProceso.getNombre())
-                .unidadId(cargoProceso.getUnidad() != null ? cargoProceso.getUnidad().getId() : null)
-                .unidadNombre(cargoProceso.getUnidad() != null ? cargoProceso.getUnidad().getNombre() : null)
-                .unidadAbreviatura(cargoProceso.getUnidad() != null ? cargoProceso.getUnidad().getAbreviatura() : null)
-                .descripcion(cargoProceso.getDescripcion())
-                //.activo(cargoProceso.getActivo())
-                .createdAt(cargoProceso.getCreatedAt())
-                .totalHistoriales(cargoProceso.getHistoriales() != null ? cargoProceso.getHistoriales().size() : 0)
+                .id(cargo.getId())
+                .procesoId(cargo.getProceso() != null ? cargo.getProceso().getId() : null)
+                .procesoNombre(cargo.getProceso() != null ? cargo.getProceso().getNombre() : null)
+                .nombre(cargo.getNombre())
+                .unidadId(cargo.getUnidad() != null ? cargo.getUnidad().getId() : null)
+                .unidadNombre(cargo.getUnidad() != null ? cargo.getUnidad().getNombre() : null)
+                .unidadAbreviatura(cargo.getUnidad() != null ? cargo.getUnidad().getAbreviatura() : null)
+                .descripcion(cargo.getDescripcion())
+                //.activo(cargo.getActivo())
+                .createdAt(cargo.getCreatedAt())
+                .totalHistoriales(cargo.getHistoriales() != null ? cargo.getHistoriales().size() : 0)
                 .build();
             }
             
-            public CargoProcesoResponseDTO toResponseDTO(CargoProceso cargoProceso) {
-                if (cargoProceso == null) return null;
+            public CargoProcesoResponseDTO toResponseDTO(Cargo cargo) {
+                if (cargo == null) return null;
                 
                 return CargoProcesoResponseDTO.builder()
-                .id(cargoProceso.getId())
-                .procesoId(cargoProceso.getProceso() != null ? cargoProceso.getProceso().getId() : null)
-                .nombre(cargoProceso.getNombre())
-                .unidadId(cargoProceso.getUnidad() != null ? cargoProceso.getUnidad().getId() : null)
-                .descripcion(cargoProceso.getDescripcion())
-                //.activo(cargoProceso.getActivo())
+                .id(cargo.getId())
+                .procesoId(cargo.getProceso() != null ? cargo.getProceso().getId() : null)
+                .nombre(cargo.getNombre())
+                .unidadId(cargo.getUnidad() != null ? cargo.getUnidad().getId() : null)
+                .descripcion(cargo.getDescripcion())
+                //.activo(cargo.getActivo())
                 .build();
     }
     
-    public CargoProceso toEntity(CargoProcesoCreateRequestDTO requestDTO, 
+    public Cargo toEntity(CargoProcesoCreateRequestDTO requestDTO, 
                                  ProcesoElectoral proceso, 
                                  Unidad unidad) {
         if (requestDTO == null) return null;
         
-        return CargoProceso.builder()
+        return Cargo.builder()
                 .proceso(proceso)
                 .nombre(requestDTO.getNombre())
                 .unidad(unidad)
@@ -56,35 +56,35 @@ public class CargoProcesoMapper {
     }
     
     public void updateEntity(CargoProcesoUpdateRequestDTO requestDTO, 
-                            CargoProceso cargoProceso,
+                            Cargo cargo,
                             Unidad unidad) {
-        if (requestDTO == null || cargoProceso == null) return;
+        if (requestDTO == null || cargo == null) return;
         
         if (requestDTO.getNombre() != null) {
-            cargoProceso.setNombre(requestDTO.getNombre());
+            cargo.setNombre(requestDTO.getNombre());
         }
         
         if (requestDTO.getDescripcion() != null) {
-            cargoProceso.setDescripcion(requestDTO.getDescripcion());
+            cargo.setDescripcion(requestDTO.getDescripcion());
         }
         
         // if (requestDTO.getActivo() != null) {
-        //     cargoProceso.setActivo(requestDTO.getActivo());
+        //     cargo.setActivo(requestDTO.getActivo());
         // }
         
         if (requestDTO.getUnidadId() != null && unidad != null) {
-            cargoProceso.setUnidad(unidad);
+            cargo.setUnidad(unidad);
         }
     }
     
     
-    public List<CargoProcesoDTO> toDTOList(List<CargoProceso> cargosProceso) {
+    public List<CargoProcesoDTO> toDTOList(List<Cargo> cargosProceso) {
         return cargosProceso.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
     
-    public List<CargoProcesoResponseDTO> toResponseDTOList(List<CargoProceso> cargosProceso) {
+    public List<CargoProcesoResponseDTO> toResponseDTOList(List<Cargo> cargosProceso) {
         return cargosProceso.stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());

@@ -15,7 +15,7 @@ import com.credenciales.tribunal.exception.BusinessException;
 import com.credenciales.tribunal.exception.DuplicateResourceException;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoMapper;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoPatchRequestDTO;
-import com.credenciales.tribunal.model.entity.CargoProceso;
+import com.credenciales.tribunal.model.entity.Cargo;
 import com.credenciales.tribunal.model.entity.HistorialCargoProceso;
 import com.credenciales.tribunal.model.entity.Personal;
 import com.credenciales.tribunal.model.entity.ProcesoElectoral;
@@ -56,16 +56,16 @@ public class HistorialCargoProcesoServiceImpl implements HistorialCargoProcesoSe
                 requestDTO.getPersonalId(), requestDTO.getCargoProcesoId());
         
         // Validar que el cargo proceso exista y esté activo
-        CargoProceso cargoProceso = cargoProcesoRepository.findById(requestDTO.getCargoProcesoId())
+        Cargo cargo = cargoProcesoRepository.findById(requestDTO.getCargoProcesoId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Cargo proceso no encontrado con ID: " + requestDTO.getCargoProcesoId()));
         
-        // if (!cargoProceso.getActivo()) {
+        // if (!cargo.getActivo()) {
         //     throw new BusinessException("No se puede asignar personal a un cargo proceso inactivo");
         // }
         
         // Validar que el proceso del cargo esté activo y vigente
-        ProcesoElectoral proceso = cargoProceso.getProceso();
+        ProcesoElectoral proceso = cargo.getProceso();
         if (!proceso.getEstado()) {
             throw new BusinessException("No se puede asignar personal a un cargo de un proceso inactivo");
         }
@@ -86,7 +86,7 @@ public class HistorialCargoProcesoServiceImpl implements HistorialCargoProcesoSe
                 requestDTO.getPersonalId(), requestDTO.getCargoProcesoId())) {
             throw new DuplicateResourceException(
                     String.format("El personal ya tiene un historial activo en el cargo '%s'", 
-                            cargoProceso.getNombre()));
+                            cargo.getNombre()));
         }
         
         // Validar que el personal pueda ser asignado (no tenga otro historial activo en otro cargo del mismo proceso)
@@ -103,7 +103,7 @@ public class HistorialCargoProcesoServiceImpl implements HistorialCargoProcesoSe
             throw new BusinessException("Si el historial se crea como inactivo, debe tener fecha de fin");
         }
         
-        HistorialCargoProceso historial = historialMapper.toEntity(requestDTO, cargoProceso, personal);
+        HistorialCargoProceso historial = historialMapper.toEntity(requestDTO, cargo, personal);
         HistorialCargoProceso savedHistorial = historialRepository.save(historial);
         PersonalDTO person=personalServiceImpl.estadoRegistrado(requestDTO.getPersonalId());
         log.info("Historial de cargo proceso creado exitosamente con ID: {} and {}", savedHistorial.getId(),person.getId());
@@ -149,7 +149,7 @@ public class HistorialCargoProcesoServiceImpl implements HistorialCargoProcesoSe
         LocalDateTime nuevaFechaFin = requestDTO.getFechaFin() != null ? 
                 requestDTO.getFechaFin() : historial.getFechaFin();
         
-        validarFechas(nuevaFechaInicio, nuevaFechaFin, historial.getCargoProceso().getProceso());
+        validarFechas(nuevaFechaInicio, nuevaFechaFin, historial.getCargo().getProceso());
         
         // Validar consistencia de fechas
         if (nuevaFechaFin != null && nuevaFechaFin.isBefore(nuevaFechaInicio)) {
@@ -178,8 +178,8 @@ public HistorialCargoProcesoResponseDTO updateHistorialId(Long id, HistorialCarg
     
     // --- Manejo de reasignación de cargo ---
     Long nuevoCargoProcesoId = requestDTO.getCargoProcesoId();
-    CargoProceso cargoProcesoActual = historial.getCargoProceso();
-    CargoProceso nuevoCargoProceso = null;
+    Cargo cargoProcesoActual = historial.getCargo();
+    Cargo nuevoCargoProceso = null;
     
     if (nuevoCargoProcesoId != null && !nuevoCargoProcesoId.equals(cargoProcesoActual.getId())) {
         // Se solicita cambiar de cargo
@@ -206,7 +206,7 @@ public HistorialCargoProcesoResponseDTO updateHistorialId(Long id, HistorialCarg
         
         boolean tieneOtroActivoEnMismoProceso = activosDelPersonal.stream()
                 .filter(h -> !h.getId().equals(id))  // excluir el actual
-                .anyMatch(h -> h.getCargoProceso().getProceso().getId()
+                .anyMatch(h -> h.getCargo().getProceso().getId()
                         .equals(nuevoProceso.getId()));
         
         if (tieneOtroActivoEnMismoProceso) {
@@ -229,7 +229,7 @@ public HistorialCargoProcesoResponseDTO updateHistorialId(Long id, HistorialCarg
     // --- Validación de fechas (usando el proceso que corresponda) ---
     ProcesoElectoral procesoParaValidarFechas = (nuevoCargoProceso != null) 
             ? nuevoCargoProceso.getProceso() 
-            : historial.getCargoProceso().getProceso();
+            : historial.getCargo().getProceso();
     
     LocalDateTime nuevaFechaInicio = requestDTO.getFechaInicio() != null ? 
             requestDTO.getFechaInicio() : historial.getFechaInicio();
@@ -250,11 +250,11 @@ public HistorialCargoProcesoResponseDTO updateHistorialId(Long id, HistorialCarg
     }
     
     // --- Actualizar la entidad ---
-    // Necesitamos pasar el nuevo cargoProceso al mapper si cambió
+    // Necesitamos pasar el nuevo cargo al mapper si cambió
     if (nuevoCargoProceso != null) {
-        // Podrías tener un método en el mapper que acepte también el cargoProceso
+        // Podrías tener un método en el mapper que acepte también el cargo
         // o asignarlo manualmente antes de llamar al mapper
-        historial.setCargoProceso(nuevoCargoProceso);
+        historial.setCargo(nuevoCargoProceso);
     }
     
     historialMapper.updateEntity(requestDTO, historial);
@@ -411,15 +411,15 @@ public HistorialCargoProcesoResponseDTO updateHistorialId(Long id, HistorialCarg
         
         return historiales.stream()
                 .filter(h -> searchRequest.getCargoProcesoId() == null || 
-                        h.getCargoProceso().getId().equals(searchRequest.getCargoProcesoId()))
+                        h.getCargo().getId().equals(searchRequest.getCargoProcesoId()))
                 .filter(h -> searchRequest.getPersonalId() == null || 
                         h.getPersonal().getId().equals(searchRequest.getPersonalId()))
                 .filter(h -> searchRequest.getProcesoId() == null || 
-                        (h.getCargoProceso().getProceso() != null && 
-                         h.getCargoProceso().getProceso().getId().equals(searchRequest.getProcesoId())))
+                        (h.getCargo().getProceso() != null && 
+                         h.getCargo().getProceso().getId().equals(searchRequest.getProcesoId())))
                 .filter(h -> searchRequest.getUnidadId() == null || 
-                        (h.getCargoProceso().getUnidad() != null && 
-                         h.getCargoProceso().getUnidad().getId().equals(searchRequest.getUnidadId())))
+                        (h.getCargo().getUnidad() != null && 
+                         h.getCargo().getUnidad().getId().equals(searchRequest.getUnidadId())))
                 .filter(h -> searchRequest.getActivo() == null || 
                         h.getActivo().equals(searchRequest.getActivo()))
                 .filter(h -> searchRequest.getFechaInicioDesde() == null || 
@@ -512,11 +512,11 @@ public HistorialCargoProcesoResponseDTO updateHistorialId(Long id, HistorialCarg
         }
         
         // Verificar que el cargo proceso y el proceso sigan activos
-        // if (!historial.getCargoProceso().getActivo()) {
+        // if (!historial.getCargo().getActivo()) {
         //     throw new BusinessException("No se puede reactivar el historial porque el cargo proceso está inactivo");
         // }
         
-        ProcesoElectoral proceso = historial.getCargoProceso().getProceso();
+        ProcesoElectoral proceso = historial.getCargo().getProceso();
         if (!proceso.getEstado()) {
             throw new BusinessException("No se puede reactivar el historial porque el proceso electoral está inactivo");
         }
@@ -529,7 +529,7 @@ public HistorialCargoProcesoResponseDTO updateHistorialId(Long id, HistorialCarg
         
         // Verificar que no tenga otro historial activo en el mismo cargo proceso
         if (historialRepository.existsByPersonalIdAndCargoProcesoIdAndActivoTrue(
-                historial.getPersonal().getId(), historial.getCargoProceso().getId())) {
+                historial.getPersonal().getId(), historial.getCargo().getId())) {
             throw new BusinessException("El personal ya tiene un historial activo en este cargo proceso");
         }
         
@@ -596,7 +596,7 @@ public HistorialCargoProcesoResponseDTO updateHistorialId(Long id, HistorialCarg
         log.debug("Verificando si personal ID: {} puede ser asignado a cargo proceso ID: {}", 
                 personalId, cargoProcesoId);
         
-        CargoProceso nuevoCargo = cargoProcesoRepository.findById(cargoProcesoId)
+        Cargo nuevoCargo = cargoProcesoRepository.findById(cargoProcesoId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Cargo proceso no encontrado con ID: " + cargoProcesoId));
         
@@ -606,7 +606,7 @@ public HistorialCargoProcesoResponseDTO updateHistorialId(Long id, HistorialCarg
         
         // Verificar que no tenga un historial activo en el mismo proceso
         return historialesActivos.stream()
-                .noneMatch(h -> h.getCargoProceso().getProceso().getId()
+                .noneMatch(h -> h.getCargo().getProceso().getId()
                         .equals(nuevoCargo.getProceso().getId()));
     }
     
@@ -651,7 +651,7 @@ public HistorialCargoProcesoResponseDTO updateHistorialId(Long id, HistorialCarg
     public ActualizarFechasHistorialResponse actualizarFechasHistoriales(
             ActualizarFechasHistorialRequest request) {
         
-        log.info("Iniciando actualización de fechas para cargo_proceso: {} en proceso: {}", 
+        log.info("Iniciando actualización de fechas para cargo: {} en proceso: {}", 
                 request.getCargoProcesoId(), request.getProcesoElectoralId());
         
         // Validar que el proceso existe
@@ -659,8 +659,8 @@ public HistorialCargoProcesoResponseDTO updateHistorialId(Long id, HistorialCarg
                 .orElseThrow(() -> new ResourceNotFoundException(
                     "Proceso electoral no encontrado con ID: " + request.getProcesoElectoralId()));
         
-        // Validar que el cargo_proceso existe y pertenece al proceso
-        CargoProceso cargoProceso = cargoProcesoRepository
+        // Validar que el cargo existe y pertenece al proceso
+        Cargo cargo = cargoProcesoRepository
                 .findByIdAndProcesoId(request.getCargoProcesoId(), request.getProcesoElectoralId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                     "Cargo proceso no encontrado con ID: " + request.getCargoProcesoId() + 
@@ -676,7 +676,7 @@ public HistorialCargoProcesoResponseDTO updateHistorialId(Long id, HistorialCarg
                 request.getFechaFin(),
                 request.getActivo());
         
-        log.info("Se actualizaron {} historiales para el cargo: {}", actualizados, cargoProceso.getNombre());
+        log.info("Se actualizaron {} historiales para el cargo: {}", actualizados, cargo.getNombre());
 
         //Actualizar Personal
         List<HistorialCargoProceso> historiales = historialRepository.findByCargoProcesoIdWithPersonal(request.getCargoProcesoId());
@@ -689,21 +689,21 @@ public HistorialCargoProcesoResponseDTO updateHistorialId(Long id, HistorialCarg
         if (!personalIds.isEmpty()) {
             CambioEstadoMasivoRequestDTO cambioRequest = new CambioEstadoMasivoRequestDTO();
             cambioRequest.setPersonalIds(personalIds);
-            cambioRequest.setObservacion("Actualización de fechas por cambio en cargo proceso: " + cargoProceso.getNombre());
+            cambioRequest.setObservacion("Actualización de fechas por cambio en cargo proceso: " + cargo.getNombre());
 
 
             estadoPersonalService.contratoTerminadoMasivo(cambioRequest);
             log.info("Cambio de estado de contrato terminado para {} personas", personalIds.size());
         } else {
-            log.warn("No se encontraron personas asociadas al cargo_proceso {}", request.getCargoProcesoId());
+            log.warn("No se encontraron personas asociadas al cargo {}", request.getCargoProcesoId());
         }
 
         // Construir respuesta
         return ActualizarFechasHistorialResponse.builder()
                 .procesoElectoralId(proceso.getId())
                 .nombreProceso(proceso.getNombre())
-                .cargoProcesoId(cargoProceso.getId())
-                .nombreCargo(cargoProceso.getNombre())
+                .cargoProcesoId(cargo.getId())
+                .nombreCargo(cargo.getNombre())
                 .historialesActualizados(actualizados)
                 .nuevaFechaInicio(request.getFechaInicio())
                 .nuevaFechaFin(request.getFechaFin())
@@ -741,7 +741,7 @@ public HistorialCargoProcesoResponseDTO updateHistorialId(Long id, HistorialCarg
         
         if (!existe) {
             throw new ResourceNotFoundException(
-                "No existe el cargo_proceso " + cargoProcesoId + 
+                "No existe el cargo " + cargoProcesoId + 
                 " en el proceso " + procesoId);
         }
     }
@@ -800,12 +800,12 @@ public HistorialCargoProcesoResponseDTO updateHistorialByPersonalId(
                         "Historial de cargo proceso no encontrado con ID: " + id));
         
         // 2. Validar que el nuevo cargo sea diferente al actual (no me deja actualizar y deberia)
-        /* if (requestDTO.getIdCargo().equals(historial.getCargoProceso().getId())) {
+        /* if (requestDTO.getIdCargo().equals(historial.getCargo().getId())) {
             throw new BusinessException("El cargo seleccionado es el mismo que el actual");
         } */
         
         // 3. Buscar y validar el nuevo cargo proceso
-        CargoProceso nuevoCargoProceso = cargoProcesoRepository.findById(requestDTO.getIdCargo())
+        Cargo nuevoCargoProceso = cargoProcesoRepository.findById(requestDTO.getIdCargo())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Cargo proceso no encontrado con ID: " + requestDTO.getIdCargo()));
         
@@ -828,7 +828,7 @@ public HistorialCargoProcesoResponseDTO updateHistorialByPersonalId(
         
         boolean tieneOtroActivoEnMismoProceso = activosDelPersonal.stream()
                 .filter(h -> !h.getId().equals(id))  // excluir este historial
-                .anyMatch(h -> h.getCargoProceso().getProceso().getId()
+                .anyMatch(h -> h.getCargo().getProceso().getId()
                         .equals(nuevoProceso.getId()));
         
         if (tieneOtroActivoEnMismoProceso) {
@@ -862,7 +862,7 @@ public HistorialCargoProcesoResponseDTO updateHistorialByPersonalId(
         }
         
         // 10. Actualizar el cargo proceso
-        historial.setCargoProceso(nuevoCargoProceso);
+        historial.setCargo(nuevoCargoProceso);
         
         // 11. Actualizar fechas si vienen en el request
         if (requestDTO.getFechaInicio() != null) {

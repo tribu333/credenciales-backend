@@ -6,7 +6,7 @@ import com.credenciales.tribunal.dto.procesolectoral.request.ProcesoElectoralUpd
 import com.credenciales.tribunal.dto.procesolectoral.response.CargoProcesoResumenDTO;
 import com.credenciales.tribunal.dto.procesolectoral.response.ProcesoElectoralResponseDTO;
  */
-import com.credenciales.tribunal.model.entity.CargoProceso;
+import com.credenciales.tribunal.model.entity.Cargo;
 import com.credenciales.tribunal.model.entity.Imagen;
 import com.credenciales.tribunal.model.entity.ProcesoElectoral;
 import org.springframework.stereotype.Component;
@@ -48,7 +48,7 @@ public class ProcesoElectoralMapper {
         int totalCargosActivos = 0;
         if (proceso.getCargosProceso() != null) {
             // totalCargosActivos = (int) proceso.getCargosProceso().stream()
-            //         .filter(CargoProceso::getActivo)
+            //         .filter(Cargo::getActivo)
             //         .count();
         }
         
@@ -131,25 +131,25 @@ public class ProcesoElectoralMapper {
         }
     }
     
-    private List<CargoProcesoResumenDTO> convertirCargosProceso(List<CargoProceso> cargosProceso) {
+    private List<CargoProcesoResumenDTO> convertirCargosProceso(List<Cargo> cargosProceso) {
         return cargosProceso.stream()
                 .map(this::toCargoProcesoResumenDTO)
                 .collect(Collectors.toList());
     }
     
-    private CargoProcesoResumenDTO toCargoProcesoResumenDTO(CargoProceso cargoProceso) {
-        if (cargoProceso == null) return null;
+    private CargoProcesoResumenDTO toCargoProcesoResumenDTO(Cargo cargo) {
+        if (cargo == null) return null;
         
         return CargoProcesoResumenDTO.builder()
-                .id(cargoProceso.getId())
-                .nombre(cargoProceso.getNombre())
-                //.cargoId(cargoProceso.getCargo() != null ? cargoProceso.getCargo().getId() : null)
-                /* .unidadNombre(cargoProceso.getCargo() != null && 
-                             cargoProceso.getCargo().getUnidad() != null ? 
-                             cargoProceso.getCargo().getUnidad().getNombre() : null)
-                .totalCandidatos(cargoProceso.getCandidatos() != null ? 
-                                 cargoProceso.getCandidatos().size() : 0) */
-                //.activo(cargoProceso.getActivo())
+                .id(cargo.getId())
+                .nombre(cargo.getNombre())
+                //.cargoId(cargo.getCargo() != null ? cargo.getCargo().getId() : null)
+                /* .unidadNombre(cargo.getCargo() != null && 
+                             cargo.getCargo().getUnidad() != null ? 
+                             cargo.getCargo().getUnidad().getNombre() : null)
+                .totalCandidatos(cargo.getCandidatos() != null ? 
+                                 cargo.getCandidatos().size() : 0) */
+                //.activo(cargo.getActivo())
                 .build();
     }
     

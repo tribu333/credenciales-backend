@@ -8,7 +8,7 @@ import com.credenciales.tribunal.exception.ResourceNotFoundException;
 import com.credenciales.tribunal.exception.BusinessException;
 import com.credenciales.tribunal.exception.DuplicateResourceException;
 import com.credenciales.tribunal.dto.cargoproceso.CargoProcesoMapper;
-import com.credenciales.tribunal.model.entity.CargoProceso;
+import com.credenciales.tribunal.model.entity.Cargo;
 import com.credenciales.tribunal.model.entity.ProcesoElectoral;
 import com.credenciales.tribunal.model.entity.Unidad;
 import com.credenciales.tribunal.repository.CargoProcesoRepository;
@@ -69,8 +69,8 @@ public class CargoProcesoServiceImpl implements CargoProcesoService {
                             requestDTO.getNombre(), proceso.getNombre()));
         }
         
-        CargoProceso cargoProceso = cargoProcesoMapper.toEntity(requestDTO, proceso, unidad);
-        CargoProceso savedCargoProceso = cargoProcesoRepository.save(cargoProceso);
+        Cargo cargo = cargoProcesoMapper.toEntity(requestDTO, proceso, unidad);
+        Cargo savedCargoProceso = cargoProcesoRepository.save(cargo);
         log.info("Cargo proceso creado exitosamente con ID: {}", savedCargoProceso.getId());
         
         return cargoProcesoMapper.toResponseDTO(savedCargoProceso);
@@ -88,7 +88,7 @@ public class CargoProcesoServiceImpl implements CargoProcesoService {
     @Transactional(readOnly = true)
     public List<CargoProcesoResponseDTO> getAllCargosProceso() {
         log.debug("Obteniendo todos los cargos proceso");
-        List<CargoProceso> cargosProceso = cargoProcesoRepository.findAll();
+        List<Cargo> cargosProceso = cargoProcesoRepository.findAll();
         return cargoProcesoMapper.toResponseDTOList(cargosProceso);
     }
     
@@ -104,26 +104,26 @@ public class CargoProcesoServiceImpl implements CargoProcesoService {
     public CargoProcesoResponseDTO updateCargoProceso(Long id, CargoProcesoUpdateRequestDTO requestDTO) {
         log.info("Actualizando cargo proceso con ID: {}", id);
         
-        CargoProceso cargoProceso = cargoProcesoRepository.findById(id)
+        Cargo cargo = cargoProcesoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Cargo proceso no encontrado con ID: " + id));
         
         // Validar nombre único si se está actualizando
         if (requestDTO.getNombre() != null && 
-            !cargoProceso.getNombre().equals(requestDTO.getNombre())) {
+            !cargo.getNombre().equals(requestDTO.getNombre())) {
             
             if (cargoProcesoRepository.existsByProcesoIdAndNombre(
-                    cargoProceso.getProceso().getId(), requestDTO.getNombre())) {
+                    cargo.getProceso().getId(), requestDTO.getNombre())) {
                 throw new DuplicateResourceException(
                         String.format("Ya existe un cargo con nombre '%s' en el proceso '%s'", 
-                                requestDTO.getNombre(), cargoProceso.getProceso().getNombre()));
+                                requestDTO.getNombre(), cargo.getProceso().getNombre()));
             }
         }
         
         // Validar unidad si se actualiza
         Unidad nuevaUnidad = null;
         if (requestDTO.getUnidadId() != null && 
-            !cargoProceso.getUnidad().getId().equals(requestDTO.getUnidadId())) {
+            !cargo.getUnidad().getId().equals(requestDTO.getUnidadId())) {
             
             nuevaUnidad = unidadRepository.findById(requestDTO.getUnidadId())
                     .orElseThrow(() -> new ResourceNotFoundException(
@@ -134,14 +134,14 @@ public class CargoProcesoServiceImpl implements CargoProcesoService {
             }
         }
         
-        // Validar si se intenta activar un cargo en un proceso inactivo !cargoProceso.getActivo() &&
+        // Validar si se intenta activar un cargo en un proceso inactivo !cargo.getActivo() &&
         if (requestDTO.getActivo() != null && requestDTO.getActivo() && 
-             !cargoProceso.getProceso().getEstado()) {
+             !cargo.getProceso().getEstado()) {
             throw new BusinessException("No se puede activar un cargo en un proceso inactivo");
         }
         
-        cargoProcesoMapper.updateEntity(requestDTO, cargoProceso, nuevaUnidad);
-        CargoProceso updatedCargoProceso = cargoProcesoRepository.save(cargoProceso);
+        cargoProcesoMapper.updateEntity(requestDTO, cargo, nuevaUnidad);
+        Cargo updatedCargoProceso = cargoProcesoRepository.save(cargo);
         log.info("Cargo proceso actualizado exitosamente con ID: {}", updatedCargoProceso.getId());
         
         return cargoProcesoMapper.toResponseDTO(updatedCargoProceso);
@@ -151,12 +151,12 @@ public class CargoProcesoServiceImpl implements CargoProcesoService {
     public void deleteCargoProceso(Long id) {
         log.info("Eliminando cargo proceso con ID: {}", id);
         
-        CargoProceso cargoProceso = cargoProcesoRepository.findById(id)
+        Cargo cargo = cargoProcesoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Cargo proceso no encontrado con ID: " + id));
         
         // Validar si tiene historiales asociados
-        if (cargoProceso.getHistoriales() != null && !cargoProceso.getHistoriales().isEmpty()) {
+        if (cargo.getHistoriales() != null && !cargo.getHistoriales().isEmpty()) {
             throw new BusinessException("No se puede eliminar el cargo porque tiene historiales asociados");
         }
         
@@ -173,7 +173,7 @@ public class CargoProcesoServiceImpl implements CargoProcesoService {
             throw new ResourceNotFoundException("Proceso no encontrado con ID: " + procesoId);
         }
         
-        List<CargoProceso> cargosProceso = cargoProcesoRepository.findByProcesoIdOrderByNombreAsc(procesoId);
+        List<Cargo> cargosProceso = cargoProcesoRepository.findByProcesoIdOrderByNombreAsc(procesoId);
         return cargoProcesoMapper.toResponseDTOList(cargosProceso);
     }
     
@@ -186,7 +186,7 @@ public class CargoProcesoServiceImpl implements CargoProcesoService {
             throw new ResourceNotFoundException("Unidad no encontrada con ID: " + unidadId);
         }
         
-        List<CargoProceso> cargosProceso = cargoProcesoRepository.findByUnidadIdOrderByNombreAsc(unidadId);
+        List<Cargo> cargosProceso = cargoProcesoRepository.findByUnidadIdOrderByNombreAsc(unidadId);
         return cargoProcesoMapper.toResponseDTOList(cargosProceso);
     }
     
@@ -199,7 +199,7 @@ public class CargoProcesoServiceImpl implements CargoProcesoService {
             throw new ResourceNotFoundException("Proceso no encontrado con ID: " + procesoId);
         }
         //no funcionando aun por activos en luga solo por procesos
-        List<CargoProceso> cargosProceso = cargoProcesoRepository.findByProcesoId(procesoId);
+        List<Cargo> cargosProceso = cargoProcesoRepository.findByProcesoId(procesoId);
         return cargoProcesoMapper.toResponseDTOList(cargosProceso);
     }
     
@@ -216,7 +216,7 @@ public class CargoProcesoServiceImpl implements CargoProcesoService {
             throw new ResourceNotFoundException("Unidad no encontrada con ID: " + unidadId);
         }
         
-        List<CargoProceso> cargosProceso = cargoProcesoRepository.findByProcesoIdAndUnidadId(procesoId, unidadId);
+        List<Cargo> cargosProceso = cargoProcesoRepository.findByProcesoIdAndUnidadId(procesoId, unidadId);
         return cargoProcesoMapper.toResponseDTOList(cargosProceso);
     }
     
@@ -232,7 +232,7 @@ public class CargoProcesoServiceImpl implements CargoProcesoService {
     @Transactional(readOnly = true)
     public List<CargoProcesoResponseDTO> searchCargosProcesoByNombre(String nombre) {
         log.debug("Buscando cargos proceso que contengan: {}", nombre);
-        List<CargoProceso> cargosProceso = cargoProcesoRepository.findByNombreContainingIgnoreCase(nombre);
+        List<Cargo> cargosProceso = cargoProcesoRepository.findByNombreContainingIgnoreCase(nombre);
         return cargoProcesoMapper.toResponseDTOList(cargosProceso);
     }
     
@@ -242,7 +242,7 @@ public class CargoProcesoServiceImpl implements CargoProcesoService {
         log.debug("Buscando cargos proceso con filtros: {}", searchRequest);
         
         // Implementación básica - se puede mejorar con Specifications
-        List<CargoProceso> cargosProceso = cargoProcesoRepository.findAll();
+        List<Cargo> cargosProceso = cargoProcesoRepository.findAll();
         
         return cargosProceso.stream()
                 .filter(cp -> searchRequest.getProcesoId() == null || 
@@ -278,7 +278,7 @@ public class CargoProcesoServiceImpl implements CargoProcesoService {
             throw new ResourceNotFoundException("Proceso no encontrado con ID: " + procesoId);
         }
         
-        List<CargoProceso> cargosProceso = cargoProcesoRepository.findByProcesoIdWithRelations(procesoId);
+        List<Cargo> cargosProceso = cargoProcesoRepository.findByProcesoIdWithRelations(procesoId);
         return cargoProcesoMapper.toResponseDTOList(cargosProceso);
     }
     
@@ -295,7 +295,7 @@ public class CargoProcesoServiceImpl implements CargoProcesoService {
         
         return results.stream()
                 .map(result -> {
-                    CargoProceso cp = (CargoProceso) result[0];
+                    Cargo cp = (Cargo) result[0];
                     Long totalHistoriales = (Long) result[1];
                     CargoProcesoResponseDTO dto = cargoProcesoMapper.toResponseDTO(cp);
                     // El total ya está en el DTO, pero podríamos actualizarlo si es necesario
@@ -308,21 +308,21 @@ public class CargoProcesoServiceImpl implements CargoProcesoService {
     public CargoProcesoResponseDTO activarCargoProceso(Long id) {
         log.info("Activando cargo proceso con ID: {}", id);
         
-        CargoProceso cargoProceso = cargoProcesoRepository.findById(id)
+        Cargo cargo = cargoProcesoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Cargo proceso no encontrado con ID: " + id));
         
-        // if (cargoProceso.getActivo()) {
+        // if (cargo.getActivo()) {
         //     throw new BusinessException("El cargo proceso ya está activo");
         // }
         
         // Validar que el proceso esté activo
-        if (!cargoProceso.getProceso().getEstado()) {
+        if (!cargo.getProceso().getEstado()) {
             throw new BusinessException("No se puede activar un cargo en un proceso inactivo");
         }
         
-        //cargoProceso.setActivo(true);
-        CargoProceso updatedCargoProceso = cargoProcesoRepository.save(cargoProceso);
+        //cargo.setActivo(true);
+        Cargo updatedCargoProceso = cargoProcesoRepository.save(cargo);
         log.info("Cargo proceso activado exitosamente con ID: {}", id);
         
         return cargoProcesoMapper.toResponseDTO(updatedCargoProceso);
@@ -332,11 +332,11 @@ public class CargoProcesoServiceImpl implements CargoProcesoService {
     public CargoProcesoResponseDTO desactivarCargoProceso(Long id) {
         log.info("Desactivando cargo proceso con ID: {}", id);
         
-        CargoProceso cargoProceso = cargoProcesoRepository.findById(id)
+        Cargo cargo = cargoProcesoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Cargo proceso no encontrado con ID: " + id));
         
-        // if (!cargoProceso.getActivo()) {
+        // if (!cargo.getActivo()) {
         //     throw new BusinessException("El cargo proceso ya está inactivo");
         // }
         
@@ -345,8 +345,8 @@ public class CargoProcesoServiceImpl implements CargoProcesoService {
             throw new BusinessException("No se puede desactivar el cargo porque tiene historiales activos");
         }
         
-        //cargoProceso.setActivo(false);
-        CargoProceso updatedCargoProceso = cargoProcesoRepository.save(cargoProceso);
+        //cargo.setActivo(false);
+        Cargo updatedCargoProceso = cargoProcesoRepository.save(cargo);
         log.info("Cargo proceso desactivado exitosamente con ID: {}", id);
         
         return cargoProcesoMapper.toResponseDTO(updatedCargoProceso);

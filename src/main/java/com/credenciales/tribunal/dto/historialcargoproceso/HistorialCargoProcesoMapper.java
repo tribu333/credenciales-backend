@@ -4,7 +4,7 @@ package com.credenciales.tribunal.dto.historialcargoproceso;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoCreateRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoUpdateRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoResponseDTO; */
-import com.credenciales.tribunal.model.entity.CargoProceso;
+import com.credenciales.tribunal.model.entity.Cargo;
 import com.credenciales.tribunal.model.entity.HistorialCargoProceso;
 import com.credenciales.tribunal.model.entity.Personal;
 import org.springframework.stereotype.Component;
@@ -24,16 +24,16 @@ public class HistorialCargoProcesoMapper {
         
         return HistorialCargoProcesoDTO.builder()
                 .id(historial.getId())
-                .cargoProcesoId(historial.getCargoProceso() != null ? historial.getCargoProceso().getId() : null)
-                .cargoProcesoNombre(historial.getCargoProceso() != null ? historial.getCargoProceso().getNombre() : null)
-                .procesoId(historial.getCargoProceso() != null && historial.getCargoProceso().getProceso() != null ? 
-                        historial.getCargoProceso().getProceso().getId() : null)
-                .procesoNombre(historial.getCargoProceso() != null && historial.getCargoProceso().getProceso() != null ? 
-                        historial.getCargoProceso().getProceso().getNombre() : null)
-                .unidadId(historial.getCargoProceso() != null && historial.getCargoProceso().getUnidad() != null ? 
-                        historial.getCargoProceso().getUnidad().getId() : null)
-                .unidadNombre(historial.getCargoProceso() != null && historial.getCargoProceso().getUnidad() != null ? 
-                        historial.getCargoProceso().getUnidad().getNombre() : null)
+                .cargoProcesoId(historial.getCargo() != null ? historial.getCargo().getId() : null)
+                .cargoProcesoNombre(historial.getCargo() != null ? historial.getCargo().getNombre() : null)
+                .procesoId(historial.getCargo() != null && historial.getCargo().getProceso() != null ? 
+                        historial.getCargo().getProceso().getId() : null)
+                .procesoNombre(historial.getCargo() != null && historial.getCargo().getProceso() != null ? 
+                        historial.getCargo().getProceso().getNombre() : null)
+                .unidadId(historial.getCargo() != null && historial.getCargo().getUnidad() != null ? 
+                        historial.getCargo().getUnidad().getId() : null)
+                .unidadNombre(historial.getCargo() != null && historial.getCargo().getUnidad() != null ? 
+                        historial.getCargo().getUnidad().getNombre() : null)
                 .personalId(historial.getPersonal() != null ? historial.getPersonal().getId() : null)
                 .personalNombre(historial.getPersonal() != null ? historial.getPersonal().getNombre() : null)
                 .personalApellido(historial.getPersonal() != null ? historial.getPersonal().getApellidoPaterno() : null)
@@ -53,15 +53,15 @@ public class HistorialCargoProcesoMapper {
                 .id(historial.getId())
                 
                 // Cargo proceso
-                .cargoProcesoId(historial.getCargoProceso() != null ? historial.getCargoProceso().getId() : null)
-                .cargoProcesoNombre(historial.getCargoProceso() != null ? historial.getCargoProceso().getNombre() : null)
+                .cargoProcesoId(historial.getCargo() != null ? historial.getCargo().getId() : null)
+                .cargoProcesoNombre(historial.getCargo() != null ? historial.getCargo().getNombre() : null)
                 
                 
                 // Unidad
-                .unidadId(historial.getCargoProceso() != null && historial.getCargoProceso().getUnidad() != null ? 
-                        historial.getCargoProceso().getUnidad().getId() : null)
-                .unidadNombre(historial.getCargoProceso() != null && historial.getCargoProceso().getUnidad() != null ? 
-                        historial.getCargoProceso().getUnidad().getNombre() : null)
+                .unidadId(historial.getCargo() != null && historial.getCargo().getUnidad() != null ? 
+                        historial.getCargo().getUnidad().getId() : null)
+                .unidadNombre(historial.getCargo() != null && historial.getCargo().getUnidad() != null ? 
+                        historial.getCargo().getUnidad().getNombre() : null)
                 
                 // Personal
                 .personalId(historial.getPersonal() != null ? historial.getPersonal().getId() : null)
@@ -82,7 +82,7 @@ public class HistorialCargoProcesoMapper {
         //Personal pers=historial.getPersonal();
         return HistorialCargoProcesoResumenDTO.builder()
                 .id(historial.getId())
-                .cargoProcesoNombre(historial.getCargoProceso() !=null ? historial.getCargoProceso().getNombre():null)
+                .cargoProcesoNombre(historial.getCargo() !=null ? historial.getCargo().getNombre():null)
                 .personalId(historial.getPersonal() !=null ? historial.getPersonal().getId(): null)
                 .personalNombre(historial.getPersonal() !=null ? historial.getPersonal().getNombre(): null)
                 .personalApellidoPaterno(historial.getPersonal() !=null ? historial.getPersonal().getApellidoPaterno(): null)
@@ -96,12 +96,12 @@ public class HistorialCargoProcesoMapper {
     }
     
     public HistorialCargoProceso toEntity(HistorialCargoProcesoCreateRequestDTO requestDTO, 
-                                         CargoProceso cargoProceso, 
+                                         Cargo cargo, 
                                          Personal personal) {
         if (requestDTO == null) return null;
         
         return HistorialCargoProceso.builder()
-                .cargoProceso(cargoProceso)
+                .cargo(cargo)
                 .personal(personal)
                 .fechaInicio(requestDTO.getFechaInicio())
                 .fechaFin(requestDTO.getFechaFin())
