@@ -60,9 +60,9 @@ public class HistorialCargoProcesoServiceImpl implements HistorialCargoProcesoSe
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Cargo proceso no encontrado con ID: " + requestDTO.getCargoProcesoId()));
         
-        // if (!cargo.getActivo()) {
-        //     throw new BusinessException("No se puede asignar personal a un cargo proceso inactivo");
-        // }
+        if (!cargo.getActivo()) {
+            throw new BusinessException("No se puede asignar personal a un cargo proceso inactivo");
+        }
         
         // Validar que el proceso del cargo esté activo y vigente
         ProcesoElectoral proceso = cargo.getProceso();

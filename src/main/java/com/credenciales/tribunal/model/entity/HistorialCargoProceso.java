@@ -21,6 +21,10 @@ public class HistorialCargoProceso {
     @JoinColumn(name = "personal_id", nullable = false)
     private Personal personal;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "proceso_id", nullable = false)
+    private ProcesoElectoral proceso;
+    
     @Column(name = "fecha_inicio", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime fechaInicio;
 

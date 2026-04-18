@@ -130,7 +130,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/cargos-proceso/**").hasRole("ADMINISTRADOR")
 
                         .requestMatchers(HttpMethod.POST, "/api/historiales-cargo-proceso/**").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/historiales-cargo-proceso/**").hasRole("ADMINISTRADOR, CONSULTA")
+                        .requestMatchers(HttpMethod.PUT, "/api/historiales-cargo-proceso/**").hasRole("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/historiales-cargo-proceso/**").hasRole("ADMINISTRADOR, CONSULTA")
                         
                         .requestMatchers(HttpMethod.POST, "/api/externos/**").permitAll()
