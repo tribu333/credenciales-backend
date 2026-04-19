@@ -54,19 +54,6 @@ public interface ProcesoElectoralRepository extends JpaRepository<ProcesoElector
     // Buscar proceso con su imagen
     @Query("SELECT p FROM ProcesoElectoral p LEFT JOIN FETCH p.imagen WHERE p.id = :id")
     Optional<ProcesoElectoral> findByIdWithImagen(@Param("id") Long id);
-
-    // Buscar proceso con sus cargos
-/*     @Query("SELECT p FROM ProcesoElectoral p LEFT JOIN FETCH p.cargosProceso c WHERE p.id = :id")
-    Optional<ProcesoElectoral> findByIdWithCargos(@Param("id") Long id); */
-    
-    // Buscar proceso con imagen y cargos
-    /* @Query("SELECT p FROM ProcesoElectoral p " +
-           "LEFT JOIN FETCH p.imagen " +
-           "LEFT JOIN FETCH p.cargosProceso c " +
-           "LEFT JOIN FETCH c.cargo " +
-           "LEFT JOIN FETCH c.cargo.unidad " +
-           "WHERE p.id = :id")
-    Optional<ProcesoElectoral> findByIdWithAllRelations(@Param("id") Long id); */
     
     // Buscar procesos con cantidad de cargos
     @Query("SELECT p, SIZE(p.cargosProceso) as totalCargos FROM ProcesoElectoral p")
@@ -83,4 +70,9 @@ public interface ProcesoElectoralRepository extends JpaRepository<ProcesoElector
     
     // Buscar el proceso más reciente
     Optional<ProcesoElectoral> findTopByOrderByFechaInicioDesc();
+    // En ProcesoElectoralRepository
+    @Query("SELECT p FROM ProcesoElectoral p WHERE p.fechaInicio <= :fechaFin AND p.fechaFin >= :fechaInicio")
+    List<ProcesoElectoral> findOverlappingProcesses(LocalDate fechaInicio, LocalDate fechaFin);
+    @Query("SELECT p FROM ProcesoElectoral p WHERE p.id != :id")
+    List<ProcesoElectoral> findAllByIdNot(@Param("id") Long id);
 }

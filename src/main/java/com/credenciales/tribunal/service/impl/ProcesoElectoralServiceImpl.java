@@ -51,12 +51,21 @@ public class ProcesoElectoralServiceImpl implements ProcesoElectoralService {
         validarFechas(requestDTO.getFechaInicio(), requestDTO.getFechaFin());
         
         // Validar que no haya procesos activos que se sobrepongan si este proceso estará activo
-        if (requestDTO.getEstado()) {
-            validarSuperposicionProcesos(requestDTO.getFechaInicio(), requestDTO.getFechaFin(), null);
-            desactivarOtrosActivos(null);
-        }
-        
+        // if (requestDTO.getEstado()) {
+        //     validarSuperposicionProcesos(requestDTO.getFechaInicio(), requestDTO.getFechaFin(), null);
+        //     desactivarOtrosActivos(null);
+        // }
+        validarSuperposicionConCualquierProceso(
+            requestDTO.getFechaInicio(), 
+            requestDTO.getFechaFin(), 
+            null
+        );
+        Boolean esVigente=validarUnicoProcesoVigentePorFecha(
+            requestDTO.getFechaInicio(), 
+            requestDTO.getFechaFin()
+        );
         ProcesoElectoral proceso = procesoMapper.toEntity(requestDTO, imagen);
+        proceso.setEstado(esVigente);
         ProcesoElectoral savedProceso = procesoRepository.save(proceso);
         log.info("Proceso electoral creado exitosamente con ID: {}", savedProceso.getId());
         
@@ -175,14 +184,6 @@ public class ProcesoElectoralServiceImpl implements ProcesoElectoralService {
     
     @Override
     @Transactional(readOnly = true)
-    public List<ProcesoElectoralResponseDTO> getProcesosActivos() {
-        log.debug("Buscando procesos activos");
-        List<ProcesoElectoral> procesos = procesoRepository.findByEstadoTrueOrderByFechaInicioDesc();
-        return procesoMapper.toResponseDTOList(procesos);
-    }
-    
-    @Override
-    @Transactional(readOnly = true)
     public List<ProcesoElectoralResponseDTO> getProcesosByRangoFechas(LocalDate fechaInicio, LocalDate fechaFin) {
         log.debug("Buscando procesos entre {} y {}", fechaInicio, fechaFin);
         List<ProcesoElectoral> procesos = procesoRepository.findByFechaInicioBetween(fechaInicio, fechaFin);
@@ -259,23 +260,7 @@ public class ProcesoElectoralServiceImpl implements ProcesoElectoralService {
         return procesoRepository.findByIdWithImagen(id)
                 .map(procesoMapper::toResponseDTO);
     }
-    
-    /* @Override
-    @Transactional(readOnly = true)
-    public Optional<ProcesoElectoralResponseDTO> getProcesoWithCargos(Long id) {
-        log.debug("Buscando proceso con cargos por ID: {}", id);
-        return procesoRepository.findByIdWithCargos(id)
-                .map(procesoMapper::toResponseDTO);
-    } */
-    
-    /* @Override
-    @Transactional(readOnly = true)
-    public Optional<ProcesoElectoralResponseDTO> getProcesoWithAllRelations(Long id) {
-        log.debug("Buscando proceso con todas las relaciones por ID: {}", id);
-        return procesoRepository.findByIdWithAllRelations(id)
-                .map(procesoMapper::toResponseDTO);
-    } */
-    
+
     @Override
     public ProcesoElectoralResponseDTO activarProceso(Long id) {
         log.info("Activando proceso electoral con ID: {}", id);
@@ -403,14 +388,51 @@ public class ProcesoElectoralServiceImpl implements ProcesoElectoralService {
                                        LocalDate inicio2, LocalDate fin2) {
         return !fin1.isBefore(inicio2) && !fin2.isBefore(inicio1);
     }
-
-    private void desactivarOtrosActivos(Long procesoIdExcluir) {
-        List<ProcesoElectoral> activos = procesoRepository.findByEstadoTrue();
-        for (ProcesoElectoral activo : activos) {
-            if (!activo.getId().equals(procesoIdExcluir)) {
-                activo.setEstado(false);
-                procesoRepository.save(activo);  // O usa saveAll si son muchos
+    
+    private void validarSuperposicionConCualquierProceso(LocalDate fechaInicio, LocalDate fechaFin, Long idExcluir) {
+        // Buscar TODOS los procesos cuyos rangos se superpongan, sin filtrar por estado
+        List<ProcesoElectoral> procesosExistentes;
+        if (idExcluir != null) {
+            procesosExistentes = procesoRepository.findAllByIdNot(idExcluir);
+        } else {
+            procesosExistentes = procesoRepository.findAll();
+        }
+        
+        for (ProcesoElectoral proceso : procesosExistentes) {
+            if (fechasSeSuperponen(fechaInicio, fechaFin, 
+                                proceso.getFechaInicio(), proceso.getFechaFin())) {
+                throw new BusinessException(
+                    String.format("Las fechas se superponen con el proceso '%s' (del %s al %s)",
+                        proceso.getNombre(), proceso.getFechaInicio(), proceso.getFechaFin()));
             }
         }
+    }
+
+    private Boolean validarUnicoProcesoVigentePorFecha(LocalDate nuevaFechaInicio, LocalDate nuevaFechaFin) {
+        LocalDate hoy = LocalDate.now();
+        
+        // Verificar si el nuevo proceso estaría vigente hoy
+        boolean nuevoProcesoVigente = !nuevaFechaInicio.isAfter(hoy) && !nuevaFechaFin.isBefore(hoy);
+        
+        if (nuevoProcesoVigente) {
+            // Buscar si ya hay algún otro proceso vigente según fecha actual
+            List<ProcesoElectoral> procesosVigentes = procesoRepository.findAll().stream()
+                .filter(p -> {
+                    LocalDate fin = p.getFechaFin();
+                    LocalDate inicio = p.getFechaInicio();
+                    return !inicio.isAfter(hoy) && !fin.isBefore(hoy);
+                })
+                .collect(Collectors.toList());
+            
+            if (!procesosVigentes.isEmpty()) {
+                throw new BusinessException(
+                    String.format("Ya existe un proceso vigente actualmente: '%s' (del %s al %s). " +
+                                "No puede haber dos procesos activos al mismo tiempo.",
+                        procesosVigentes.get(0).getNombre(),
+                        procesosVigentes.get(0).getFechaInicio(),
+                        procesosVigentes.get(0).getFechaFin()));
+            }
+        }
+        return nuevoProcesoVigente;
     }
 }

@@ -4,8 +4,6 @@ import com.credenciales.tribunal.dto.login.LoginResponseDTO;
 import com.credenciales.tribunal.dto.login.UsuarioLoginDTO;
 import com.credenciales.tribunal.dto.usuario.UsuarioRegistroDTO;
 import com.credenciales.tribunal.dto.usuario.UsuarioResponseDTO;
-import com.credenciales.tribunal.dto.usuario.UsuarioUpdateDTO;
-import com.credenciales.tribunal.model.Usuario;
 import com.credenciales.tribunal.service.AuthService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,10 +12,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -67,15 +61,5 @@ public class AuthController {
         
         UsuarioResponseDTO response = authService.registrarUsuario(adminDTO);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
-    
-    @PutMapping("/usuarios/{id}")
-    public ResponseEntity<UsuarioResponseDTO> actualizarUsuario(
-            @PathVariable Long id,
-            @Valid @RequestBody UsuarioUpdateDTO updateDTO) {
-        //Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-    Usuario currentUser = null;
-        UsuarioResponseDTO response = authService.actualizarUsuario(id, updateDTO, currentUser);
-        return ResponseEntity.ok(response);
     }
 }

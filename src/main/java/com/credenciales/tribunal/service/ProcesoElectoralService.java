@@ -32,8 +32,6 @@ public interface ProcesoElectoralService {
     
     List<ProcesoElectoralResponseDTO> getProcesosByEstado(Boolean estado);
     
-    List<ProcesoElectoralResponseDTO> getProcesosActivos();
-    
     // Métodos de búsqueda por fechas
     List<ProcesoElectoralResponseDTO> getProcesosByRangoFechas(LocalDate fechaInicio, LocalDate fechaFin);
     
@@ -50,11 +48,6 @@ public interface ProcesoElectoralService {
     
     // Métodos con relaciones
     Optional<ProcesoElectoralResponseDTO> getProcesoWithImagen(Long id);
-    
-    //Optional<ProcesoElectoralResponseDTO> getProcesoWithCargos(Long id);
-    
-    //Optional<ProcesoElectoralResponseDTO> getProcesoWithAllRelations(Long id);
-    
     // Métodos de negocio
     ProcesoElectoralResponseDTO activarProceso(Long id);
     

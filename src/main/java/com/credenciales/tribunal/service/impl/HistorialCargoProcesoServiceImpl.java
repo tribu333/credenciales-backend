@@ -26,11 +26,14 @@ import com.credenciales.tribunal.repository.ProcesoElectoralRepository;
 import com.credenciales.tribunal.service.HistorialCargoProcesoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -60,15 +63,16 @@ public class HistorialCargoProcesoServiceImpl implements HistorialCargoProcesoSe
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Cargo proceso no encontrado con ID: " + requestDTO.getCargoProcesoId()));
         
-        if (!cargo.getActivo()) {
-            throw new BusinessException("No se puede asignar personal a un cargo proceso inactivo");
-        }
+        // if (!cargo.getActivo()) {
+        //     throw new BusinessException("No se puede asignar personal a un cargo proceso inactivo");
+        // }
         
         // Validar que el proceso del cargo esté activo y vigente
-        ProcesoElectoral proceso = cargo.getProceso();
-        if (!proceso.getEstado()) {
-            throw new BusinessException("No se puede asignar personal a un cargo de un proceso inactivo");
+        List<ProcesoElectoral> procesosVigentes=procesoRepository.findActivosVigentesEnFecha(LocalDate.now());
+        if(procesosVigentes.isEmpty()){
+            throw new BusinessException("No existen Procesos Electorales vigentes");
         }
+        ProcesoElectoral proceso=procesosVigentes.get(0);
         
         LocalDateTime ahora = LocalDateTime.now();
         if (ahora.isBefore(proceso.getFechaInicio().atStartOfDay()) || 
@@ -104,6 +108,7 @@ public class HistorialCargoProcesoServiceImpl implements HistorialCargoProcesoSe
         }
         
         HistorialCargoProceso historial = historialMapper.toEntity(requestDTO, cargo, personal);
+        historial.setProceso(proceso);
         HistorialCargoProceso savedHistorial = historialRepository.save(historial);
         PersonalDTO person=personalServiceImpl.estadoRegistrado(requestDTO.getPersonalId());
         log.info("Historial de cargo proceso creado exitosamente con ID: {} and {}", savedHistorial.getId(),person.getId());

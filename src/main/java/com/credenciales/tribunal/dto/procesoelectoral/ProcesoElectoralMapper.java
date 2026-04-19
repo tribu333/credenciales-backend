@@ -1,12 +1,5 @@
 package com.credenciales.tribunal.dto.procesoelectoral;
 
-/* import com.credenciales.tribunal.dto.procesolectoral.ProcesoElectoralDTO;
-import com.credenciales.tribunal.dto.procesolectoral.request.ProcesoElectoralCreateRequestDTO;
-import com.credenciales.tribunal.dto.procesolectoral.request.ProcesoElectoralUpdateRequestDTO;
-import com.credenciales.tribunal.dto.procesolectoral.response.CargoProcesoResumenDTO;
-import com.credenciales.tribunal.dto.procesolectoral.response.ProcesoElectoralResponseDTO;
- */
-import com.credenciales.tribunal.model.entity.Cargo;
 import com.credenciales.tribunal.model.entity.Imagen;
 import com.credenciales.tribunal.model.entity.ProcesoElectoral;
 import org.springframework.stereotype.Component;
@@ -69,8 +62,6 @@ public class ProcesoElectoralMapper {
                 .totalCargosActivos(totalCargosActivos)
                 .duracionDias(duracionDias)
                 .vigente(vigente && proceso.getEstado())
-                .cargos(proceso.getCargosProceso() != null ? 
-                        convertirCargosProceso(proceso.getCargosProceso()) : null)
                 .build();
     }
     
@@ -129,28 +120,6 @@ public class ProcesoElectoralMapper {
         } else {
             return "EN_CURSO";
         }
-    }
-    
-    private List<CargoProcesoResumenDTO> convertirCargosProceso(List<Cargo> cargosProceso) {
-        return cargosProceso.stream()
-                .map(this::toCargoProcesoResumenDTO)
-                .collect(Collectors.toList());
-    }
-    
-    private CargoProcesoResumenDTO toCargoProcesoResumenDTO(Cargo cargo) {
-        if (cargo == null) return null;
-        
-        return CargoProcesoResumenDTO.builder()
-                .id(cargo.getId())
-                .nombre(cargo.getNombre())
-                //.cargoId(cargo.getCargo() != null ? cargo.getCargo().getId() : null)
-                /* .unidadNombre(cargo.getCargo() != null && 
-                             cargo.getCargo().getUnidad() != null ? 
-                             cargo.getCargo().getUnidad().getNombre() : null)
-                .totalCandidatos(cargo.getCandidatos() != null ? 
-                                 cargo.getCandidatos().size() : 0) */
-                //.activo(cargo.getActivo())
-                .build();
     }
     
     public List<ProcesoElectoralDTO> toDTOList(List<ProcesoElectoral> procesos) {

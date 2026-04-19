@@ -147,11 +147,7 @@ public class ProcesoElectoralController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-    @GetMapping("/activos")
-    public ResponseEntity<List<ProcesoElectoralResponseDTO>> getProcesosActivos() {
-        List<ProcesoElectoralResponseDTO> procesos = procesoService.getProcesosActivos();
-        return ResponseEntity.ok(procesos);
-    }
+
     @GetMapping("/vigentes")
     public ResponseEntity<List<ProcesoElectoralResponseDTO>> getProcesosVigentesActuales() {
         List<ProcesoElectoralResponseDTO> procesos = procesoService.getProcesosVigentesActuales();

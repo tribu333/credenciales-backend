@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 @Builder
@@ -29,18 +28,4 @@ public class ProcesoElectoralResponseDTO {
     private Integer totalCargosActivos;
     private Long duracionDias;
     private Boolean vigente;
-    private List<CargoProcesoResumenDTO> cargos;
-}
-
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-class CargoProcesoResumenDTO {
-    private Long id;
-    private String nombre;
-    private Long cargoId;
-    private String unidadNombre;
-    private Integer totalCandidatos;
-    private Boolean activo;
 }

@@ -40,7 +40,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/api/historiales-cargo-proceso")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
-@Tag(name = "Historial de Cargos por Proceso Electoral", 
+@Tag(name = "Historial de Cargos", 
      description = "API para gestionar la asignación de cargos a personal en procesos electorales específicos")
 public class HistorialCargoProcesoController {
     
@@ -172,16 +172,6 @@ public class HistorialCargoProcesoController {
         
         return ResponseEntity.ok(response);
     }
-/*     @PostMapping("/actualizar-activo")
-    @Operation(summary = "Actualiza las fechas de todos los historiales de un cargo en un proceso")
-    public ResponseEntity<ActualizarFechasHistorialResponse> actualizarFechas(
-            @Valid @RequestBody ActualizarFechasHistorialRequest request) {
-        
-        ActualizarFechasHistorialResponse response = historialService
-                .actualizarFechasHistoriales(request);
-        
-        return ResponseEntity.ok(response);
-    } */
     
     @PutMapping("/proceso/{procesoId}/cargo/{cargoId}/fechas")
     @Operation(summary = "Actualiza fechas mediante parámetros en la URL")
