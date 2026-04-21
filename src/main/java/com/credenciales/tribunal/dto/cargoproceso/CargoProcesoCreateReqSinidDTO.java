@@ -14,8 +14,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CargoProcesoCreateReqSinidDTO {
     
-    private Long procesoId;
-    
     @NotBlank(message = "El nombre del cargo es obligatorio")
     @Size(max = 150, message = "El nombre no puede exceder los 150 caracteres")
     private String nombre;
