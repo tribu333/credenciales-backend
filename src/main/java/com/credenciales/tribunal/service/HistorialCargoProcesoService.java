@@ -7,7 +7,9 @@ import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProceso
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoSearchRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoUpdateRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialPersonalDTO;
+import com.credenciales.tribunal.model.entity.Cargo;
 import com.credenciales.tribunal.model.entity.HistorialCargoProceso;
+import com.credenciales.tribunal.model.entity.Personal;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoResponseDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoResumenListDTO;
 
@@ -109,4 +111,5 @@ HistorialCargoProcesoResponseDTO updateHistorialByPersonalId(
 
         HistorialCargoProcesoResponseDTO reasignarCargoHistorial(Long id, HistorialCargoProcesoPatchRequestDTO requestDTO);
         HistorialCargoProcesoResponseDTO getHistorialActivoUnico(Long personalId);
+        HistorialCargoProceso createHistorialSimple(Personal personal, Cargo cargo);
 }

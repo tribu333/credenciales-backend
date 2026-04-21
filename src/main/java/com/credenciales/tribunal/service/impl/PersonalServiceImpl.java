@@ -4,6 +4,7 @@ import com.credenciales.tribunal.dto.email.VerificacionCodigoRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionEmailRequestDTO;
 import com.credenciales.tribunal.dto.email.VerificacionResponseDTO;
 import com.credenciales.tribunal.dto.estadoActual.CambioEstadoMasivoRequestDTO;
+import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoCreateRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoPatchRequestDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoResponseDTO;
 import com.credenciales.tribunal.dto.historialcargoproceso.HistorialCargoProcesoUpdateRequestDTO;
@@ -426,14 +427,15 @@ public class PersonalServiceImpl implements PersonalService {
 		Cargo cargo = cargoProcesoRepository.findById(cargoProcesoId)
 				.orElseThrow(() -> new ResourceNotFoundException(
 						"Cargo de proceso no encontrado con ID: " + cargoProcesoId));
-
-		HistorialCargoProceso historial = HistorialCargoProceso.builder()
+		/* HistorialCargoProcesoCreateRequestDTO h=HistorialCargoProcesoCreateRequestDTO
+		HistorialCargoProceso historial=historialCargoProcesoService.createHistorial(); */
+		/* HistorialCargoProceso historial = HistorialCargoProceso.builder()
 				.personal(personal)
 				.cargo(cargo)
 				.fechaInicio(LocalDateTime.now())
 				.activo(true)
-				.build();
-
+				.build(); */
+		HistorialCargoProceso historial = historialCargoProcesoService.createHistorialSimple(personal, cargo);
 		historialCargoProcesoRepository.save(historial);
 		log.info("Cargo EVENTUAL registrado: {} para personal {}", cargo.getNombre(), personal.getId());
 	}

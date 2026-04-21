@@ -115,7 +115,27 @@ public class HistorialCargoProcesoServiceImpl implements HistorialCargoProcesoSe
         
         return historialMapper.toResponseDTO(savedHistorial);
     }
-    
+    public HistorialCargoProceso createHistorialSimple(Personal personal, Cargo cargo) {
+        log.info("Creando historial simple para personal ID: {} y cargo ID: {}", 
+                personal.getId(), cargo.getId());
+        
+        // Obtener proceso electoral vigente
+        List<ProcesoElectoral> procesosVigentes = procesoRepository.findActivosVigentesEnFecha(LocalDate.now());
+        if(procesosVigentes.isEmpty()){
+            throw new BusinessException("No existen Procesos Electorales vigentes");
+        }
+        ProcesoElectoral proceso = procesosVigentes.get(0);
+        
+        HistorialCargoProceso historial = HistorialCargoProceso.builder()
+                .personal(personal)
+                .cargo(cargo)
+                .proceso(proceso)
+                .fechaInicio(LocalDateTime.now())
+                .activo(true)
+                .build();
+        
+        return historialRepository.save(historial);
+    }
     @Override
     @Transactional(readOnly = true)
     public Optional<HistorialCargoProcesoResponseDTO> getHistorialById(Long id) {
