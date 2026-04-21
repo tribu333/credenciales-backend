@@ -436,7 +436,7 @@ public class PersonalServiceImpl implements PersonalService {
 				.activo(true)
 				.build(); */
 		HistorialCargoProceso historial = historialCargoProcesoService.createHistorialSimple(personal, cargo);
-		historialCargoProcesoRepository.save(historial);
+		//historialCargoProcesoRepository.save(historial);
 		log.info("Cargo EVENTUAL registrado: {} para personal {}", cargo.getNombre(), personal.getId());
 	}
 
