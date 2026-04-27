@@ -175,46 +175,6 @@ public class ImagenServiceImpl implements ImagenService {
                 .orElseThrow(() -> new RuntimeException("Imagen no encontrada con nombre: " + nombreArchivo));
     }
 
-    // @Override
-    // @Transactional(readOnly = true)
-    // public long contarImagenesPorComplaint(Long idComplaint) {
-    //     Complaint complaint = complaintRepository.findById(idComplaint)
-    //             .orElseThrow(() -> new RuntimeException("Complaint no encontrado con ID: " + idComplaint));
-        
-    //     return imagenRepository.countByComplaint(complaint);
-    // }
-
-    // @Override
-    // public void eliminarTodasImagenesComplaint(Long idComplaint) {
-    //     Complaint complaint = complaintRepository.findById(idComplaint)
-    //             .orElseThrow(() -> new RuntimeException("Complaint no encontrado con ID: " + idComplaint));
-        
-    //     List<Imagen> imagenes = imagenRepository.findByComplaint(complaint);
-        
-    //     // Eliminar archivos físicos
-    //     for (Imagen imagen : imagenes) {
-    //         try {
-    //             fileStorageService.deleteFile(imagen.getNombreArchivo());
-    //         } catch (Exception e) {
-    //             // Log del error pero continuar eliminando
-    //             System.err.println("Error al eliminar archivo: " + imagen.getNombreArchivo());
-    //         }
-    //     }
-        
-    //     // Eliminar de base de datos
-    //     imagenRepository.deleteByComplaint(complaint);
-    // }
-    // @Override
-    // @Transactional(readOnly = true)
-    // public List<ImagenResponseDTO> getImagenesPorDenuncia(Long idComplaint) {
-    //     Complaint complaint = complaintRepository.findById(idComplaint)
-    //             .orElseThrow(() -> new RuntimeException("Complaint no encontrado con ID: " + idComplaint));
-        
-    //     return imagenRepository.findByComplaint(complaint)
-    //             .stream()
-    //             .map(this::convertToResponseDTO)
-    //             .collect(Collectors.toList());
-    // }
     @Override
     public List<ImagenResponseDTO> subirImagenesMasivas(MultipartFile[] files) {
         // Validar que el complaint existe

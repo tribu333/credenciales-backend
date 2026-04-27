@@ -53,7 +53,7 @@ public class AuthController {
     public ResponseEntity<UsuarioResponseDTO> crearAdminInicial() {
         UsuarioRegistroDTO adminDTO = UsuarioRegistroDTO.builder()
                 .username("admin")
-                .email("admin@denuncias.com")
+                .email("admin@gmail.com")
                 .password("admin123")
                 .nombreCompleto("Administrador Sistema")
                 .rol("ADMINISTRADOR")

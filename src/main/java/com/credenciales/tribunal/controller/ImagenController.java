@@ -46,7 +46,7 @@ public class ImagenController {
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadImagen(
             @RequestParam("file") MultipartFile file
-            /* @RequestParam("denunciaId") Long denunciaId */) {
+            ) {
         
         try {
             var imagen = imagenService.subirImagen(file);
@@ -56,21 +56,7 @@ public class ImagenController {
         }
     }
     
-    /* @GetMapping("/denuncia/{denunciaId}")
-    public ResponseEntity<?> getImagenesPorDenuncia(@PathVariable Long denunciaId) {
-        return ResponseEntity.ok(imagenService.getImagenesPorDenuncia(denunciaId));
-    } */
-     // ========== DESCARGAR/VER IMAGEN ==========
-    
-    /**
-     * Descarga una imagen por nombre de archivo
-     * GET /api/imagenes/descargar/{nombreArchivo}
-     * 
-     * Ejemplo: GET /api/imagenes/descargar/abc123-def456.jpg
-     * 
-     * Esta URL se usa en el frontend para mostrar imágenes:
-     * <img src="http://localhost:8080/api/imagenes/descargar/abc123-def456.jpg" />
-     */
+   
     @Operation(
         summary = "Descargar imagen por nombre de archivo",
         description = "Recupera una imagen por su nombre de archivo. Este endpoint se puede usar directamente en etiquetas <img> del frontend."

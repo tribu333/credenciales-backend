@@ -41,12 +41,6 @@ public class Imagen {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    /* // Relación muchos a uno: muchas imágenes pertenecen a un complaint
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_denuncia", nullable = false)
-    @ToString.Exclude // Excluye de toString para evitar recursión
-    private Complaint complaint; */
-
     // ========== MÉTODOS ÚTILES ==========
     
     public String getTamanioFormateado() {
